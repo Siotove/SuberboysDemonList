@@ -14,6 +14,18 @@
             "link": "https://www.youtube.com/watch?v=invalid",
             "percent": 100,
             "hz": 360
+        },
+        {
+            "user": "R3dcorrupt",
+            "link": "https://www.youtube.com/watch?v=invalid",
+            "percent": 100,
+            "hz": 180
+        },
+        {
+            "user": "JJgamingGMD",
+            "link": "https://www.youtube.com/watch?v=invalid",
+            "percent": 100,
+            "hz": 2
         }
     ]
 }
