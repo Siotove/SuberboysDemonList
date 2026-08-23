@@ -8,5 +8,11 @@
     "percentToQualify": 100,
     "password": "Not Copyable",
     "records": [
+        {
+            "user": "Justgame",
+            "link": "https://www.youtube.com/watch?v=invalid",
+            "percent": 100,
+            "hz": 69
+        }
     ]
 }
