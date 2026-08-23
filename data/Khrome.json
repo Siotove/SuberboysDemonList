@@ -38,6 +38,12 @@
             "link": "https://www.youtube.com/watch?v=invalid",
             "percent": 100,
             "hz": 120
+        },
+        {
+            "user": "Paperalizado",
+            "link": "https://www.youtube.com/watch?v=invalid",
+            "percent": 100,
+            "hz": 60
         }
     ]
 }
