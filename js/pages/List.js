@@ -118,7 +118,7 @@ export default {
                         Do not use secret routes or bug routes
                     </p>
                     <p>
-                        The Level MUST Be Published By A Suberboys Member IF You Are Verifying
+                        The Level MUST Be Published By The Following Accounts: Suberman2
                     </p>
                     <p>
                         Once a level falls onto the Legacy List, we accept records for it for 24 hours after it falls off, then afterwards we never accept records for said level
