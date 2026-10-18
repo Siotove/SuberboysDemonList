@@ -126,3 +126,24 @@
 .page-list .meta .editors li a:hover {
     text-decoration: underline;
 }
+/* Apply medal colors to both rank numbers and level names */
+.page-list .rank-gold,
+.page-list .rank-gold .type-label-lg,
+.page-list .rank-gold button,
+.page-list .rank-gold button .type-label-lg {
+    color: #ffd700;
+}
+
+.page-list .rank-silver,
+.page-list .rank-silver .type-label-lg,
+.page-list .rank-silver button,
+.page-list .rank-silver button .type-label-lg {
+    color: #c0c0c0;
+}
+
+.page-list .rank-bronze,
+.page-list .rank-bronze .type-label-lg,
+.page-list .rank-bronze button,
+.page-list .rank-bronze button .type-label-lg {
+    color: #cd7f32;
+}
