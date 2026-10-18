@@ -7,10 +7,16 @@ const PACK_DEFINITIONS = [
         id: 'starter-pack',
         name: 'Starter Pack',
         bonus: 100,
-        levelPaths: [
-            'easy/level-1',
-            'easy/level-2',
-            'easy/level-3',
+        levelPaths: [          
+    "USadaclysm",
+    "Test68",
+    "CS2",
+    "Polychromatical",
+    "Sadaclysm",
+    "TungTung",
+    "AinaPoni",
+    "MilestoneIII",
+    "Dashgs",
         ],
     },
 ];
