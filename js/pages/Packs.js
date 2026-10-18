@@ -1,46 +1,7 @@
-
+import { PACK_DEFINITIONS } from '../packs.js';
 import { fetchList } from '../content.js';
 import Spinner from '../components/Spinner.js';
 
-const PACK_DEFINITIONS = [
-    {
-        id: 'milestone-pack',
-        name: 'Milestone Trilogy',
-        bonus: 100,
-        levelPaths: [
-            'MilestoneI',
-            'MilestoneII',
-            'MilestoneIII',
-        ],
-    },
-    {
-        id: 'aina-pack',
-        name: 'Aina Poni Duo',
-        bonus: 150,
-        levelPaths: [
-            'AinaPoni',
-            'AinaPoniII',
-        ],
-    },
-    {
-        id: 'polychromatical-pack',
-        name: 'Polychromaticals',
-        bonus: 200,
-        levelPaths: [
-            'Polychromatical',
-            'PolychromaticalII',
-        ],
-    },
-    {
-        id: 'sadaclysm-pack',
-        name: 'Sadaclysm Versions',
-        bonus: 250,
-        levelPaths: [
-            'Sadaclysm',
-            'USadaclysm',
-        ],
-    },
-];
 
 export default {
     components: { Spinner },
