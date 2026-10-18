@@ -17,10 +17,9 @@ export default {
             </div>
 
             <div v-else>
-                <p>Levels loaded: {{ levels.length }}</p>
                 <p v-if="levels.length === 0">
-                    No levels could be loaded.
-                </p>
+    No levels could be loaded. Please try again later.
+</p>
 
                 <ul>
                     <li v-for="level in levels" :key="level.path">
