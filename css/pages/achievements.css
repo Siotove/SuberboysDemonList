@@ -1,4 +1,16 @@
 
+.achievements-page h1 {
+    margin: 0 0 12px;
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.15;
+    letter-spacing: -0.04em;
+}
+
+.achievements-page > p {
+    margin: 0 0 28px;
+    line-height: 1.6;
+    opacity: 0.75;
+}
 .achievements-page {
     width: min(1100px, 100%);
     margin: 0 auto;
@@ -182,4 +194,105 @@
     border-radius: inherit;
     background: #55cde0;
     transition: width 0.25s ease;
+}
+
+/* Colourful achievement cards */
+.achievement-card {
+    overflow: hidden;
+    border: 1px solid var(--tier-color);
+    border-top: 4px solid var(--tier-color);
+    background: var(--tier-bg);
+    box-shadow: 0 4px 14px var(--tier-shadow);
+}
+
+.achievement-icon {
+    background: var(--tier-icon-bg);
+    box-shadow: 0 0 20px var(--tier-shadow);
+}
+
+.achievement-tier {
+    color: var(--tier-text);
+    background: var(--tier-badge);
+    border: 1px solid var(--tier-color);
+}
+
+/* Bronze — warm copper */
+.tier-bronze {
+    --tier-color: #c47b48;
+    --tier-bg: #c47b4818;
+    --tier-shadow: #c47b4825;
+    --tier-icon-bg: #c47b4830;
+    --tier-badge: #c47b4825;
+    --tier-text: #a45c2b;
+}
+
+/* Silver — cool grey */
+.tier-silver {
+    --tier-color: #aab7c7;
+    --tier-bg: #aab7c718;
+    --tier-shadow: #aab7c725;
+    --tier-icon-bg: #aab7c730;
+    --tier-badge: #aab7c725;
+    --tier-text: #64748b;
+}
+
+/* Gold — bright golden yellow */
+.tier-gold {
+    --tier-color: #e8b923;
+    --tier-bg: #e8b92318;
+    --tier-shadow: #e8b92335;
+    --tier-icon-bg: #e8b92335;
+    --tier-badge: #e8b92330;
+    --tier-text: #946600;
+}
+
+/* Diamond — vibrant cyan */
+.tier-diamond {
+    --tier-color: #35cde5;
+    --tier-bg: #35cde518;
+    --tier-shadow: #35cde535;
+    --tier-icon-bg: #35cde535;
+    --tier-badge: #35cde530;
+    --tier-text: #087e98;
+}
+
+/* Platinum — icy blue-purple */
+.tier-platinum {
+    --tier-color: #9b91f5;
+    --tier-bg: #9b91f51a;
+    --tier-shadow: #9b91f535;
+    --tier-icon-bg: #9b91f535;
+    --tier-badge: #9b91f530;
+    --tier-text: #6854c4;
+}
+
+/* Legendary — vivid purple */
+.tier-legendary {
+    --tier-color: #d16bff;
+    --tier-bg: #d16bff1c;
+    --tier-shadow: #d16bff40;
+    --tier-icon-bg: #d16bff40;
+    --tier-badge: #d16bff30;
+    --tier-text: #9835bd;
+}
+
+.achievement-card:not(.is-locked):hover {
+    box-shadow: 0 8px 26px var(--tier-shadow);
+}
+
+.achievement-card.is-locked {
+    filter: grayscale(0.65);
+    opacity: 0.6;
+}
+
+.achievement-card:not(.is-locked) .achievement-icon {
+    transform: scale(1.05);
+}
+
+.achievement-card:not(.is-locked) .achievement-status {
+    color: var(--tier-text);
+}
+
+.achievement-card:not(.is-locked) {
+    box-shadow: 0 4px 18px var(--tier-shadow);
 }
