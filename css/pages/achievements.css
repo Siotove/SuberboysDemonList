@@ -55,7 +55,10 @@
     font-weight: 500;
     cursor: pointer;
 }
-
+.achievements-page select option {
+    font-family: inherit;
+    font-size: inherit;
+}
 /* Progress summary */
 .achievement-summary {
     max-width: 460px;
