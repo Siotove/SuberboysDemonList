@@ -1,1 +1,20 @@
+.page-packs h1 {
+    margin-bottom: 12px;
+}
 
+.page-packs > p {
+    margin-bottom: 24px;
+}
+
+.page-packs ul {
+    list-style: none;
+    padding: 0;
+}
+
+.page-packs li {
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    background: var(--color-background);
+    color: var(--color-on-background);
+}
