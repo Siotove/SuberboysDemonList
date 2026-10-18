@@ -43,7 +43,10 @@ export default {
                         class="pack-card"
                     >
                         <h2>{{ pack.name }}</h2>
-                        <p class="pack-category">
+                        <p
+    class="pack-category"
+    :class="'category-' + (pack.category || 'uncategorized').toLowerCase()"
+>
                             {{ pack.category || 'Uncategorized' }}
                         </p>
                         <p class="pack-bonus">
