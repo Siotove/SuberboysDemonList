@@ -87,6 +87,19 @@ export default {
                                 </td>
                             </tr>
                         </table>
+                        <h2 v-if="entry.packsBeaten && entry.packsBeaten.length > 0">
+    Packs Beaten ({{ entry.packsBeaten.length }})
+</h2>
+<table class="table" v-if="entry.packsBeaten && entry.packsBeaten.length > 0">
+    <tr v-for="pack in entry.packsBeaten" :key="pack.id">
+        <td class="level">
+            <span class="type-label-lg">{{ pack.name }}</span>
+        </td>
+        <td class="score">
+            <p>+{{ localize(pack.bonus) }}</p>
+        </td>
+    </tr>
+</table>
                     </div>
                 </div>
             </div>
