@@ -103,3 +103,31 @@
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+/* Override the global three-column layout for the Packs page */
+main.page-packs {
+    display: block;
+    height: 0;
+    min-height: 0;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.page-packs .packs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    align-items: start;
+}
+
+.page-packs .pack-card {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+}
+
+@media screen and (max-width: 600px) {
+    main.page-packs {
+        padding: 20px;
+    }
+}
