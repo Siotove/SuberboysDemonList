@@ -500,3 +500,18 @@ main:not(.dark) .achievements-page {
     background-color: #25252b;
     color: #ffffff;
 }
+/* Match the Packs tab's full-page background */
+main.achievements-page {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    min-height: 100%;
+    box-sizing: border-box;
+    background-color: var(--color-background, white);
+    color: var(--color-on-background, black);
+}
+
+main.achievements-page.dark {
+    background-color: #1c1b1f;
+    color: #ffffff;
+}
