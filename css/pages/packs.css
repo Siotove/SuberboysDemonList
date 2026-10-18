@@ -246,3 +246,31 @@ body:has(main.page-packs.dark) #app {
     color: #422b62;
     border-color: #b69cdb;
 }
+.pack-beaten-count {
+    display: inline-block;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--color-on-background);
+    font: inherit;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.pack-beaten-count:hover {
+    opacity: 0.75;
+}
+
+.pack-victors {
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--color-background);
+}
+
+.pack-victors p {
+    margin: 4px 0;
+}
