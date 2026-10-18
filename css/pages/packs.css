@@ -131,3 +131,10 @@ main.page-packs {
         padding: 20px;
     }
 }
+
+/* Make the Packs page background fill the available space */
+main.page-packs {
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+    min-height: 100%;
+}
