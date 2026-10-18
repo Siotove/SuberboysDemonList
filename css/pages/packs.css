@@ -132,9 +132,13 @@ main.page-packs {
     }
 }
 
-/* Make the Packs page background fill the available space */
 main.page-packs {
+    display: block;
+    height: 0;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    box-sizing: border-box;
     background-color: var(--color-background);
     color: var(--color-on-background);
-    min-height: 100%;
 }
