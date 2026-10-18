@@ -27,4 +27,11 @@ export const PACK_DEFINITIONS = [
         bonus: 250,
         levelPaths: ['Sadaclysm', 'USadaclysm'],
     },
+    {
+        id: 'top-pack',
+        name: 'Top 1 Pack 1',
+        category: 'Gold',
+        bonus: 300,
+        levelPaths: ['SocietyButNo3','Polychromatical','MilestoneIII','NGWave'],
+    },
 ];
