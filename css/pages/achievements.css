@@ -515,3 +515,30 @@ main.achievements-page.dark {
     background-color: #1c1b1f;
     color: #ffffff;
 }
+/* Match the Packs page layout and background */
+main.achievements-page {
+    display: block;
+    width: 100%;
+    max-width: none;
+    height: 0;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    box-sizing: border-box;
+
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+}
+
+/* Dark mode background */
+body:has(main.achievements-page.dark),
+body:has(main.achievements-page.dark) #app {
+    background-color: #121114;
+}
+
+main.achievements-page.dark {
+    --color-background: #1c1b1f;
+    --color-on-background: #ffffff;
+    background-color: #1c1b1f;
+    color: #ffffff;
+}
