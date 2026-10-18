@@ -38,12 +38,6 @@ export default {
                     <p v-if="pack.levels.length === 0">
                         Levels will appear here once added to this pack.
                     </p>
-
-                    <ul v-else class="pack-levels">
-                        <li v-for="level in pack.levels" :key="level.path">
-                            <span>#{{ level.rank }} — {{ level.name }}</span>
-                        </li>
-                    </ul>
                 </article>
             </div>
         </main>
