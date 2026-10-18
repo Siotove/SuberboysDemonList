@@ -95,7 +95,7 @@ export default {
                 pack => (pack.category || 'Uncategorized') === this.selectedCategory
             );
         },
-    },
+    }
 
     async mounted() {
         try {
