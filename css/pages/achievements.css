@@ -261,3 +261,146 @@
         transition: none;
     }
 }
+
+/* ==================================
+   ACHIEVEMENT RARITY EFFECTS
+   Bronze < Silver < Gold < Diamond
+   < Platinum < Legendary
+================================== */
+
+/* Shared setup */
+.achievement-card {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-top-width: 3px;
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        border-color 0.25s ease;
+}
+
+/* Bronze — subtle copper glow */
+.achievement-card.tier-bronze:not(.is-locked) {
+    box-shadow: 0 3px 10px #bd794820;
+}
+
+.achievement-card.tier-bronze:not(.is-locked):hover {
+    box-shadow: 0 6px 18px #bd794850;
+}
+
+/* Silver — metallic shine */
+.achievement-card.tier-silver:not(.is-locked) {
+    box-shadow: 0 3px 12px #aab7c72b;
+}
+
+.achievement-card.tier-silver:not(.is-locked):hover {
+    box-shadow: 0 6px 22px #aab7c760;
+}
+
+/* Gold — warm golden glow */
+.achievement-card.tier-gold:not(.is-locked) {
+    box-shadow:
+        0 0 12px #e8b92330,
+        inset 0 0 18px #e8b9230c;
+}
+
+.achievement-card.tier-gold:not(.is-locked):hover {
+    box-shadow:
+        0 0 18px #e8b92365,
+        inset 0 0 24px #e8b92315;
+}
+
+/* Diamond — icy cyan glow */
+.achievement-card.tier-diamond:not(.is-locked) {
+    box-shadow:
+        0 0 14px #35cde535,
+        inset 0 0 20px #35cde510;
+}
+
+.achievement-card.tier-diamond:not(.is-locked):hover {
+    box-shadow:
+        0 0 25px #35cde580,
+        inset 0 0 28px #35cde520;
+}
+
+/* Platinum — shifting blue and violet shine */
+.achievement-card.tier-platinum:not(.is-locked) {
+    background:
+        linear-gradient(135deg, #9b91f51b, #62c9f01b, #9b91f51b);
+    background-size: 200% 200%;
+    animation: platinum-shimmer 5s ease-in-out infinite;
+    box-shadow: 0 0 18px #9b91f540;
+}
+
+.achievement-card.tier-platinum:not(.is-locked):hover {
+    box-shadow:
+        0 0 28px #9b91f580,
+        0 0 42px #62c9f030;
+}
+
+@keyframes platinum-shimmer {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* Legendary — animated purple aura */
+.achievement-card.tier-legendary:not(.is-locked) {
+    background:
+        linear-gradient(135deg, #d16bff20, #853bdf20, #f06bc920);
+    background-size: 250% 250%;
+    animation: legendary-aura 4s ease-in-out infinite;
+    box-shadow:
+        0 0 18px #d16bff50,
+        0 0 35px #853bdf20;
+}
+
+.achievement-card.tier-legendary:not(.is-locked):hover {
+    box-shadow:
+        0 0 28px #d16bff90,
+        0 0 48px #853bdf50;
+}
+
+@keyframes legendary-aura {
+    0%, 100% {
+        background-position: 0% 50%;
+        box-shadow: 0 0 18px #d16bff45, 0 0 35px #853bdf20;
+    }
+    50% {
+        background-position: 100% 50%;
+        box-shadow: 0 0 26px #d16bff75, 0 0 42px #853bdf35;
+    }
+}
+
+/* Make the rarity badge glow too */
+.achievement-card:not(.is-locked) .achievement-tier {
+    box-shadow: 0 0 10px var(--tier-bg);
+}
+
+.achievement-card.tier-gold:not(.is-locked) .achievement-tier {
+    box-shadow: 0 0 12px #e8b92345;
+}
+
+.achievement-card.tier-diamond:not(.is-locked) .achievement-tier {
+    box-shadow: 0 0 14px #35cde550;
+}
+
+.achievement-card.tier-platinum:not(.is-locked) .achievement-tier {
+    box-shadow: 0 0 16px #9b91f570;
+}
+
+.achievement-card.tier-legendary:not(.is-locked) .achievement-tier {
+    box-shadow: 0 0 20px #d16bff80;
+}
+
+/* Respect reduced-motion settings */
+@media (prefers-reduced-motion: reduce) {
+    .achievement-card.tier-platinum:not(.is-locked),
+    .achievement-card.tier-legendary:not(.is-locked) {
+        animation: none;
+    }
+}
