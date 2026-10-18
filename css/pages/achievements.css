@@ -1,0 +1,67 @@
+
+.achievements-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.achievements-page h1 {
+    margin-bottom: 8px;
+}
+
+.achievements-page select {
+    display: block;
+    width: 100%;
+    max-width: 350px;
+    margin: 10px 0 24px;
+    padding: 10px;
+}
+
+.achievement-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.achievement-card {
+    padding: 18px;
+    border: 2px solid #888;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.achievement-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.achievement-card h3 {
+    margin-bottom: 8px;
+}
+
+.achievement-tier {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: #888;
+    color: white;
+    font-size: 0.85rem;
+}
+
+.achievement-status {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.is-locked {
+    opacity: 0.55;
+}
+
+.tier-bronze { border-color: #a97142; }
+.tier-silver { border-color: #aeb7c2; }
+.tier-gold { border-color: #e0b323; }
+.tier-diamond { border-color: #58cde0; }
+.tier-platinum { border-color: #8c9bd8; }
+.tier-legendary { border-color: #b56be0; }
