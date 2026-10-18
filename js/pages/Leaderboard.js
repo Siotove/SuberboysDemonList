@@ -8,10 +8,11 @@ export default {
         Spinner,
     },
     data: () => ({
-        leaderboard: [],
-        loading: true,
-        selected: 0,
-        err: [],
+    leaderboard: [],
+    loading: true,
+    selected: 0,
+    sortBy: 'points',
+    err: [],
     }),
     template: `
         <main v-if="loading">
@@ -25,8 +26,19 @@ export default {
                     </p>
                 </div>
                 <div class="board-container">
+                <div class="leaderboard-controls">
+    <label for="leaderboard-sort">Sort by:</label>
+    <select id="leaderboard-sort" v-model="sortBy"
+        @change="selected = 0">
+        <option value="points">Most Points</option>
+        <option value="verified">Most Verified Levels</option>
+        <option value="completed">Most Completed Levels</option>
+        <option value="progressed">Most Progressed Levels</option>
+        <option value="packs">Most Packs Beaten</option>
+    </select>
+</div>
                     <table class="board">
-                        <tr v-for="(ientry, i) in leaderboard">
+                        <tr v-for="(ientry, i) in sortedLeaderboard" :key="ientry.user">
                             <td class="rank">
                                 <p class="type-label-lg">#{{ i + 1 }}</p>
                             </td>
@@ -106,9 +118,35 @@ export default {
         </main>
     `,
     computed: {
+        sortedLeaderboard() {
+    const count = (player, key) =>
+        Array.isArray(player[key]) ? player[key].length : 0;
+
+    return [...this.leaderboard].sort((a, b) => {
+        switch (this.sortBy) {
+            case 'verified':
+                return count(b, 'verified') - count(a, 'verified');
+            case 'completed':
+                return count(b, 'completed') - count(a, 'completed');
+            case 'progressed':
+                return count(b, 'progressed') - count(a, 'progressed');
+            case 'packs':
+                return count(b, 'packsBeaten') - count(a, 'packsBeaten');
+            default:
+                return (Number(b.total) || 0) - (Number(a.total) || 0);
+        }
+    });
+},
         entry() {
-            return this.leaderboard[this.selected];
-        },
+    return this.sortedLeaderboard[this.selected] || {
+        user: 'No players',
+        total: 0,
+        verified: [],
+        completed: [],
+        progressed: [],
+        packsBeaten: [],
+    };
+},
     },
     async mounted() {
         const [leaderboard, err] = await fetchLeaderboard();
