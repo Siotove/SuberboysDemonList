@@ -254,3 +254,62 @@ input[type="checkbox"] {
         padding: 0.6rem 0.35rem;
     }
 }
+
+/* Match the site's main font */
+.page-leaderboard-container,
+.page-leaderboard-container button,
+.page-leaderboard-container select,
+.page-leaderboard-container input {
+    font-family: inherit;
+}
+
+/* Keep the player list readable */
+.page-leaderboard .board {
+    table-layout: fixed;
+}
+
+.page-leaderboard .board th:first-child,
+.page-leaderboard .board td.rank {
+    width: 3.5rem;
+}
+
+.page-leaderboard .board th:nth-child(2),
+.page-leaderboard .board td.total {
+    width: 7rem;
+}
+
+.page-leaderboard .board td.user {
+    min-width: 0;
+}
+
+.page-leaderboard .board td.user button {
+    overflow-wrap: anywhere;
+}
+
+/* Fix spacing in the player's level tables */
+.page-leaderboard .player .table {
+    table-layout: auto;
+}
+
+.page-leaderboard .player .table td.rank {
+    width: 3.5rem;
+    padding-right: 0.75rem;
+    white-space: nowrap;
+}
+
+.page-leaderboard .player .table td.level {
+    overflow-wrap: anywhere;
+}
+
+.page-leaderboard .player .table td.score {
+    text-align: right;
+    padding-left: 1rem;
+    white-space: nowrap;
+}
+
+/* Make the main player heading inherit the site's font */
+.page-leaderboard .player h1,
+.page-leaderboard .player h2,
+.page-leaderboard .player h3 {
+    font-family: inherit;
+}
