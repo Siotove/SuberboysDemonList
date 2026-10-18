@@ -22,7 +22,7 @@ export default {
         <main class="page-packs">
             <h1>Packs</h1>
             <p class="packs-description">
-                Complete every level in a pack at 100% to earn bonus points.
+                Don't bother with packs right now, they are in the works.
             </p>
 
             <div v-if="loading" class="packs-loading">
