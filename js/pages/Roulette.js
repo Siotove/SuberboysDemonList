@@ -41,7 +41,8 @@ export default {
                 <div class="levels">
                     <template v-if="levels.length > 0">
                         <!-- Completed Levels -->
-                        <div class="level" v-for="(level, i) in levels.slice(0, progression.length)">
+                        <div class="level" :class="medalClass(level.rank)"
+     v-for="(level, i) in levels.slice(0, progression.length)">
                             <a :href="level.video" class="video">
                                 <img :src="getThumbnailFromId(getYoutubeIdFromUrl(level.video))" alt="">
                             </a>
@@ -154,10 +155,17 @@ export default {
         },
     },
     methods: {
-        shuffle,
-        getThumbnailFromId,
-        getYoutubeIdFromUrl,
-        async onStart() {
+    medalClass(rank) {
+        if (rank === 1) return 'medal-gold';
+        if (rank === 2) return 'medal-silver';
+        if (rank === 3) return 'medal-bronze';
+        return '';
+    },
+
+    shuffle,
+    getThumbnailFromId,
+    getYoutubeIdFromUrl,
+    async onStart() {
             if (this.isActive) {
                 this.showToast('Give up before starting a new roulette.');
                 return;
