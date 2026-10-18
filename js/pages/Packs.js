@@ -82,9 +82,11 @@ export default {
         };
     },
 
-    categories() {
-    return PACK_CATEGORIES;
-},
+    
+    computed: {
+        categories() {
+            return PACK_CATEGORIES;
+        },
 
         filteredPacks() {
             if (this.selectedCategory === 'All') {
@@ -92,10 +94,11 @@ export default {
             }
 
             return this.packs.filter(
-                pack => (pack.category || 'Uncategorized') === this.selectedCategory
+                pack =>
+                    (pack.category || 'Uncategorized') === this.selectedCategory
             );
         },
-    }
+    },
 
     async mounted() {
         try {
