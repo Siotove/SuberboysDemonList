@@ -32,10 +32,35 @@ template: `
             <div v-if="selectedPlayerData">
                 <h2>{{ selectedPlayerData.user }}</h2>
 
-                <p>
-                    {{ selectedPlayerData.achievements.filter(a => a.unlocked).length }}
-                    / {{ achievements.length }} achievements unlocked
-                </p>
+                
+<div class="achievement-summary">
+    <p>
+        <strong>
+            {{ selectedPlayerData.achievements.filter(a => a.unlocked).length }}
+            / {{ achievements.length }}
+        </strong>
+        achievements unlocked
+    </p>
+
+    <div
+        class="achievement-progress"
+        role="progressbar"
+        :aria-valuenow="selectedPlayerData.achievements.filter(a => a.unlocked).length"
+        :aria-valuemin="0"
+        :aria-valuemax="achievements.length"
+        aria-label="Achievement completion"
+    >
+        <div
+            class="achievement-progress__fill"
+            :style="{
+                width: (
+                    selectedPlayerData.achievements.filter(a => a.unlocked).length
+                    / achievements.length * 100
+                ) + '%'
+            }"
+        ></div>
+    </div>
+</div>
 
                 <div class="achievement-grid">
                     <article
