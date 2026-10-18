@@ -8,7 +8,10 @@ export default {
     },
 
 template: `
-    <main class="achievements-page">
+    <main
+    class="achievements-page"
+    :class="{ dark: $root.store.dark }"
+>
         <h1>Achievements</h1>
         <p>Choose a player to view their achievements.</p>
 
@@ -131,3 +134,31 @@ template: `
         }
     },
 };
+
+/* Achievements page theme */
+.achievements-page {
+    background-color: var(--color-background, white);
+    color: var(--color-on-background, black);
+    min-height: 100%;
+    box-sizing: border-box;
+}
+
+.achievements-page.dark {
+    --color-background: #1c1b1f;
+    --color-on-background: #ffffff;
+
+    background-color: #1c1b1f;
+    color: #ffffff;
+}
+
+/* Ensure the full scrollable achievements area is dark */
+.achievements-page.dark select {
+    background-color: #25252b;
+    color: #ffffff;
+    color-scheme: dark;
+}
+
+.achievements-page.dark select option {
+    background-color: #25252b;
+    color: #ffffff;
+}
