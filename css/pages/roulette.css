@@ -129,3 +129,13 @@
         align-self: stretch;
     }
 }
+
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    .page-roulette .levels .level.medal-gold,
+    .page-roulette .levels .level.medal-silver,
+    .page-roulette .levels .level.medal-bronze {
+        animation: none;
+    }
+}
