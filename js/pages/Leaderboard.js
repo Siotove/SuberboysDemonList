@@ -1,6 +1,6 @@
 import { fetchLeaderboard } from '../content.js';
 import { localize } from '../util.js';
-
+import { ACHIEVEMENTS, getAchievements } from '../achievements.js';
 import Spinner from '../components/Spinner.js';
 
 export default {
@@ -35,6 +35,8 @@ export default {
         <option value="completed">Most Completed Levels</option>
         <option value="progressed">Most Progressed Levels</option>
         <option value="packs">Most Packs Beaten</option>
+        <option value="achievements">Most Achievements</option>
+<option value="rarest">Rarest Achievements</option>
     </select>
 </div>
                     <table class="board">
