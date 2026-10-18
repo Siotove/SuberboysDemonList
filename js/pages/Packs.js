@@ -8,9 +8,9 @@ const PACK_DEFINITIONS = [
         name: 'Milestone Trilogy',
         bonus: 100,
         levelPaths: [          
-    "MilestoneI",
-    "MilestoneII",
     "MilestoneIII",
+    "MilestoneII",
+    "MilestoneI",
         ],
     },
 ];
