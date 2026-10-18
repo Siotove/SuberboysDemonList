@@ -9,7 +9,7 @@ export default {
         <main class="page-packs">
             <h1>Packs</h1>
             <p class="packs-description">
-                Don't bother with packs right now, they are in the works.
+                WE GOT PACKS BABYYY
             </p>
 
             <div v-if="loading" class="packs-loading">
@@ -52,9 +52,28 @@ export default {
                         <p class="pack-bonus">
                             Bonus: {{ pack.bonus }} points
                         </p>
-<p class="pack-beaten-count">
+<button
+    class="pack-beaten-count"
+    @click="toggleVictors(pack.id)"
+>
     {{ pack.beatenCount }} victors
-</p>
+</button>
+
+<div
+    v-if="expandedPack === pack.id"
+    class="pack-victors"
+>
+    <p
+        v-for="name in pack.victorNames"
+        :key="name"
+    >
+        {{ name }}
+    </p>
+
+    <p v-if="pack.victorNames.length === 0">
+        No victors yet!
+    </p>
+</div>
                         <p v-if="pack.levels.length === 0">
                             No levels have been added to this pack yet.
                         </p>
@@ -78,14 +97,15 @@ export default {
         </main>
     `,
 
-    data() {
-        return {
-            loading: true,
-            error: false,
-            packs: [],
-            selectedCategory: 'All',
-        };
-    },
+   data() {
+    return {
+        loading: true,
+        error: false,
+        packs: [],
+        selectedCategory: 'All',
+        expandedPack: null,
+    };
+},
 
     
     computed: {
@@ -104,7 +124,12 @@ export default {
             );
         },
     },
-
+methods: {
+    toggleVictors(packId) {
+        this.expandedPack =
+            this.expandedPack === packId ? null : packId;
+    },
+},
     async mounted() {
         try {
             const result = await fetchList();
@@ -122,17 +147,24 @@ export default {
 
             const [leaderboard, leaderboardErrors] = await fetchLeaderboard();
 
-this.packs = PACK_DEFINITIONS.map(pack => ({
-    ...pack,
-    levels: pack.levelPaths
-        .map(path =>
-            levels.find(level => level.path === path)
+const [leaderboard] = await fetchLeaderboard();
+
+this.packs = PACK_DEFINITIONS.map(pack => {
+    const victorNames = leaderboard
+        .filter(player =>
+            player.packsBeaten.some(beaten => beaten.id === pack.id)
         )
-        .filter(Boolean),
-    beatenCount: leaderboard.filter(player =>
-        player.packsBeaten.some(beaten => beaten.id === pack.id)
-    ).length,
-}));
+        .map(player => player.user);
+
+    return {
+        ...pack,
+        levels: pack.levelPaths
+            .map(path => levels.find(level => level.path === path))
+            .filter(Boolean),
+        victorNames,
+        beatenCount: victorNames.length,
+    };
+});
         } catch (error) {
             console.error('Failed to load packs:', error);
             this.error = true;
