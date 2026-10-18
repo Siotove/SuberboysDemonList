@@ -97,3 +97,160 @@ input[type="checkbox"] {
     cursor: pointer;
     margin: 0;
 }
+/* Leaderboard layout */
+.page-leaderboard-container {
+    grid-column: 1 / -1;
+    min-width: 0;
+}
+
+.page-leaderboard {
+    width: min(100% - 2rem, 1100px);
+    margin: 2rem auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+}
+
+.page-leaderboard .board-container,
+.page-leaderboard .player-container {
+    min-width: 0;
+    padding: 1.25rem;
+    border: 1px solid var(--color-background-hover);
+    border-radius: 12px;
+    background: var(--color-background);
+    color: var(--color-on-background);
+}
+
+/* Sort dropdown */
+.leaderboard-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.leaderboard-controls label {
+    font-weight: 600;
+}
+
+.leaderboard-controls select {
+    max-width: 100%;
+    padding: 0.65rem 2.25rem 0.65rem 0.8rem;
+    border: 1px solid var(--color-background-hover);
+    border-radius: 8px;
+    background: var(--color-background);
+    color: var(--color-on-background);
+    font: inherit;
+    cursor: pointer;
+}
+
+/* Leaderboard table */
+.page-leaderboard .board,
+.page-leaderboard .table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.page-leaderboard .board th,
+.page-leaderboard .board td,
+.page-leaderboard .table td {
+    padding: 0.8rem 0.65rem;
+    border-bottom: 1px solid var(--color-background-hover);
+    text-align: left;
+}
+
+.page-leaderboard .board th {
+    font-size: 0.9rem;
+    opacity: 0.75;
+    font-weight: 600;
+}
+
+.page-leaderboard .board tbody tr:hover,
+.page-leaderboard .board tr:hover {
+    background: var(--color-background-hover);
+}
+
+.page-leaderboard .board .rank {
+    width: 4rem;
+    white-space: nowrap;
+}
+
+.page-leaderboard .board .total {
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.page-leaderboard .board .user button {
+    display: block;
+    width: 100%;
+    padding: 0.25rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-on-background);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.page-leaderboard .board .user button:hover,
+.page-leaderboard .board .user.active button {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+}
+
+/* Selected player's details */
+.page-leaderboard .player h1 {
+    margin-top: 0;
+}
+
+.page-leaderboard .player h2 {
+    margin-top: 1.75rem;
+    font-size: 1.15rem;
+}
+
+.page-leaderboard .player h3 {
+    opacity: 0.8;
+}
+
+.page-leaderboard .player .table a {
+    color: var(--color-primary);
+    overflow-wrap: anywhere;
+}
+
+.page-leaderboard .player .table .rank,
+.page-leaderboard .player .table .score {
+    white-space: nowrap;
+}
+
+.page-leaderboard .player ul {
+    padding-left: 1.5rem;
+    line-height: 1.8;
+}
+
+/* Error message */
+.page-leaderboard .error {
+    color: var(--color-error);
+}
+
+/* Smaller screens */
+@media (max-width: 600px) {
+    .page-leaderboard {
+        width: calc(100% - 1rem);
+        margin: 0.5rem auto;
+        gap: 0.75rem;
+    }
+
+    .page-leaderboard .board-container,
+    .page-leaderboard .player-container {
+        padding: 0.75rem;
+        border-radius: 8px;
+    }
+
+    .page-leaderboard .board th,
+    .page-leaderboard .board td,
+    .page-leaderboard .table td {
+        padding: 0.6rem 0.35rem;
+    }
+}
