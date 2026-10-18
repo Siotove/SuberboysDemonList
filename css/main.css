@@ -313,3 +313,49 @@ input[type="checkbox"] {
 .page-leaderboard .player h3 {
     font-family: inherit;
 }
+/* Match the site's Lexend Deca typography */
+.page-leaderboard-container,
+.page-leaderboard-container button,
+.page-leaderboard-container select,
+.page-leaderboard-container a,
+.page-leaderboard-container th,
+.page-leaderboard-container td,
+.page-leaderboard-container li {
+    font-family: "Lexend Deca", sans-serif;
+}
+
+/* Keep headings consistent with the rest of the site */
+.page-leaderboard .player h1,
+.page-leaderboard .player h2,
+.page-leaderboard .player h3 {
+    font-family: "Lexend Deca", sans-serif;
+}
+
+/* Fix level names overlapping their rank numbers */
+.page-leaderboard .player .table {
+    table-layout: auto;
+    border-collapse: collapse;
+}
+
+.page-leaderboard .player .table td.rank {
+    width: 3.5rem;
+    padding-right: 1rem;
+    white-space: nowrap;
+}
+
+.page-leaderboard .player .table td.level {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.page-leaderboard .player .table td.score {
+    padding-left: 1rem;
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Keep the sort control consistent */
+.page-leaderboard .leaderboard-controls select {
+    font-family: "Lexend Deca", sans-serif;
+    font-size: 14px;
+}
