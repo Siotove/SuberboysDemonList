@@ -43,6 +43,7 @@
 
 
 
+
 .achievements-page select {
     display: block;
     width: 100%;
@@ -50,21 +51,35 @@
     padding: 12px 14px;
     border: 1px solid #88888855;
     border-radius: 10px;
-    background-color: var(--background, #ffffff);
-    color: inherit;
+    background-color: #ffffff;
+    color: #222222;
+    color-scheme: light;
     font-family: "Lexend Deca", sans-serif;
     font-size: 14.2857px;
     font-weight: 500;
     line-height: 20px;
     cursor: pointer;
-    color-scheme: light dark;
 }
 
 .achievements-page select option {
-    background-color: Canvas;
-    color: CanvasText;
+    background-color: #ffffff;
+    color: #222222;
     font-family: "Lexend Deca", sans-serif;
-    font-size: 14.2857px;
+}
+
+/* Dark theme */
+.dark .achievements-page select,
+body.dark .achievements-page select {
+    background-color: #25252b;
+    color: #f5f5f5;
+    color-scheme: dark;
+    border-color: #555561;
+}
+
+.dark .achievements-page select option,
+body.dark .achievements-page select option {
+    background-color: #25252b;
+    color: #f5f5f5;
 }
 /* Progress summary */
 .achievement-summary {
