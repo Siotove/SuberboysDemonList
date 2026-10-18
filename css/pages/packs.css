@@ -205,3 +205,24 @@ body:has(main.page-packs.dark) #app {
     color: var(--color-on-background);
     background-color: var(--color-background);
 }
+
+/* Gold */
+.category-gold {
+    background-color: #f2c94c;
+    color: #493600;
+    border-color: #d4a72c;
+}
+
+/* Diamond */
+.category-diamond {
+    background-color: #a8e8f0;
+    color: #124b59;
+    border-color: #64cbdc;
+}
+
+/* Platinum */
+.category-platinum {
+    background-color: #d8c8f0;
+    color: #422b62;
+    border-color: #b69cdb;
+}
