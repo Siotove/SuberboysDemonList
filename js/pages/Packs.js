@@ -53,7 +53,7 @@ export default {
                             Bonus: {{ pack.bonus }} points
                         </p>
 <p class="pack-beaten-count">
-    {{ pack.beatenCount }}
+    {{ pack.beatenCount }} victors
 </p>
                         <p v-if="pack.levels.length === 0">
                             No levels have been added to this pack yet.
