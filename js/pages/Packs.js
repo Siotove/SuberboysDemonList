@@ -4,13 +4,40 @@ import Spinner from '../components/Spinner.js';
 
 const PACK_DEFINITIONS = [
     {
-        id: 'milestones',
+        id: 'milestone-pack',
         name: 'Milestone Trilogy',
         bonus: 100,
-        levelPaths: [          
-    "MilestoneIII",
-    "MilestoneII",
-    "MilestoneI",
+        levelPaths: [
+            'MilestoneI',
+            'MilestoneII',
+            'MilestoneIII',
+        ],
+    },
+    {
+        id: 'aina-pack',
+        name: 'Aina Poni Duo',
+        bonus: 150,
+        levelPaths: [
+            'AinaPoni',
+            'AinaPoniII',
+        ],
+    },
+    {
+        id: 'polychromatical-pack',
+        name: 'Polychromaticals',
+        bonus: 200,
+        levelPaths: [
+            'Polychromatical',
+            'PolychromaticalII',
+        ],
+    },
+    {
+        id: 'sadaclysm-pack',
+        name: 'Sadaclysm Versions',
+        bonus: 250,
+        levelPaths: [
+            'Sadaclysm',
+            'USadaclysm',
         ],
     },
 ];
