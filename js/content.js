@@ -115,16 +115,18 @@ export async function fetchLeaderboard() {
     const res = Object.entries(scoreMap).map(([user, scores]) => {
         const { verified, completed, progressed, completedPaths } = scores;
 
-        const packsBeaten = PACK_DEFINITIONS
-            .filter((pack) =>
-                pack.levelPaths.length > 0 &&
-                pack.levelPaths.every((path) => completedPaths.has(path))
-            )
-            .map((pack) => ({
-                id: pack.id,
-                name: pack.name,
-                bonus: pack.bonus,
-            }));
+        
+const packsBeaten = PACK_DEFINITIONS
+    .filter(pack =>
+        pack.levelPaths.length > 0 &&
+        pack.levelPaths.every(path => completedPaths.has(path))
+    )
+    .map(pack => ({
+        id: pack.id,
+        name: pack.name,
+        category: pack.category,
+        bonus: pack.bonus,
+    }));
 
         const levelTotal = [verified, completed, progressed]
             .flat()
