@@ -172,7 +172,7 @@ export default {
         });
     },
 
-    entry() {
+        entry() {
         return this.sortedLeaderboard[this.selected] || {
             user: 'No players',
             total: 0,
@@ -183,8 +183,8 @@ export default {
         };
     },
 },
-    },
-    async mounted() {
+
+async mounted() {
         const [leaderboard, err] = await fetchLeaderboard();
         this.leaderboard = leaderboard;
         this.err = err;
