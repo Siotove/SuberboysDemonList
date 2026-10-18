@@ -449,3 +449,24 @@ body.dark .achievement-card .achievement-tier {
 body.dark .achievement-progress {
     background: #ffffff20;
 }
+
+/* Achievements page background */
+.achievements-page {
+    background: transparent;
+    color: inherit;
+}
+
+/* Dark mode */
+.dark .achievements-page,
+body.dark .achievements-page {
+    background: transparent;
+    color: #f0f0f4;
+}
+
+/* Keep the dropdown dark in dark mode */
+.dark .achievements-page select,
+body.dark .achievements-page select {
+    background-color: #25252b;
+    color: #f5f5f5;
+    color-scheme: dark;
+}
