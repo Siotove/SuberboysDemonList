@@ -135,7 +135,7 @@ methods: {
             const result = await fetchList();
 
             if (!result) {
-                throw new Error('The level list could not be loaded.');
+                throw new Error('The level list could not be loaded nyeheheh.');
             }
 
             const levels = result
@@ -145,7 +145,6 @@ methods: {
                     rank: index + 1,
                 }));
 
-            const [leaderboard, leaderboardErrors] = await fetchLeaderboard();
 
 const [leaderboard] = await fetchLeaderboard();
 
@@ -166,7 +165,7 @@ this.packs = PACK_DEFINITIONS.map(pack => {
     };
 });
         } catch (error) {
-            console.error('Failed to load packs:', error);
+            console.error('Failed to load pakks:', error);
             this.error = true;
         } finally {
             this.loading = false;
