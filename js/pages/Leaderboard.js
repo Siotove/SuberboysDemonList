@@ -44,6 +44,11 @@ export default {
                             <td class="rank">
                                 <p class="type-label-lg">#{{ i + 1 }}</p>
                             </td>
+                            <tr>
+    <th>Rank</th>
+    <th>{{ valueHeading }}</th>
+    <th>Player</th>
+</tr>
                             <td class="total">
     <p class="type-label-lg">{{ rankingValue(ientry) }}</p>
 </td>
