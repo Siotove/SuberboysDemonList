@@ -359,3 +359,38 @@ input[type="checkbox"] {
     font-family: "Lexend Deca", sans-serif;
     font-size: 14px;
 }
+
+/* Give the leaderboard and player details more width */
+.page-leaderboard {
+    width: calc(100% - 2rem);
+    max-width: 1500px;
+    margin: 1rem auto;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+/* Let the player details use all available panel width */
+.page-leaderboard .player-container,
+.page-leaderboard .board-container {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.page-leaderboard .player .table {
+    width: 100%;
+    table-layout: auto;
+}
+
+.page-leaderboard .player .table td.level {
+    width: 100%;
+    overflow-wrap: anywhere;
+}
+
+/* Stack panels on narrow screens */
+@media (max-width: 800px) {
+    .page-leaderboard {
+        grid-template-columns: minmax(0, 1fr);
+        width: calc(100% - 1rem);
+    }
+}
