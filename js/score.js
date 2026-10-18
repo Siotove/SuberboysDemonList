@@ -24,14 +24,12 @@ export function score(rank, percent, minPercent) {
         ((percent - (minPercent - 1)) / (100 - (minPercent - 1)));
     */
     // New formula
-    let score = (-24.9975*Math.pow(rank-5, 0.4) + 500) *
-        ((percent - (minPercent - 1)) / (100 - (minPercent - 1)));
-
-    score = Math.max(0, score);
-
-    if (percent != 100) {
-        return round(score - score / 3);
-    }
+    let score = (
+    500 - 480 * Math.pow((rank - 1) / 24, 0.4)
+) * (
+    (percent - (minPercent - 1)) /
+    (100 - (minPercent - 1))
+);
 
     return Math.max(round(score), 0);
 }
