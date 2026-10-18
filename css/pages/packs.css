@@ -206,21 +206,41 @@ body:has(main.page-packs.dark) #app {
     background-color: var(--color-background);
 }
 
-/* Gold */
+
+.pack-category {
+    display: inline-block;
+    padding: 5px 12px;
+    margin: 8px 0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+
+.category-bronze {
+    background-color: #8c6239;
+    color: #fff4e8;
+    border-color: #b88655;
+}
+
+.category-silver {
+    background-color: #c6cbd1;
+    color: #252a30;
+    border-color: #e2e5e9;
+}
+
 .category-gold {
     background-color: #f2c94c;
     color: #493600;
     border-color: #d4a72c;
 }
 
-/* Diamond */
 .category-diamond {
     background-color: #a8e8f0;
     color: #124b59;
     border-color: #64cbdc;
 }
 
-/* Platinum */
 .category-platinum {
     background-color: #d8c8f0;
     color: #422b62;
