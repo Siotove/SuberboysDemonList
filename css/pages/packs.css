@@ -142,3 +142,9 @@ main.page-packs {
     background-color: var(--color-background);
     color: var(--color-on-background);
 }
+
+/* Dark mode background for the Packs page */
+body:has(main.page-packs.dark),
+body:has(main.page-packs.dark) #app {
+    background-color: #121114;
+}
