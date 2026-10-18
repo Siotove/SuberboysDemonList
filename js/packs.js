@@ -1,3 +1,11 @@
+
+export const PACK_CATEGORIES = [
+    'Bronze',
+    'Silver',
+    'Gold',
+    'Diamond',
+    'Platinum',
+];
 export const PACK_DEFINITIONS = [
     {
         id: 'milestone-pack',
