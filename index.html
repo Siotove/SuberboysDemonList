@@ -82,8 +82,6 @@
                 </div>
             </nav>
         </header>
-        <main :class="{ dark: store.dark }">
-    <router-view></router-view>
-</main>
+        <router-view :class="{ dark: store.dark }"></router-view>
     </body>
 </html>
