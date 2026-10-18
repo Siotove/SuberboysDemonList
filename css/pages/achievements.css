@@ -451,3 +451,15 @@ body.dark .achievement-progress {
     background: transparent;
     color: var(--color-on-background, inherit);
 }
+
+/* Fill the page with the active theme background */
+main > div:has(.achievements-page) {
+    background-color: var(--color-background);
+}
+
+.achievements-page {
+    min-height: 100%;
+    box-sizing: border-box;
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+}
