@@ -126,24 +126,32 @@
 .page-list .meta .editors li a:hover {
     text-decoration: underline;
 }
-/* Apply medal colors to both rank numbers and level names */
-.page-list .rank-gold,
-.page-list .rank-gold .type-label-lg,
-.page-list .rank-gold button,
-.page-list .rank-gold button .type-label-lg {
-    color: #ffd700;
+/* Gold — hardest level */
+.page-list .list .rank-gold,
+.page-list .list .rank-gold .type-label-lg,
+.page-list .list .level.rank-gold button,
+.page-list .list .level.rank-gold button .type-label-lg,
+.page-list .list .level.rank-gold.active button,
+.page-list .list .level.rank-gold button:hover {
+    color: #ffd700 !important;
 }
 
-.page-list .rank-silver,
-.page-list .rank-silver .type-label-lg,
-.page-list .rank-silver button,
-.page-list .rank-silver button .type-label-lg {
-    color: #c0c0c0;
+/* Silver — second hardest */
+.page-list .list .rank-silver,
+.page-list .list .rank-silver .type-label-lg,
+.page-list .list .level.rank-silver button,
+.page-list .list .level.rank-silver button .type-label-lg,
+.page-list .list .level.rank-silver.active button,
+.page-list .list .level.rank-silver button:hover {
+    color: #c0c0c0 !important;
 }
 
-.page-list .rank-bronze,
-.page-list .rank-bronze .type-label-lg,
-.page-list .rank-bronze button,
-.page-list .rank-bronze button .type-label-lg {
-    color: #cd7f32;
+/* Bronze — third hardest */
+.page-list .list .rank-bronze,
+.page-list .list .rank-bronze .type-label-lg,
+.page-list .list .level.rank-bronze button,
+.page-list .list .level.rank-bronze button .type-label-lg,
+.page-list .list .level.rank-bronze.active button,
+.page-list .list .level.rank-bronze button:hover {
+    color: #cd7f32 !important;
 }
