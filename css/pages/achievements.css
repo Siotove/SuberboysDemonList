@@ -41,6 +41,7 @@
 }
 
 
+
 .achievements-page select {
     display: block;
     width: 100%;
@@ -50,14 +51,19 @@
     border-radius: 10px;
     background: var(--background, #ffffff);
     color: inherit;
-    font: inherit;
-    font-family: inherit;
+
+    font-family: "Lexend Deca", sans-serif;
+    font-size: 14.2857px;
     font-weight: 500;
+    line-height: 20px;
+
     cursor: pointer;
 }
+
 .achievements-page select option {
-    font-family: inherit;
-    font-size: inherit;
+    font-family: "Lexend Deca", sans-serif;
+    font-size: 14.2857px;
+    font-weight: 500;
 }
 /* Progress summary */
 .achievement-summary {
