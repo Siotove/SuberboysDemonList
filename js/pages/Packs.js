@@ -82,12 +82,9 @@ export default {
         };
     },
 
-    computed: {
-        categories() {
-            return [...new Set(
-                this.packs.map(pack => pack.category || 'Uncategorized')
-            )].sort();
-        },
+    categories() {
+    return PACK_CATEGORIES;
+},
 
         filteredPacks() {
             if (this.selectedCategory === 'All') {
