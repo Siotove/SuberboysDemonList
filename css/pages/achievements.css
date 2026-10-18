@@ -17,18 +17,6 @@
     padding: 28px 20px 48px;
 }
 
-.achievements-page h1 {
-    margin: 0 0 8px;
-}
-
-.achievements-page > p {
-    margin-bottom: 24px;
-    opacity: 0.8;
-}
-
-.achievements-page h2 {
-    margin: 24px 0 8px;
-}
 
 .achievements-page label {
     display: block;
