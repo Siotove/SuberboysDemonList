@@ -1,5 +1,5 @@
 
-import { PACK_DEFINITIONS } from '../packs.js';
+import { PACK_DEFINITIONS, PACK_CATEGORIES } from '../packs.js';
 import { fetchList } from '../content.js';
 import Spinner from '../components/Spinner.js';
 
