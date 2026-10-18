@@ -148,3 +148,60 @@ body:has(main.page-packs.dark),
 body:has(main.page-packs.dark) #app {
     background-color: #121114;
 }
+/* Category filter */
+.packs-filter {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.packs-filter label {
+    font-weight: 600;
+    color: var(--color-on-background);
+}
+
+.packs-filter select {
+    appearance: none;
+    -webkit-appearance: none;
+
+    min-width: 200px;
+    padding: 11px 42px 11px 14px;
+
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 500;
+
+    color: var(--color-on-background);
+    background-color: var(--color-background);
+
+    border: 1px solid var(--color-on-background);
+    border-radius: 10px;
+
+    cursor: pointer;
+    outline: none;
+
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.packs-filter select:hover {
+    border-color: var(--color-primary, #888888);
+}
+
+.packs-filter select:focus-visible {
+    border-color: var(--color-primary, #888888);
+    box-shadow: 0 0 0 3px
+        color-mix(in srgb, var(--color-primary, #888888) 25%, transparent);
+}
+
+.packs-filter select option {
+    color: var(--color-on-background);
+    background-color: var(--color-background);
+}
