@@ -148,6 +148,3 @@ export async function fetchLeaderboard() {
 
     return [res.sort((a, b) => b.total - a.total), errs];
 }
-    // Sort by total score
-    return [res.sort((a, b) => b.total - a.total), errs];
-}
