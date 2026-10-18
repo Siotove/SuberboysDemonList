@@ -8,7 +8,7 @@ const PACK_DEFINITIONS = [
         name: 'Starter Pack',
         bonus: 100,
         levelPaths: [
-            // Add exact paths from data/_list.json here.
+            'Fates.json',
         ],
     },
 
