@@ -53,7 +53,9 @@ export default {
                         <p class="pack-bonus">
                             Bonus: {{ pack.bonus }} points
                         </p>
-
+<p class="pack-beaten-count">
+    {{ pack.beatenCount }}
+</p>
                         <p v-if="pack.levels.length === 0">
                             No levels have been added to this pack yet.
                         </p>
@@ -119,14 +121,19 @@ export default {
                     rank: index + 1,
                 }));
 
-            this.packs = PACK_DEFINITIONS.map(pack => ({
-                ...pack,
-                levels: pack.levelPaths
-                    .map(path =>
-                        levels.find(level => level.path === path)
-                    )
-                    .filter(Boolean),
-            }));
+            const [leaderboard, leaderboardErrors] = await fetchLeaderboard();
+
+this.packs = PACK_DEFINITIONS.map(pack => ({
+    ...pack,
+    levels: pack.levelPaths
+        .map(path =>
+            levels.find(level => level.path === path)
+        )
+        .filter(Boolean),
+    beatenCount: leaderboard.filter(player =>
+        player.packsBeaten.some(beaten => beaten.id === pack.id)
+    ).length,
+}));
         } catch (error) {
             console.error('Failed to load packs:', error);
             this.error = true;
