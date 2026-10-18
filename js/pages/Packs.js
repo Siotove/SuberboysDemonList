@@ -8,11 +8,11 @@ const PACK_DEFINITIONS = [
         name: 'Starter Pack',
         bonus: 100,
         levelPaths: [
-            'Fates.json',
+            'easy/level-1',
+            'easy/level-2',
+            'easy/level-3',
         ],
     },
-
-    // Add more packs by copying the object above.
 ];
 
 export default {
