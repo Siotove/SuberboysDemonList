@@ -8,10 +8,7 @@ export default {
     },
 
 template: `
-    <main
-    class="achievements-page"
-    :class="{ dark: store.dark }"
->
+    <main class="achievements-page">
         <h1>Achievements</h1>
         <p>Choose a player to view their achievements.</p>
 
