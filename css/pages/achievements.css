@@ -42,6 +42,7 @@
 
 
 
+
 .achievements-page select {
     display: block;
     width: 100%;
@@ -49,21 +50,21 @@
     padding: 12px 14px;
     border: 1px solid #88888855;
     border-radius: 10px;
-    background: var(--background, #ffffff);
+    background-color: var(--background, #ffffff);
     color: inherit;
-
     font-family: "Lexend Deca", sans-serif;
     font-size: 14.2857px;
     font-weight: 500;
     line-height: 20px;
-
     cursor: pointer;
+    color-scheme: light dark;
 }
 
 .achievements-page select option {
+    background-color: Canvas;
+    color: CanvasText;
     font-family: "Lexend Deca", sans-serif;
     font-size: 14.2857px;
-    font-weight: 500;
 }
 /* Progress summary */
 .achievement-summary {
@@ -403,4 +404,33 @@
     .achievement-card.tier-legendary:not(.is-locked) {
         animation: none;
     }
+}
+
+/* Dark mode adjustments */
+.dark .achievements-page select,
+body.dark .achievements-page select {
+    background-color: #25252b;
+    color: #f5f5f5;
+    border-color: #555561;
+}
+
+.dark .achievements-page select option,
+body.dark .achievements-page select option {
+    background-color: #25252b;
+    color: #f5f5f5;
+}
+
+.dark .achievement-card,
+body.dark .achievement-card {
+    color: #f0f0f4;
+}
+
+.dark .achievement-card .achievement-tier,
+body.dark .achievement-card .achievement-tier {
+    color: var(--tier-color);
+}
+
+.dark .achievement-progress,
+body.dark .achievement-progress {
+    background: #ffffff20;
 }
