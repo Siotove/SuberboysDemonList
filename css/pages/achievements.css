@@ -463,3 +463,13 @@ main > div:has(.achievements-page) {
     background-color: var(--color-background);
     color: var(--color-on-background);
 }
+/* Theme background for the achievements page only */
+main.dark .achievements-page {
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+}
+
+main:not(.dark) .achievements-page {
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+}
