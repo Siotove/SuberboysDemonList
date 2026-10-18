@@ -10,7 +10,7 @@ export default {
 template: `
     <main
     class="achievements-page"
-    :class="{ dark: $root.store.dark }"
+    :class="{ dark: store.dark }"
 >
         <h1>Achievements</h1>
         <p>Choose a player to view their achievements.</p>
