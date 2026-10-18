@@ -1,3 +1,4 @@
+
 import { fetchList } from '../content.js';
 import Spinner from '../components/Spinner.js';
 
@@ -7,9 +8,11 @@ const PACK_DEFINITIONS = [
         name: 'Starter Pack',
         bonus: 100,
         levelPaths: [
-            // Add exact paths from data/_list.json here
+            // Add exact paths from data/_list.json here.
         ],
     },
+
+    // Add more packs by copying the object above.
 ];
 
 export default {
@@ -26,6 +29,10 @@ export default {
                 <Spinner />
             </div>
 
+            <p v-else-if="error" class="packs-error">
+                Could not load the level list. Please refresh the page.
+            </p>
+
             <div v-else class="packs-grid">
                 <article
                     v-for="pack in packs"
@@ -33,26 +40,49 @@ export default {
                     class="pack-card"
                 >
                     <h2>{{ pack.name }}</h2>
-                    <p class="pack-bonus">Bonus: {{ pack.bonus }} points</p>
+                    <p class="pack-bonus">
+                        Bonus: {{ pack.bonus }} points
+                    </p>
 
                     <p v-if="pack.levels.length === 0">
-                        Levels will appear here once added to this pack.
+                        No levels have been added to this pack yet.
                     </p>
+
+                    <ul v-else class="pack-levels">
+                        <li
+                            v-for="level in pack.levels"
+                            :key="level.path"
+                        >
+                            <span>#{{ level.rank }}</span>
+                            <span>{{ level.name }}</span>
+                        </li>
+                    </ul>
                 </article>
+
+                <p v-if="packs.length === 0">
+                    No packs have been configured yet.
+                </p>
             </div>
         </main>
     `,
 
-    data: () => ({
-        loading: true,
-        packs: [],
-    }),
+    data() {
+        return {
+            loading: true,
+            error: false,
+            packs: [],
+        };
+    },
 
     async mounted() {
         try {
             const result = await fetchList();
 
-            const levels = (result || [])
+            if (!result) {
+                throw new Error('The level list could not be loaded.');
+            }
+
+            const levels = result
                 .filter(([level]) => level)
                 .map(([level], index) => ({
                     ...level,
@@ -62,83 +92,16 @@ export default {
             this.packs = PACK_DEFINITIONS.map(pack => ({
                 ...pack,
                 levels: pack.levelPaths
-                    .map(path => levels.find(level => level.path === path))
+                    .map(path =>
+                        levels.find(level => level.path === path)
+                    )
                     .filter(Boolean),
             }));
         } catch (error) {
             console.error('Failed to load packs:', error);
+            this.error = true;
         } finally {
             this.loading = false;
         }
     },
 };
-
-
-
-Step 2 — Fix the styling
-Open css/pages/packs.css, delete its current contents, and paste this:
-
-.page-packs {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 32px;
-    box-sizing: border-box;
-    color: var(--color-on-background);
-    font-family: 'Lexend Deca', sans-serif;
-}
-
-.page-packs h1 {
-    margin: 0 0 12px;
-    font-size: 36px;
-}
-
-.packs-description {
-    margin: 0 0 28px;
-    color: #aaa;
-    font-size: 14px;
-}
-
-.packs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 20px;
-    width: 100%;
-}
-
-.pack-card {
-    min-width: 0;
-    padding: 20px;
-    border-radius: 10px;
-    background: var(--color-background);
-    border: 1px solid rgba(150, 150, 150, 0.25);
-    box-sizing: border-box;
-}
-
-.pack-card h2 {
-    margin: 0 0 10px;
-    font-size: 22px;
-}
-
-.pack-bonus {
-    margin: 0 0 18px;
-    color: #ffd700;
-    font-weight: 700;
-}
-
-.pack-levels {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.pack-levels li {
-    padding: 10px 0;
-    border-top: 1px solid rgba(150, 150, 150, 0.2);
-    font-size: 14px;
-    overflow-wrap: anywhere;
-}
-
-.packs-loading {
-    padding: 24px 0;
-}
