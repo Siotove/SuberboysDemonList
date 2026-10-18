@@ -1,7 +1,7 @@
+
 import { PACK_DEFINITIONS } from '../packs.js';
 import { fetchList } from '../content.js';
 import Spinner from '../components/Spinner.js';
-
 
 export default {
     components: { Spinner },
@@ -21,35 +21,54 @@ export default {
                 Could not load the level list. Please refresh the page.
             </p>
 
-            <div v-else class="packs-grid">
-                <article
-                    v-for="pack in packs"
-                    :key="pack.id"
-                    class="pack-card"
-                >
-                    <h2>{{ pack.name }}</h2>
-                    <p class="pack-bonus">
-                        Bonus: {{ pack.bonus }} points
-                    </p>
-
-                    <p v-if="pack.levels.length === 0">
-                        No levels have been added to this pack yet.
-                    </p>
-
-                    <ul v-else class="pack-levels">
-                        <li
-                            v-for="level in pack.levels"
-                            :key="level.path"
+            <div v-else>
+                <div class="packs-filter">
+                    <label for="pack-category">Category:</label>
+                    <select id="pack-category" v-model="selectedCategory">
+                        <option value="All">All categories</option>
+                        <option
+                            v-for="category in categories"
+                            :key="category"
+                            :value="category"
                         >
-                            <span>#{{ level.rank }}</span>
-                            <span>{{ level.name }}</span>
-                        </li>
-                    </ul>
-                </article>
+                            {{ category }}
+                        </option>
+                    </select>
+                </div>
 
-                <p v-if="packs.length === 0">
-                    No packs have been configured yet.
-                </p>
+                <div class="packs-grid">
+                    <article
+                        v-for="pack in filteredPacks"
+                        :key="pack.id"
+                        class="pack-card"
+                    >
+                        <h2>{{ pack.name }}</h2>
+                        <p class="pack-category">
+                            {{ pack.category || 'Uncategorized' }}
+                        </p>
+                        <p class="pack-bonus">
+                            Bonus: {{ pack.bonus }} points
+                        </p>
+
+                        <p v-if="pack.levels.length === 0">
+                            No levels have been added to this pack yet.
+                        </p>
+
+                        <ul v-else class="pack-levels">
+                            <li
+                                v-for="level in pack.levels"
+                                :key="level.path"
+                            >
+                                <span>#{{ level.rank }}</span>
+                                <span>{{ level.name }}</span>
+                            </li>
+                        </ul>
+                    </article>
+
+                    <p v-if="filteredPacks.length === 0">
+                        No packs found in this category.
+                    </p>
+                </div>
             </div>
         </main>
     `,
@@ -59,7 +78,26 @@ export default {
             loading: true,
             error: false,
             packs: [],
+            selectedCategory: 'All',
         };
+    },
+
+    computed: {
+        categories() {
+            return [...new Set(
+                this.packs.map(pack => pack.category || 'Uncategorized')
+            )].sort();
+        },
+
+        filteredPacks() {
+            if (this.selectedCategory === 'All') {
+                return this.packs;
+            }
+
+            return this.packs.filter(
+                pack => (pack.category || 'Uncategorized') === this.selectedCategory
+            );
+        },
     },
 
     async mounted() {
