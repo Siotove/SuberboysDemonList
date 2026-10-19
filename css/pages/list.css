@@ -199,3 +199,10 @@
     margin: 0;
     font-weight: bold;
 }
+
+.page-list .historical-controls select,
+.page-list .historical-controls button {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+}
