@@ -115,63 +115,63 @@ jobs:
                 p.above ? `Above: **${p.above}**` : 'Above: *(top of list)*',
                 p.below ? `Below: **${p.below}**` : 'Below: *(bottom of list)*'
               ].join(' · ');
+            }      
+
+          const lines = [];
+
+          function positionText(level, verb, list) {
+            const p = placement(list, level);
+
+            if (p.rank === 1) {
+              return `**${level}** Was Moved To Number 1 As The New Top 1`;
             }
 
-            
-const lines = [];
+            let message = `**${level}** Was ${verb} To #${p.rank}`;
 
-function positionText(level, verb, list) {
-  const p = placement(list, level);
+            if (p.above) {
+              message += `, Above **${p.above}**`;
+            }
 
-  if (p.rank === 1) {
-    return `**${level}** Was ${verb} To Number 1 As The New Top 1`;
-  }
+            if (p.below) {
+              message += ` & Below **${p.below}**`;
+            }
 
-  let message = `**${level}** Was ${verb} To #${p.rank}`;
+            return message;
+          }
 
-  if (p.above) {
-    message += `, Above **${p.above}**`;
-  }
+          for (const level of added) {
+            lines.push(positionText(level, 'Added', after));
+          }
 
-  if (p.below) {
-    message += ` & Below **${p.below}**`;
-  }
+          for (const level of moved) {
+            const oldRank = before.indexOf(level) + 1;
+            const newRank = after.indexOf(level) + 1;
 
-  return message;
-}
+            if (newRank === 1) {
+              lines.push(
+                `**${level}** Was Moved To Number 1 As The New Top 1`
+              );
+            } else {
+              let message =
+                `**${level}** Was Moved From #${oldRank} to #${newRank}`;
 
-for (const level of added) {
-  lines.push(positionText(level, 'Added', after));
-}
+              const p = placement(after, level);
 
-for (const level of moved) {
-  const oldRank = before.indexOf(level) + 1;
-  const newRank = after.indexOf(level) + 1;
+              if (p.above) {
+                message += `, Above **${p.above}**`;
+              }
 
-  if (newRank === 1) {
-    lines.push(
-      `**${level}** Was Moved To Number 1 As The New Top 1`
-    );
-  } else {
-    let message = `**${level}** Was Moved From #${oldRank} to #${newRank}`;
+              if (p.below) {
+                message += ` & Below **${p.below}**`;
+              }
 
-    const p = placement(after, level);
+              lines.push(message);
+            }
+          }
 
-    if (p.above) {
-      message += `, Above **${p.above}**`;
-    }
-
-    if (p.below) {
-      message += ` & Below **${p.below}**`;
-    }
-
-    lines.push(message);
-  }
-}
-
-for (const level of removed) {
-  lines.push(`**${level}** Was Just Deleted Off The List`);
-}
+          for (const level of removed) {
+            lines.push(`**${level}** Was Just Deleted Off The List`);
+          }
             if (lines.length === 0) {
               console.log('No additions, removals, or reorderings detected.');
               return;
