@@ -6,6 +6,10 @@ export default {
                 <h1>Welcome back</h1>
                 <p>Log in to your Suberboys account.</p>
 
+                <p v-if="$route.query.registered === '1'" role="status">
+                    Account created! You can now log in.
+                </p>
+
                 <form @submit.prevent="login">
                     <label for="login-email">Email</label>
                     <input
@@ -25,16 +29,15 @@ export default {
                         required
                     >
 
-                    <p v-if="message" role="status">{{ message }}</p>
+                    <p v-if="message" role="alert">{{ message }}</p>
 
                     <button type="submit" :disabled="loading">
                         {{ loading ? 'Logging in...' : 'Log in' }}
                     </button>
                 </form>
 
-                <p>
-                    Don't have an account?
-                    <router-link to="/register">Register</router-link>
+                <p>New here?
+                    <router-link to="/register">Create an account</router-link>
                 </p>
             </section>
         </main>
@@ -49,8 +52,33 @@ export default {
     },
     methods: {
         async login() {
-            this.message = 'Account authentication is not connected yet.';
+            this.loading = true;
+            this.message = '';
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        email: this.email,
+                        password: this.password
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    this.message = result.error || 'Login failed.';
+                    return;
+                }
+
+                this.$router.push('/profile');
+            } catch {
+                this.message = 'Could not connect. Please try again.';
+            } finally {
+                this.loading = false;
+            }
         }
     }
 };
-
