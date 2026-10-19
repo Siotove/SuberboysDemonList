@@ -232,6 +232,13 @@ export default {
                     <p>Do not use secret routes or bug routes.</p>
                     <p>The level must be published by the following accounts: Suberman2, JJGamingGMD, Suberman, JJM03512, Zaynem12, Gamaker, Banrutus.</p>
                     <p>Once a level falls onto the Legacy List, records are accepted for 24 hours after it falls off. After that, new records are not accepted.</p>
+                    
+<div class="account-footer">
+    <router-link to="/login">Log in</router-link>
+    <span> · </span>
+    <router-link to="/register">Create an account</router-link>
+</div>
+
                 </div>
             </div>
         </main>
