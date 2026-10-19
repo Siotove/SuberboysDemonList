@@ -1,0 +1,182 @@
+
+name: Discord Level Updates
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - data/_list.json
+
+permissions:
+  contents: read
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compare lists and announce changes
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          node <<'NODE'
+          const { execFileSync } = require('child_process');
+
+          function getList(sha) {
+            if (!sha || /^0+$/.test(sha)) return [];
+
+            const raw = execFileSync(
+              'git',
+              ['show', `${sha}:data/_list.json`],
+              { encoding: 'utf8' }
+            );
+
+            const list = JSON.parse(raw);
+            if (!Array.isArray(list) ||
+                !list.every(x => typeof x === 'string')) {
+              throw new Error('The level list must be a JSON array of strings.');
+            }
+            return list;
+          }
+
+          async function main() {
+            const webhook = process.env.DISCORD_WEBHOOK_URL;
+            if (!webhook) throw new Error('DISCORD_WEBHOOK_URL secret is missing.');
+
+            const before = getList(process.env.BEFORE_SHA);
+            const after = getList(process.env.AFTER_SHA);
+
+            if (new Set(after).size !== after.length) {
+              throw new Error('The new level list contains duplicate names.');
+            }
+
+            const oldSet = new Set(before);
+            const newSet = new Set(after);
+
+            const added = after.filter(x => !oldSet.has(x));
+            const removed = before.filter(x => !newSet.has(x));
+
+            // Find a longest common subsequence so ordinary position shifts
+            // caused by additions/removals aren't reported as manual moves.
+            const oldCommon = before.filter(x => newSet.has(x));
+            const newCommon = after.filter(x => oldSet.has(x));
+            const dp = Array.from(
+              { length: oldCommon.length + 1 },
+              () => Array(newCommon.length + 1).fill(0)
+            );
+
+            for (let i = oldCommon.length - 1; i >= 0; i--) {
+              for (let j = newCommon.length - 1; j >= 0; j--) {
+                dp[i][j] = oldCommon[i] === newCommon[j]
+                  ? 1 + dp[i + 1][j + 1]
+                  : Math.max(dp[i + 1][j], dp[i][j + 1]);
+              }
+            }
+
+            const stable = new Set();
+            let i = 0, j = 0;
+            while (i < oldCommon.length && j < newCommon.length) {
+              if (oldCommon[i] === newCommon[j]) {
+                stable.add(oldCommon[i]);
+                i++;
+                j++;
+              } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+                i++;
+              } else {
+                j++;
+              }
+            }
+
+            const moved = newCommon.filter(
+              x => !stable.has(x) &&
+                   before.indexOf(x) !== after.indexOf(x)
+            );
+
+            function placement(list, level) {
+              const index = list.indexOf(level);
+              const above = index > 0 ? list[index - 1] : null;
+              const below = index < list.length - 1 ? list[index + 1] : null;
+              return {
+                rank: index + 1,
+                above,
+                below
+              };
+            }
+
+            function neighbours(p) {
+              return [
+                p.above ? `Above: **${p.above}**` : 'Above: *(top of list)*',
+                p.below ? `Below: **${p.below}**` : 'Below: *(bottom of list)*'
+              ].join(' · ');
+            }
+
+            const lines = [];
+
+            for (const level of added) {
+              const p = placement(after, level);
+              lines.push(
+                `🟢 **${level}** has been added at **#${p.rank}**\n` +
+                neighbours(p)
+              );
+            }
+
+            for (const level of moved) {
+              const oldRank = before.indexOf(level) + 1;
+              const p = placement(after, level);
+              lines.push(
+                `🔄 **${level}** moved from **#${oldRank}** to **#${p.rank}**\n` +
+                neighbours(p)
+              );
+            }
+
+            for (const level of removed) {
+              const oldRank = before.indexOf(level) + 1;
+              lines.push(`🔴 **${level}** has been removed (was **#${oldRank}**).`);
+            }
+
+            if (lines.length === 0) {
+              console.log('No additions, removals, or reorderings detected.');
+              return;
+            }
+
+            const messages = [];
+            let current = '**Demon Roulette — Level List Update**\n';
+
+            for (const line of lines) {
+              const next = current + '\n\n' + line;
+              if (next.length > 1800 && current.length > 45) {
+                messages.push(current);
+                current = '**Demon Roulette — Level List Update (continued)**\n' + line;
+              } else {
+                current = next;
+              }
+            }
+            if (current.trim()) messages.push(current);
+
+            for (const content of messages) {
+              const response = await fetch(webhook, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content, allowed_mentions: { parse: [] } })
+              });
+
+              if (!response.ok) {
+                throw new Error(`Discord webhook failed with HTTP ${response.status}.`);
+              }
+            }
+
+            console.log(`Sent ${lines.length} change announcement(s).`);
+          }
+
+          main().catch(error => {
+            console.error(error.message);
+            process.exitCode = 1;
+          });
+          NODE
