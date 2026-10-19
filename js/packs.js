@@ -42,4 +42,18 @@ export const PACK_DEFINITIONS = [
         bonus: 300,
         levelPaths: ['SocietyButNo3','Polychromatical','MilestoneIII','NGWave'],
     },
+    {
+        id: 'milee-pack',
+        name: 'Easy List Points',
+        category: 'Bronze',
+        bonus: 100,
+        levelPaths: ['Khrome, cu, AinaPoniII'],
+    },
+    {
+        id: 'dfsd',
+        name: 'Top 1 Pack 2 (unused)',
+        category: 'Bronze',
+        bonus: 100,
+        levelPaths: ['NGWave'],
+    },
 ];
