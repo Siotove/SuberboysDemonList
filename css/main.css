@@ -993,8 +993,19 @@ main.page-higher-lower {
     cursor: wait;
 }
 
+
 /* Scrollable leaderboard panel */
-.board-container {
+.page-leaderboard-container {
+    min-height: 0;
+}
+
+.page-leaderboard {
+    height: calc(100% - 2rem);
+    min-height: 0;
+}
+
+.page-leaderboard .board-container {
+    min-height: 0;
     max-height: 70vh;
     overflow-y: auto;
     overflow-x: auto;
@@ -1002,27 +1013,21 @@ main.page-higher-lower {
     scrollbar-color: #777 transparent;
 }
 
-/* Keep leaderboard headings visible */
-.board {
+/* Keep the table headings visible */
+.page-leaderboard .board {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
-.board tr:first-child {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: var(--background, #222);
-}
-
-/* Make leaderboard rows easier to use */
-.board th {
+.page-leaderboard .board th {
     position: sticky;
     top: 0;
     z-index: 3;
+    background: var(--color-background);
 }
 
-.board th,
-.board td {
-    padding: 10px;
+/* Keep scrolling smooth */
+.page-leaderboard .board-container {
+    scroll-behavior: smooth;
 }
