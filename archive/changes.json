@@ -39598,5 +39598,155 @@
         "to": 28
       }
     ]
+  },
+  {
+    "date": "2026-10-19T16:29:47.000Z",
+    "commit": "6e2d99828f088bf849d33ea501ca116012017b6f",
+    "added": [],
+    "removed": [
+      "Justgameisgay"
+    ],
+    "moved": [
+      {
+        "level": "NGWave",
+        "from": 1,
+        "to": 0
+      },
+      {
+        "level": "Bang",
+        "from": 2,
+        "to": 1
+      },
+      {
+        "level": "SocietyButNo3",
+        "from": 3,
+        "to": 2
+      },
+      {
+        "level": "PolychromaticalII",
+        "from": 4,
+        "to": 3
+      },
+      {
+        "level": "CS2",
+        "from": 5,
+        "to": 4
+      },
+      {
+        "level": "Sandic",
+        "from": 6,
+        "to": 5
+      },
+      {
+        "level": "Acheroneasy",
+        "from": 7,
+        "to": 6
+      },
+      {
+        "level": "Thermo",
+        "from": 8,
+        "to": 7
+      },
+      {
+        "level": "Test68",
+        "from": 9,
+        "to": 8
+      },
+      {
+        "level": "USadaclysm",
+        "from": 10,
+        "to": 9
+      },
+      {
+        "level": "Polychromatical",
+        "from": 11,
+        "to": 10
+      },
+      {
+        "level": "Sadaclysm",
+        "from": 12,
+        "to": 11
+      },
+      {
+        "level": "TungTung",
+        "from": 13,
+        "to": 12
+      },
+      {
+        "level": "AinaPoni",
+        "from": 14,
+        "to": 13
+      },
+      {
+        "level": "MilestoneIII",
+        "from": 15,
+        "to": 14
+      },
+      {
+        "level": "Dashgs",
+        "from": 16,
+        "to": 15
+      },
+      {
+        "level": "Fates",
+        "from": 17,
+        "to": 16
+      },
+      {
+        "level": "Application",
+        "from": 18,
+        "to": 17
+      },
+      {
+        "level": "MilestoneII",
+        "from": 19,
+        "to": 18
+      },
+      {
+        "level": "AinaPoniII",
+        "from": 20,
+        "to": 19
+      },
+      {
+        "level": "WinterWonder",
+        "from": 21,
+        "to": 20
+      },
+      {
+        "level": "MilestoneI",
+        "from": 22,
+        "to": 21
+      },
+      {
+        "level": "Ninefiveone",
+        "from": 23,
+        "to": 22
+      },
+      {
+        "level": "Getbetter",
+        "from": 24,
+        "to": 23
+      },
+      {
+        "level": "22",
+        "from": 25,
+        "to": 24
+      },
+      {
+        "level": "cu",
+        "from": 26,
+        "to": 25
+      },
+      {
+        "level": "Eternity",
+        "from": 27,
+        "to": 26
+      },
+      {
+        "level": "Khrome",
+        "from": 28,
+        "to": 27
+      }
+    ]
   }
 ]
