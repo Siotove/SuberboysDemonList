@@ -1,0 +1,18 @@
+/* Games page layout — separate from the Demon List */
+main.games-page {
+    display: block;
+    width: 100%;
+    height: 0;
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem max(1rem, calc((100% - 1100px) / 2));
+    box-sizing: border-box;
+    font-family: "Lexend Deca", sans-serif;
+}
+
+.games-page *,
+.games-page *::before,
+.games-page *::after {
+    box-sizing: border-box;
+}
