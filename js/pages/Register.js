@@ -14,6 +14,7 @@ export default {
                         type="text"
                         minlength="3"
                         maxlength="24"
+                        pattern="[A-Za-z0-9_]+"
                         autocomplete="username"
                         required
                     >
@@ -23,6 +24,7 @@ export default {
                         id="register-email"
                         v-model.trim="email"
                         type="email"
+                        maxlength="254"
                         autocomplete="email"
                         required
                     >
@@ -33,6 +35,7 @@ export default {
                         v-model="password"
                         type="password"
                         minlength="12"
+                        maxlength="128"
                         autocomplete="new-password"
                         required
                     >
@@ -44,8 +47,7 @@ export default {
                     </button>
                 </form>
 
-                <p>
-                    Already registered?
+                <p>Already have an account?
                     <router-link to="/login">Log in</router-link>
                 </p>
             </section>
@@ -62,8 +64,37 @@ export default {
     },
     methods: {
         async register() {
-            this.message = 'Account registration is not connected yet.';
+            this.loading = true;
+            this.message = '';
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        username: this.username,
+                        email: this.email,
+                        password: this.password
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    this.message = result.error || 'Registration failed.';
+                    return;
+                }
+
+                this.$router.push({
+                    path: '/login',
+                    query: { registered: '1' }
+                });
+            } catch {
+                this.message = 'Could not connect. Please try again.';
+            } finally {
+                this.loading = false;
+            }
         }
     }
 };
-
