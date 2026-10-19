@@ -992,3 +992,37 @@ main.page-higher-lower {
     opacity: 0.6;
     cursor: wait;
 }
+
+/* Scrollable leaderboard panel */
+.board-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #777 transparent;
+}
+
+/* Keep leaderboard headings visible */
+.board {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.board tr:first-child {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--background, #222);
+}
+
+/* Make leaderboard rows easier to use */
+.board th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+}
+
+.board th,
+.board td {
+    padding: 10px;
+}
