@@ -40,7 +40,7 @@ export default {
                         <option
                             v-for="snapshot in snapshotDates"
                             :key="snapshot.date"
-                            :value="snapshot.date"
+                            :value="snapshot.date.slice(0, 10)"
                         >
                             {{ formatDate(snapshot.date) }}
                         </option>
