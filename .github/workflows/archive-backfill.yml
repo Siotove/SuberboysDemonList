@@ -24,35 +24,37 @@ jobs:
           const { execFileSync } = require('child_process');
 
           const dir = 'archive/snapshots';
-          fs.mkdirSync(dir, { recursive: true });
-          fs.mkdirSync('archive', { recursive: true });
-
           const indexPath = 'archive/index.json';
           const changesPath = 'archive/changes.json';
 
+          fs.mkdirSync(dir, { recursive: true });
+          fs.mkdirSync('archive', { recursive: true });
+
           let index = [];
 
-if (fs.existsSync(indexPath)) {
-  try {
-    index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
-  } catch (error) {
-    throw new Error(
-      `Invalid JSON in ${indexPath}: ${error.message}`
-    );
-  }
-}
+          if (fs.existsSync(indexPath)) {
+            try {
+              index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+            } catch (error) {
+              throw new Error(
+                `Invalid JSON in ${indexPath}: ${error.message}`
+              );
+            }
+          }
 
-if (!Array.isArray(index)) {
-  throw new Error(`${indexPath} must contain a JSON array.`);
-}
+          if (!Array.isArray(index)) {
+            throw new Error(`${indexPath} must contain a JSON array.`);
+          }
 
-          const known = new Set(index.map(x => x.commit));
+          const known = new Set(index.map(item => item.commit));
 
-          const commits = execFileSync(
+          const output = execFileSync(
             'git',
             ['log', '--reverse', '--format=%H', '--', 'data/_list.json'],
             { encoding: 'utf8' }
-          ).trim().split('\n').filter(Boolean);
+          );
+
+          const commits = output.trim().split('\n').filter(Boolean);
 
           for (const sha of commits) {
             if (known.has(sha)) continue;
@@ -69,33 +71,39 @@ if (!Array.isArray(index)) {
 
             let levels;
 
-try {
-  levels = JSON.parse(raw);
-} catch (error) {
-  console.log(`Invalid JSON in commit ${sha}`);
-  console.log(`File contents:\n${raw}`);
-  throw error;
-}
+            try {
+              levels = JSON.parse(raw);
+            } catch (error) {
+              console.log(
+                `Skipping malformed historical JSON in commit ${sha}: ${error.message}`
+              );
+              continue;
+            }
 
-if (!Array.isArray(levels) ||
-    !levels.every(level => typeof level === 'string')) {
-  throw new Error(`Invalid level list in commit ${sha}`);
-}
+            if (!Array.isArray(levels) ||
+                !levels.every(level => typeof level === 'string')) {
+              console.log(
+                `Skipping invalid level-list format in commit ${sha}`
+              );
+              continue;
+            }
 
-            const shortSha = sha.slice(0, 7);
             const date = new Date(timestamp).toISOString().slice(0, 10);
-            const filename = `${date}-${shortSha}.json`;
+            const filename = `${date}-${sha.slice(0, 7)}.json`;
+            const relativeFile = `snapshots/${filename}`;
+            const fullPath = path.join('archive', relativeFile);
 
             fs.writeFileSync(
-              path.join(dir, filename),
+              fullPath,
               JSON.stringify(levels, null, 2) + '\n'
             );
 
             index.push({
               date: timestamp,
               commit: sha,
-              file: `snapshots/${filename}`
+              file: relativeFile
             });
+
             known.add(sha);
           }
 
@@ -104,34 +112,59 @@ if (!Array.isArray(levels) ||
             a.commit.localeCompare(b.commit)
           );
 
-          const readLevels = item => JSON.parse(
-            fs.readFileSync(path.join('archive', item.file), 'utf8')
-          );
+          const readLevels = item => {
+            const file = path.join('archive', item.file);
+
+            if (!fs.existsSync(file)) {
+              throw new Error(`Missing snapshot file: ${file}`);
+            }
+
+            const levels = JSON.parse(fs.readFileSync(file, 'utf8'));
+
+            if (!Array.isArray(levels)) {
+              throw new Error(`Snapshot is not an array: ${file}`);
+            }
+
+            return levels;
+          };
 
           const changes = index.map((item, i) => {
             const current = readLevels(item);
             const previous = i ? readLevels(index[i - 1]) : [];
+
             const currentSet = new Set(current);
             const previousSet = new Set(previous);
+
+            const added = current.filter(x => !previousSet.has(x));
+            const removed = previous.filter(x => !currentSet.has(x));
+
+            const moved = current
+              .filter(x => previousSet.has(x))
+              .filter(x => previous.indexOf(x) !== current.indexOf(x))
+              .map(level => ({
+                level,
+                from: previous.indexOf(level) + 1,
+                to: current.indexOf(level) + 1
+              }));
 
             return {
               date: item.date,
               commit: item.commit,
-              added: current.filter(x => !previousSet.has(x)),
-              removed: previous.filter(x => !currentSet.has(x)),
-              moved: current
-                .filter(x => previousSet.has(x))
-                .filter(x => previous.indexOf(x) !== current.indexOf(x))
-                .map(level => ({
-                  level,
-                  from: previous.indexOf(level),
-                  to: current.indexOf(level)
-                }))
+              added,
+              removed,
+              moved
             };
           });
 
-          fs.writeFileSync(indexPath, JSON.stringify(index, null, 2) + '\n');
-          fs.writeFileSync(changesPath, JSON.stringify(changes, null, 2) + '\n');
+          fs.writeFileSync(
+            indexPath,
+            JSON.stringify(index, null, 2) + '\n'
+          );
+
+          fs.writeFileSync(
+            changesPath,
+            JSON.stringify(changes, null, 2) + '\n'
+          );
 
           console.log(`Archive now contains ${index.length} snapshots.`);
           NODE
