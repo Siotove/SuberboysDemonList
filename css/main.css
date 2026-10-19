@@ -854,184 +854,174 @@ input[type="checkbox"] {
     }
 }
 
-/* ===== Games page: layout and theme override ===== */
+/
+/* =========================
+   GAMES — match the List page
+   ========================= */
 
-main.games-page {
-    display: block;
-    width: min(1100px, calc(100% - 40px));
-    max-width: none;
-    margin: 0 auto;
-    padding: 48px 0;
-    color: #f5f7ff;
-    font-family: inherit;
-    line-height: 1.5;
+.games-page {
+    width: min(1100px, calc(100% - 2rem));
+    margin-inline: auto;
+    padding-block: 2rem;
+    color: var(--color-on-background);
+    font-family: "Lexend Deca", sans-serif;
+    box-sizing: border-box;
 }
 
-.games-page h1,
-.games-page h2,
-.games-page h3,
-.games-page p {
-    position: static;
-    width: auto;
-    height: auto;
-    max-height: none;
-    margin-top: 0;
-    overflow: visible;
-    background: transparent;
-    color: inherit;
-    text-transform: none;
+.games-page *,
+.games-page *::before,
+.games-page *::after {
+    box-sizing: border-box;
 }
 
 .games-page .games-hero {
-    display: block;
-    max-width: 700px;
-    margin: 0 0 48px;
-    padding: 0;
-    background: transparent;
+    margin-bottom: 2.5rem;
 }
 
 .games-page .games-eyebrow {
     display: inline-block;
-    margin-bottom: 14px;
-    color: #78b7ff;
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 2px;
+    margin-bottom: 0.75rem;
+    color: var(--color-primary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
 }
 
 .games-page .games-hero h1 {
-    display: block;
-    margin: 0 0 14px;
-    color: #f5f7ff;
-    font-size: clamp(42px, 6vw, 64px);
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -1.5px;
+    margin: 0 0 0.75rem;
+    color: var(--color-on-background);
+    font-family: "Lexend Deca", sans-serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 700;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
 }
 
 .games-page .games-hero p {
-    max-width: 560px;
+    max-width: 38rem;
     margin: 0;
-    color: #aeb7c8;
-    font-size: 16px;
+    color: var(--color-on-background);
+    font-size: 1rem;
     line-height: 1.7;
+    opacity: 0.7;
 }
 
 .games-page .games-section {
-    display: block;
     width: 100%;
     margin: 0;
-    padding: 0;
-    background: transparent;
 }
 
 .games-page .games-section-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
 }
 
 .games-page .games-section-heading h2 {
     margin: 0;
-    color: #f5f7ff;
-    font-size: 24px;
-    font-weight: 750;
-    line-height: 1.3;
+    color: var(--color-on-background);
+    font-size: 1.4rem;
+    font-weight: 600;
+    line-height: 1.4;
 }
 
 .games-page .games-section-heading > span {
-    color: #aeb7c8;
-    font-size: 12px;
-    font-weight: 700;
+    color: var(--color-on-background);
+    font-size: 0.75rem;
+    opacity: 0.6;
 }
 
 .games-page .games-grid {
     display: grid;
-    width: 100%;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px;
+    gap: 1rem;
+    width: 100%;
 }
 
 .games-page a.game-card {
+    --card-accent: var(--color-primary);
+
     display: flex;
     flex-direction: column;
-    width: auto;
     min-width: 0;
-    min-height: 280px;
+    min-height: 16rem;
     margin: 0;
-    padding: 24px;
-    overflow: hidden;
-    border: 1px solid #353b4a;
-    border-radius: 16px;
-    background: #171b25;
-    color: #f5f7ff;
-    font-family: inherit;
-    line-height: 1.5;
+    padding: 1.5rem;
+    border: 1px solid var(--color-background-hover);
+    border-radius: 0.75rem;
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+    font-family: "Lexend Deca", sans-serif;
     text-decoration: none;
     box-shadow: none;
-    box-sizing: border-box;
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease;
 }
 
 .games-page a.game-card:hover {
-    transform: translateY(-3px);
-    border-color: var(--card-accent, #1685ff);
+    background-color: var(--color-background-hover);
+    border-color: var(--color-primary);
 }
 
 .games-page .roulette-card {
-    --card-accent: #1685ff;
+    --card-accent: var(--color-primary);
 }
 
 .games-page .higher-card {
-    --card-accent: #a879ff;
+    --card-accent: var(--color-primary);
 }
 
 .games-page .game-card-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 1rem;
 }
 
 .games-page .game-number {
-    color: var(--card-accent);
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 1px;
+    color: var(--color-on-background);
+    font-size: 0.75rem;
+    font-weight: 500;
+    opacity: 0.6;
 }
 
 .games-page .game-icon {
     display: grid;
-    width: 48px;
-    height: 48px;
+    width: 2.75rem;
+    height: 2.75rem;
     flex-shrink: 0;
     place-items: center;
-    border: 1px solid #393e50;
-    border-radius: 12px;
-    background: #222838;
-    font-size: 24px;
+    border: 1px solid var(--color-background-hover);
+    border-radius: 0.5rem;
+    background-color: var(--color-background);
+    font-size: 1.4rem;
 }
 
 .games-page .game-card-content {
     flex: 1;
-    padding: 24px 0;
+    padding-block: 1.5rem;
 }
 
 .games-page .game-card-content h3 {
-    margin: 0 0 10px;
-    color: #ffffff;
-    font-size: 27px;
-    font-weight: 800;
-    line-height: 1.25;
+    margin: 0 0 0.75rem;
+    color: var(--color-on-background);
+    font-family: "Lexend Deca", sans-serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
 }
 
 .games-page .game-card-content p {
     margin: 0;
-    color: #b7c0d0;
-    font-size: 15px;
+    color: var(--color-on-background);
+    font-size: 0.9rem;
     line-height: 1.7;
+    opacity: 0.7;
 }
 
 .games-page .game-card-bottom {
@@ -1039,35 +1029,41 @@ main.games-page {
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 12px;
-    padding-top: 16px;
-    border-top: 1px solid #353b4a;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-background-hover);
 }
 
 .games-page .game-card-bottom > span:first-child {
-    color: #aeb7c8;
-    font-size: 12px;
+    color: var(--color-on-background);
+    font-size: 0.75rem;
+    opacity: 0.6;
 }
 
 .games-page .game-play {
-    color: var(--card-accent);
-    font-size: 14px;
-    font-weight: 800;
+    color: var(--color-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
 }
 
 .games-page .games-footer {
-    margin-top: 32px;
-    padding-top: 20px;
-    border-top: 1px solid #353b4a;
-    color: #aeb7c8;
-    font-size: 14px;
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-background-hover);
+    color: var(--color-on-background);
+    font-size: 0.85rem;
     text-align: center;
+    opacity: 0.6;
 }
 
 @media (max-width: 700px) {
-    main.games-page {
-        width: calc(100% - 28px);
-        padding: 32px 0;
+    .games-page {
+        width: calc(100% - 1.5rem);
+        padding-block: 1.5rem;
+    }
+
+    .games-page .games-hero {
+        margin-bottom: 2rem;
     }
 
     .games-page .games-grid {
@@ -1075,11 +1071,7 @@ main.games-page {
     }
 
     .games-page a.game-card {
-        min-height: 250px;
-        padding: 20px;
-    }
-
-    .games-page .games-hero {
-        margin-bottom: 32px;
+        min-height: 14rem;
+        padding: 1.25rem;
     }
 }
