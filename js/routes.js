@@ -1,4 +1,4 @@
-
+import HigherLower from './pages/HigherLower.js';
 import List from './pages/List.js';
 import Achievements from './pages/Achievements.js';
 import Leaderboard from './pages/Leaderboard.js';
@@ -11,6 +11,7 @@ export default [
     { path: '/leaderboard', component: Leaderboard },
     { path: '/achievements', component: Achievements },
     { path: '/games', component: Games },
+    { path: '/games/higher-lower', component: HigherLower,},
     { path: '/games/roulette', component: Roulette },
     { path: '/roulette', redirect: '/games/roulette' },
     { path: '/packs', component: Packs },
