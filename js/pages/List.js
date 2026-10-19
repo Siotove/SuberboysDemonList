@@ -293,123 +293,123 @@ await this.updateRankChanges();
 this.loading = false;
     },
 
+    
     methods: {
         embed,
         score,
 
-        
-formatDate(date) {
-    const [year, month, day] = date.slice(0, 10).split("-").map(Number);
+        formatDate(date) {
+            const [year, month, day] = date.slice(0, 10).split("-").map(Number);
 
-    return new Date(year, month - 1, day).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-        
-async updateRankChanges() {
-    this.rankChanges = {};
+            return new Date(year, month - 1, day).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+            });
+        },
 
-    if (!this.snapshotDates.length) return;
+        async updateRankChanges() {
+            this.rankChanges = {};
 
-    const selectedSnapshot = this.historical
-        ? this.snapshotDates.find(
-            item => item.date.slice(0, 10) === this.selectedDate
-        )
-        : null;
+            if (!this.snapshotDates.length) return;
 
-    const comparisonSnapshot = this.historical
-        ? this.snapshotDates[
-            this.snapshotDates.findIndex(
-                item => item.date.slice(0, 10) === this.selectedDate
-            ) + 1
-        ]
-        : this.snapshotDates[0];
+            const selectedIndex = this.historical
+                ? this.snapshotDates.findIndex(
+                    item => item.date.slice(0, 10) === this.selectedDate
+                )
+                : -1;
 
-    let currentOrder;
-    let previousOrder;
+            const selectedSnapshot = selectedIndex >= 0
+                ? this.snapshotDates[selectedIndex]
+                : null;
 
-    try {
-        if (this.historical) {
-            if (!selectedSnapshot) return;
+            const comparisonSnapshot = this.historical
+                ? this.snapshotDates[selectedIndex + 1]
+                : this.snapshotDates[0];
 
-            const response = await fetch(
-                "/archive/" + selectedSnapshot.file
-            );
-            if (!response.ok) return;
-            currentOrder = await response.json();
-        } else {
-            currentOrder = (this.currentList || [])
-                .map(([level]) => level?.path || level?.name)
-                .filter(Boolean);
-        }
+            let currentOrder;
+            let previousOrder = [];
 
-        if (!comparisonSnapshot) {
-            previousOrder = [];
-        } else {
-            const response = await fetch(
-                "/archive/" + comparisonSnapshot.file
-            );
-            if (!response.ok) return;
-            previousOrder = await response.json();
-        }
-    } catch (error) {
-        console.error("Failed to calculate rank changes:", error);
-        return;
-    }
+            try {
+                if (this.historical) {
+                    if (!selectedSnapshot) return;
 
-    const canonical = value => {
-        const level = (this.currentList || [])
-            .map(([item]) => item)
-            .find(item =>
-                item && (item.path === value || item.name === value)
-            );
+                    const response = await fetch(
+                        "/archive/" + selectedSnapshot.file
+                    );
+                    if (!response.ok) throw new Error("Snapshot unavailable");
 
-        return level?.path || value;
-    };
+                    currentOrder = await response.json();
+                } else {
+                    currentOrder = (this.currentList || [])
+                        .map(([level]) => level?.path || level?.name)
+                        .filter(Boolean);
+                }
 
-    const previousRanks = new Map(
-        previousOrder.map((value, index) => [
-            canonical(value),
-            index + 1,
-        ])
-    );
+                if (comparisonSnapshot) {
+                    const response = await fetch(
+                        "/archive/" + comparisonSnapshot.file
+                    );
+                    if (!response.ok) throw new Error("Comparison snapshot unavailable");
 
-    currentOrder.forEach((value, index) => {
-        const key = canonical(value);
-        const rank = index + 1;
-        const oldRank = previousRanks.get(key);
+                    previousOrder = await response.json();
+                }
+            } catch (error) {
+                console.error("Failed to calculate rank changes:", error);
+                return;
+            }
 
-        let change;
+            const canonical = value => {
+                const level = (this.currentList || [])
+                    .map(([item]) => item)
+                    .find(item =>
+                        item && (item.path === value || item.name === value)
+                    );
 
-        if (oldRank === undefined) {
-            change = { type: "new", label: "NEW" };
-        } else if (oldRank > rank) {
-            change = {
-                type: "up",
-                label: "↑ " + (oldRank - rank),
+                return level?.path || value;
             };
-        } else if (oldRank < rank) {
-            change = {
-                type: "down",
-                label: "↓ " + (rank - oldRank),
-            };
-        } else {
-            change = { type: "same", label: "—" };
-        }
 
-        this.rankChanges[key] = change;
-    });
-},
+            const previousRanks = new Map(
+                previousOrder.map((value, index) => [
+                    canonical(value),
+                    index + 1,
+                ])
+            );
 
-rankChange(level) {
-    if (!level) return null;
-    return this.rankChanges[level.path]
-        || this.rankChanges[level.name]
-        || null;
-},
-    });
-},
+            currentOrder.forEach((value, index) => {
+                const key = canonical(value);
+                const rank = index + 1;
+                const oldRank = previousRanks.get(key);
 
+                let change;
+
+                if (oldRank === undefined) {
+                    change = { type: "new", label: "NEW" };
+                } else if (oldRank > rank) {
+                    change = {
+                        type: "up",
+                        label: "↑ " + (oldRank - rank),
+                    };
+                } else if (oldRank < rank) {
+                    change = {
+                        type: "down",
+                        label: "↓ " + (rank - oldRank),
+                    };
+                } else {
+                    change = { type: "same", label: "—" };
+                }
+
+                this.rankChanges[key] = change;
+            });
+        },
+
+        rankChange(level) {
+            if (!level) return null;
+
+            return this.rankChanges[level.path]
+                || this.rankChanges[level.name]
+                || null;
+        },
 
         async loadSnapshotDates() {
             try {
@@ -447,7 +447,7 @@ rankChange(level) {
 
         async loadHistorical(date) {
             if (!date) {
-                this.showCurrentList();
+                await this.showCurrentList();
                 return;
             }
 
@@ -461,36 +461,34 @@ rankChange(level) {
             this.selectedError = "";
 
             try {
-                const response = await fetch(
-                    "/archive/" + snapshot.file
-                );
+                const response = await fetch("/archive/" + snapshot.file);
 
                 if (!response.ok) {
                     throw new Error("Could not fetch snapshot");
                 }
 
                 const historicalPaths = await response.json();
-
                 const currentByPath = new Map();
                 const currentByName = new Map();
 
-                for (const [level, err] of this.currentList || []) {
+                for (const [level] of this.currentList || []) {
                     if (!level) continue;
+
                     currentByPath.set(level.path, [level, null]);
                     currentByName.set(level.name, [level, null]);
                 }
 
                 this.list = historicalPaths.map(path => {
-                    const match =
-                        currentByPath.get(path) ||
-                        currentByName.get(path);
-
-                    return match || [null, path];
+                    return currentByPath.get(path)
+                        || currentByName.get(path)
+                        || [null, path];
                 });
 
                 this.historical = true;
                 this.selected = 0;
-await this.updateRankChanges();
+
+                await this.updateRankChanges();
+
                 if (!this.list.length) {
                     this.selectedError = "This snapshot contains no levels.";
                 }
@@ -499,18 +497,21 @@ await this.updateRankChanges();
                 this.errors.push(
                     "Failed to load the selected historical snapshot."
                 );
-                this.showCurrentList();
+
+                await this.showCurrentList();
             } finally {
                 this.loading = false;
             }
         },
 
-        showCurrentList() {
+        async showCurrentList() {
             this.list = this.currentList || [];
             this.selectedDate = "";
             this.historical = false;
             this.selected = 0;
             this.selectedError = "";
+
+            await this.updateRankChanges();
         },
     },
 };
