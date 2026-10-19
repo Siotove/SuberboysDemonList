@@ -1031,3 +1031,23 @@ main.page-higher-lower {
 .page-leaderboard .board-container {
     scroll-behavior: smooth;
 }
+
+/* Scroll the right-hand player details panel */
+.page-leaderboard .player-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #777 transparent;
+    scroll-behavior: smooth;
+}
+
+/* Keep the player name visible while scrolling */
+.page-leaderboard .player > h1 {
+    position: sticky;
+    top: -1px;
+    z-index: 2;
+    padding-block: 0.5rem;
+    background: var(--color-background);
+}
