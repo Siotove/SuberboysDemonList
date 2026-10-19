@@ -842,3 +842,29 @@ button {
         padding: 1rem;
     }
 }
+/* Restore the original list page layout */
+main.page-list {
+    display: grid;
+    grid-template-columns: minmax(16rem, 1fr) minmax(16rem, 2fr) minmax(16rem, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    column-gap: 2rem;
+    height: 0;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+main.page-list > .list-container,
+main.page-list > .level-container,
+main.page-list > .meta-container {
+    min-width: 0;
+    overflow-y: auto;
+}
+
+main.page-list .list-container {
+    padding-inline: 1rem;
+}
+
+main.page-list .level-container .level {
+    max-width: 48rem;
+}
