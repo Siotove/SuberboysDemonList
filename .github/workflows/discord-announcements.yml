@@ -178,13 +178,13 @@ jobs:
             }
 
             const messages = [];
-            let current = '**Demon Roulette — Level List Update**\n';
+            let current = '**Demonlist Update**\n';
 
             for (const line of lines) {
               const next = current + '\n\n' + line;
               if (next.length > 1800 && current.length > 45) {
                 messages.push(current);
-                current = '**Demon Roulette — Level List Update (continued)**\n' + line;
+                current = '**Demonlist Update(continued)**\n' + line;
               } else {
                 current = next;
               }
