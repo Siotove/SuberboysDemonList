@@ -910,3 +910,31 @@ main.games-page {
         grid-template-columns: minmax(0, 1fr);
     }
 }
+/* Higher or Lower: full-width page layout */
+main.page-higher-lower {
+    display: block;
+    width: 100%;
+    max-width: none;
+    height: 0;
+    min-height: 0;
+    flex: 1;
+    margin: 0;
+    padding: 2rem max(1.5rem, calc((100% - 1100px) / 2));
+    overflow-y: auto;
+    box-sizing: border-box;
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+    font-family: "Lexend Deca", sans-serif;
+}
+
+.page-higher-lower *,
+.page-higher-lower *::before,
+.page-higher-lower *::after {
+    box-sizing: border-box;
+}
+
+@media (max-width: 700px) {
+    main.page-higher-lower {
+        padding: 1.5rem 1rem;
+    }
+}
