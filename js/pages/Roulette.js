@@ -63,7 +63,13 @@ export default {
                                 <p>{{ currentLevel.id }}</p>
                             </div>
                             <form class="actions" v-if="!givenUp">
-                                <input type="number" v-model="percentage" :placeholder="placeholder" :min="currentPercentage + 1" max=100>
+                                <input
+    type="number"
+    v-model.number="percentage"
+    :placeholder="placeholder"
+    :min="requiredPercentage"
+    max="100"
+/>
                                 <Btn @click.native.prevent="onDone">Done</Btn>
                                 <Btn @click.native.prevent="onGiveUp" style="background-color: #e91e63;">Give Up</Btn>
                             </form>
@@ -139,7 +145,7 @@ export default {
     },
     requiredPercentage() {
         const round = this.progression.length + 1;
-        return (round * (round + 1)) / 2;
+        return Math.min(100, (round * (round + 1)) / 2);
     },
     placeholder() {
         return `Reach at least ${this.requiredPercentage}%`;
@@ -222,23 +228,26 @@ export default {
             );
         },
         onDone() {
-            if (!this.percentage) {
-                return;
-            }
+    const value = Number(this.percentage);
 
-            if (
-                this.percentage <= this.currentPercentage ||
-                this.percentage > 100
-            ) {
-                this.showToast('Invalid percentage.');
-                return;
-            }
+    if (
+        this.percentage === undefined ||
+        this.percentage === '' ||
+        !Number.isFinite(value) ||
+        !Number.isInteger(value) ||
+        value < this.requiredPercentage ||
+        value > 100
+    ) {
+        this.showToast(
+            `You need at least ${this.requiredPercentage}% to complete this round.`,
+        );
+        return;
+    }
 
-            this.progression.push(this.percentage);
-            this.percentage = undefined;
-
-            this.save();
-        },
+    this.progression.push(value);
+    this.percentage = undefined;
+    this.save();
+},
         onGiveUp() {
             this.givenUp = true;
 
