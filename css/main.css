@@ -938,3 +938,57 @@ main.page-higher-lower {
         padding: 1.5rem 1rem;
     }
 }
+
+.account-page {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100%;
+    padding: 3rem 1rem;
+    box-sizing: border-box;
+}
+
+.account-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 2rem;
+    border: 1px solid var(--color-background-hover);
+    border-radius: 16px;
+    background: var(--color-background);
+    color: var(--color-on-background);
+    box-sizing: border-box;
+}
+
+.account-card h1 {
+    margin-top: 0;
+}
+
+.account-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.account-card input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #888;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font: inherit;
+}
+
+.account-card button {
+    padding: 0.8rem;
+    border: 0;
+    border-radius: 8px;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font: inherit;
+    cursor: pointer;
+}
+
+.account-card button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
