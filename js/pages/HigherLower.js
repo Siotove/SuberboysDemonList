@@ -95,7 +95,7 @@ export default {
                                 :src="thumbnail(leftLevel)"
                                 :alt="leftLevel.name"
                             >
-                            <span class="hl-rank">#{{ leftLevel.rank }}</span>
+                           
                             <strong>{{ leftLevel.name }}</strong>
                             <span class="hl-choice">Choose this demon</span>
                         </button>
@@ -111,7 +111,7 @@ export default {
                                 :src="thumbnail(rightLevel)"
                                 :alt="rightLevel.name"
                             >
-                            <span class="hl-rank">#{{ rightLevel.rank }}</span>
+                            
                             <strong>{{ rightLevel.name }}</strong>
                             <span class="hl-choice">Choose this demon</span>
                         </button>
