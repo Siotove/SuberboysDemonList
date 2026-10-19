@@ -460,3 +460,21 @@ input[type="checkbox"] {
     gap: 10px;
     margin-top: 20px;
 }
+.roulette-round-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 24px 0;
+}
+
+.roulette-round-info p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.roulette-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
