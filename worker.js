@@ -106,6 +106,12 @@ function validOrigin(request) {
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
+        if (url.pathname.startsWith("/api/")) {
+    return Response.json({
+        receivedPath: url.pathname,
+        method: request.method
+    });
+}
         if (url.pathname === "/api/test") {
     return Response.json({
         success: true,
