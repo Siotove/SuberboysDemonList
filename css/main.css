@@ -439,3 +439,24 @@ input[type="checkbox"] {
     overflow-wrap: anywhere;
     word-break: normal;
 }
+/* Roulette round information */
+.roulette-round-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 24px 0;
+}
+
+.roulette-round-info p,
+.roulette-round-info h2 {
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Roulette action buttons */
+.roulette-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
