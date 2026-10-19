@@ -1,3 +1,8 @@
+
+/* ========================================
+   THEME
+   ======================================== */
+
 :root {
     --color-background: white;
     --color-on-background: black;
@@ -7,6 +12,11 @@
     --color-on-primary: white;
     --color-error: #de0000;
     --color-on-error: white;
+
+    --font-main: "Lexend Deca", sans-serif;
+    --border-subtle: var(--color-background-hover);
+    --surface-muted: rgba(128, 128, 128, 0.08);
+    --surface-raised: rgba(128, 128, 128, 0.12);
 }
 
 main.dark,
@@ -21,108 +31,156 @@ header.dark {
     --color-on-primary: white;
     --color-error: #de0000;
     --color-on-error: white;
+    --surface-muted: rgba(255, 255, 255, 0.04);
+    --surface-raised: rgba(255, 255, 255, 0.07);
 }
+
+/* ========================================
+   GLOBAL LAYOUT
+   ======================================== */
 
 html,
 body {
+    width: 100%;
     height: 100%;
+    margin: 0;
 }
 
 body {
     display: flex;
     flex-direction: column;
-    margin: 0;
+    min-width: 0;
+    overflow: hidden;
+    font-family: var(--font-main);
 }
 
 header,
 main {
     background-color: var(--color-background);
     color: var(--color-on-background);
-    display: grid;
-    grid-template-columns: minmax(16rem, 1fr) minmax(16rem, 2fr) minmax(
-            16em,
-            1fr
-        );
-    column-gap: 2rem;
 }
 
-header {
+body > header {
     display: flex;
-    padding-inline: calc(25vw - 10rem);
-    height: 4rem;
+    align-items: center;
+    gap: 2rem;
+    flex-shrink: 0;
+    min-height: 4rem;
+    padding-inline: max(1rem, calc((100vw - 1200px) / 2));
     background-color: var(--color-primary);
     color: var(--color-on-primary);
 }
-@media screen and (min-width: 1366px) {
-    header {
-        display: grid;
-        padding-inline: 0;
-    }
-}
-header .logo {
-    justify-self: end;
-    align-self: center;
+
+body > header .logo {
     display: flex;
-    align-items: flex-end;
-    gap: 1rem;
-}
-header .nav {
-    flex: 1;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-shrink: 0;
 }
 
+body > header .logo h2,
+body > header .logo p {
+    margin: 0;
+}
+
+body > header .nav {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+
+body > #app > header {
+    /* Header is the direct child of the Vue app body. */
+    width: 100%;
+}
+
+body > header .nav__actions {
+    min-width: 0;
+}
+
+body > #app > router-view {
+    display: block;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
 
 main {
-    height: 0;
-    flex: 1;
-    display: grid;
-    grid-template-rows: minmax(0, 1fr);
-    column-gap: 2rem;
-    background-color: var(--color-background);
-    color: var(--color-on-background);
+    min-width: 0;
 }
+
 main > div {
-    overflow-y: auto;
+    min-width: 0;
 }
 
 .spinner {
     display: flex;
     align-items: center;
     justify-content: center;
-    grid-column: span 3;
+    grid-column: 1 / -1;
 }
 
 input[type="checkbox"] {
-    height: 1.25rem;
     width: 1.25rem;
-    cursor: pointer;
+    height: 1.25rem;
     margin: 0;
+    cursor: pointer;
 }
-/* Leaderboard layout */
+
+/* Shared form controls */
+
+button,
+input,
+select,
+textarea {
+    font-family: var(--font-main);
+}
+
+input:not([type="checkbox"]),
+select,
+textarea {
+    max-width: 100%;
+    color: var(--color-on-background);
+    background-color: var(--color-background);
+}
+
+button {
+    color: inherit;
+}
+
+/* ========================================
+   LEADERBOARD
+   ======================================== */
+
 .page-leaderboard-container {
     grid-column: 1 / -1;
     min-width: 0;
 }
 
 .page-leaderboard {
-    width: min(100% - 2rem, 1100px);
-    margin: 2rem auto;
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+    align-items: start;
+    gap: 1.25rem;
+    width: calc(100% - 2rem);
+    max-width: 1500px;
+    margin: 1rem auto;
+    font-family: var(--font-main);
 }
 
 .page-leaderboard .board-container,
 .page-leaderboard .player-container {
     min-width: 0;
     padding: 1.25rem;
-    border: 1px solid var(--color-background-hover);
-    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.75rem;
     background: var(--color-background);
     color: var(--color-on-background);
+    box-sizing: border-box;
 }
 
-/* Sort dropdown */
-.leaderboard-controls {
+.page-leaderboard .leaderboard-controls {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -130,142 +188,45 @@ input[type="checkbox"] {
     margin-bottom: 1rem;
 }
 
-.leaderboard-controls label {
+.page-leaderboard .leaderboard-controls label {
     font-weight: 600;
 }
 
-.leaderboard-controls select {
-    max-width: 100%;
-    padding: 0.65rem 2.25rem 0.65rem 0.8rem;
-    border: 1px solid var(--color-background-hover);
-    border-radius: 8px;
-    background: var(--color-background);
-    color: var(--color-on-background);
-    font: inherit;
+.page-leaderboard .leaderboard-controls select {
+    padding: 0.65rem 2rem 0.65rem 0.8rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
     cursor: pointer;
 }
 
-/* Leaderboard table */
 .page-leaderboard .board,
-.page-leaderboard .table {
+.page-leaderboard .player .table {
     width: 100%;
     border-collapse: collapse;
 }
 
+.page-leaderboard .board {
+    table-layout: fixed;
+}
+
 .page-leaderboard .board th,
 .page-leaderboard .board td,
-.page-leaderboard .table td {
-    padding: 0.8rem 0.65rem;
-    border-bottom: 1px solid var(--color-background-hover);
+.page-leaderboard .player .table td {
+    padding: 0.7rem 0.5rem;
+    border-bottom: 1px solid var(--border-subtle);
     text-align: left;
+    vertical-align: middle;
 }
 
 .page-leaderboard .board th {
-    font-size: 0.9rem;
-    opacity: 0.75;
+    font-size: 0.85rem;
     font-weight: 600;
+    opacity: 0.75;
 }
 
-.page-leaderboard .board tbody tr:hover,
-.page-leaderboard .board tr:hover {
+.page-leaderboard .board tbody tr:hover {
     background: var(--color-background-hover);
-}
-
-.page-leaderboard .board .rank {
-    width: 4rem;
-    white-space: nowrap;
-}
-
-.page-leaderboard .board .total {
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.page-leaderboard .board .user button {
-    display: block;
-    width: 100%;
-    padding: 0.25rem;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--color-on-background);
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-}
-
-.page-leaderboard .board .user button:hover,
-.page-leaderboard .board .user.active button {
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-}
-
-/* Selected player's details */
-.page-leaderboard .player h1 {
-    margin-top: 0;
-}
-
-.page-leaderboard .player h2 {
-    margin-top: 1.75rem;
-    font-size: 1.15rem;
-}
-
-.page-leaderboard .player h3 {
-    opacity: 0.8;
-}
-
-.page-leaderboard .player .table a {
-    color: var(--color-primary);
-    overflow-wrap: anywhere;
-}
-
-.page-leaderboard .player .table .rank,
-.page-leaderboard .player .table .score {
-    white-space: nowrap;
-}
-
-.page-leaderboard .player ul {
-    padding-left: 1.5rem;
-    line-height: 1.8;
-}
-
-/* Error message */
-.page-leaderboard .error {
-    color: var(--color-error);
-}
-
-/* Smaller screens */
-@media (max-width: 600px) {
-    .page-leaderboard {
-        width: calc(100% - 1rem);
-        margin: 0.5rem auto;
-        gap: 0.75rem;
-    }
-
-    .page-leaderboard .board-container,
-    .page-leaderboard .player-container {
-        padding: 0.75rem;
-        border-radius: 8px;
-    }
-
-    .page-leaderboard .board th,
-    .page-leaderboard .board td,
-    .page-leaderboard .table td {
-        padding: 0.6rem 0.35rem;
-    }
-}
-
-/* Match the site's main font */
-.page-leaderboard-container,
-.page-leaderboard-container button,
-.page-leaderboard-container select,
-.page-leaderboard-container input {
-    font-family: inherit;
-}
-
-/* Keep the player list readable */
-.page-leaderboard .board {
-    table-layout: fixed;
 }
 
 .page-leaderboard .board th:first-child,
@@ -275,7 +236,18 @@ input[type="checkbox"] {
 
 .page-leaderboard .board th:nth-child(2),
 .page-leaderboard .board td.total {
-    width: 7rem;
+    width: 6.5rem;
+}
+
+.page-leaderboard .board td.rank,
+.page-leaderboard .board td.total,
+.page-leaderboard .player .table td.rank,
+.page-leaderboard .player .table td.score {
+    white-space: nowrap;
+}
+
+.page-leaderboard .board td.total {
+    font-weight: 700;
 }
 
 .page-leaderboard .board td.user {
@@ -283,168 +255,91 @@ input[type="checkbox"] {
 }
 
 .page-leaderboard .board td.user button {
-    overflow-wrap: anywhere;
-}
-
-/* Fix spacing in the player's level tables */
-.page-leaderboard .player .table {
-    table-layout: auto;
-}
-
-.page-leaderboard .player .table td.rank {
-    width: 3.5rem;
-    padding-right: 0.75rem;
-    white-space: nowrap;
-}
-
-.page-leaderboard .player .table td.level {
-    overflow-wrap: anywhere;
-}
-
-.page-leaderboard .player .table td.score {
-    text-align: right;
-    padding-left: 1rem;
-    white-space: nowrap;
-}
-
-/* Make the main player heading inherit the site's font */
-.page-leaderboard .player h1,
-.page-leaderboard .player h2,
-.page-leaderboard .player h3 {
-    font-family: inherit;
-}
-/* Match the site's Lexend Deca typography */
-.page-leaderboard-container,
-.page-leaderboard-container button,
-.page-leaderboard-container select,
-.page-leaderboard-container a,
-.page-leaderboard-container th,
-.page-leaderboard-container td,
-.page-leaderboard-container li {
-    font-family: "Lexend Deca", sans-serif;
-}
-
-/* Keep headings consistent with the rest of the site */
-.page-leaderboard .player h1,
-.page-leaderboard .player h2,
-.page-leaderboard .player h3 {
-    font-family: "Lexend Deca", sans-serif;
-}
-
-/* Fix level names overlapping their rank numbers */
-.page-leaderboard .player .table {
-    table-layout: auto;
-    border-collapse: collapse;
-}
-
-.page-leaderboard .player .table td.rank {
-    width: 3.5rem;
-    padding-right: 1rem;
-    white-space: nowrap;
-}
-
-.page-leaderboard .player .table td.level {
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-
-.page-leaderboard .player .table td.score {
-    padding-left: 1rem;
-    text-align: right;
-    white-space: nowrap;
-}
-
-/* Keep the sort control consistent */
-.page-leaderboard .leaderboard-controls select {
-    font-family: "Lexend Deca", sans-serif;
-    font-size: 14px;
-}
-
-/* Give the leaderboard and player details more width */
-.page-leaderboard {
-    width: calc(100% - 2rem);
-    max-width: 1500px;
-    margin: 1rem auto;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
-    gap: 1.25rem;
-    align-items: start;
-}
-
-/* Let the player details use all available panel width */
-.page-leaderboard .player-container,
-.page-leaderboard .board-container {
-    min-width: 0;
-    box-sizing: border-box;
-}
-
-.page-leaderboard .player .table {
+    display: block;
     width: 100%;
-    table-layout: auto;
-}
-
-.page-leaderboard .player .table td.level {
-    width: 100%;
+    padding: 0.3rem;
+    border: 0;
+    border-radius: 0.375rem;
+    background: transparent;
+    color: var(--color-on-background);
+    font: inherit;
+    text-align: left;
     overflow-wrap: anywhere;
+    cursor: pointer;
 }
 
-/* Stack panels on narrow screens */
-@media (max-width: 800px) {
-    .page-leaderboard {
-        grid-template-columns: minmax(0, 1fr);
-        width: calc(100% - 1rem);
-    }
-}
-
-/* Remove excess whitespace from the stats display */
-.page-leaderboard .player-container {
-    min-width: 0;
-    overflow-x: hidden;
+.page-leaderboard .board td.user button:hover,
+.page-leaderboard .board td.user.active button {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
 }
 
 .page-leaderboard .player {
-    min-width: 0;
     width: 100%;
+    min-width: 0;
+}
+
+.page-leaderboard .player h1 {
+    margin-top: 0;
+}
+
+.page-leaderboard .player h2 {
+    margin-top: 1.5rem;
+    font-size: 1.15rem;
+}
+
+.page-leaderboard .player h3 {
+    opacity: 0.8;
 }
 
 .page-leaderboard .player .table {
-    width: 100%;
-    max-width: 100%;
     table-layout: fixed;
-    border-collapse: collapse;
 }
 
-/* Give each column only the space it needs */
 .page-leaderboard .player .table td.rank {
     width: 2.75rem;
-    padding: 0.65rem 0.35rem;
-    white-space: nowrap;
+    padding-inline: 0.35rem;
 }
 
 .page-leaderboard .player .table td.level {
     width: auto;
     min-width: 0;
-    padding: 0.65rem 0.35rem;
     overflow-wrap: anywhere;
 }
 
-.page-leaderboard .player .table td.score {
-    width: 4.5rem;
-    padding: 0.65rem 0.35rem;
-    text-align: right;
-    white-space: nowrap;
-}
-
-/* Prevent links from forcing the table wider */
 .page-leaderboard .player .table td.level a {
     overflow-wrap: anywhere;
     word-break: normal;
 }
-/* Roulette round information */
+
+.page-leaderboard .player .table td.score {
+    width: 4.5rem;
+    padding-inline: 0.35rem;
+    text-align: right;
+}
+
+.page-leaderboard .player .table a {
+    color: var(--color-primary);
+}
+
+.page-leaderboard .player ul {
+    padding-left: 1.5rem;
+    line-height: 1.8;
+}
+
+.page-leaderboard .error {
+    color: var(--color-error);
+}
+
+/* ========================================
+   ROULETTE
+   ======================================== */
+
 .roulette-round-info {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin: 24px 0;
+    gap: 0.625rem;
+    margin-block: 1.5rem;
 }
 
 .roulette-round-info p,
@@ -453,424 +348,33 @@ input[type="checkbox"] {
     line-height: 1.5;
 }
 
-/* Roulette action buttons */
 .roulette-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 20px;
-}
-.roulette-round-info {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin: 24px 0;
+    gap: 0.625rem;
+    margin-top: 1.25rem;
 }
 
-.roulette-round-info p {
-    margin: 0;
-    line-height: 1.5;
-}
+/* ========================================
+   GAMES HUB
+   ======================================== */
 
-.roulette-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-/* Games hub */
-.games-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 16px;
-}
-
-.game-card {
-    display: block;
-    padding: 24px;
-    border-radius: 12px;
-    background: #222;
-    color: inherit;
-    text-decoration: none;
-    transition: transform 0.15s ease;
-}
-
-.game-card:hover {
-    transform: translateY(-3px);
-}
-
-.game-card p {
-    margin: 12px 0;
-}
-
-.game-card-link {
-    font-weight: 700;
-}
-
-/* Higher or Lower */
+.games-page,
 .page-higher-lower {
-    width: min(1000px, calc(100% - 32px));
-    margin: 32px auto;
-}
-
-.hl-header {
-    margin-bottom: 24px;
-}
-
-.hl-header h1 {
-    margin-bottom: 8px;
-}
-
-.hl-header p,
-.hl-muted {
-    color: #999;
-    line-height: 1.6;
-}
-
-.hl-settings {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
-    max-width: 480px;
-    padding: 24px;
-    border-radius: 12px;
-    background: rgba(128, 128, 128, 0.08);
-}
-
-.hl-settings h2 {
-    margin: 0 0 4px;
-}
-
-.hl-scoreboard {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin: 24px 0;
-}
-
-.hl-scoreboard > div {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 130px;
-    padding: 16px 20px;
-    border-radius: 10px;
-    background: rgba(128, 128, 128, 0.12);
-}
-
-.hl-scoreboard span {
-    color: #999;
-    font-size: 0.9rem;
-}
-
-.hl-scoreboard strong {
-    font-size: 1.8rem;
-}
-
-.hl-instruction {
-    margin: 24px 0;
-    font-size: 1.2rem;
-    font-weight: 700;
-}
-
-.hl-cards {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    align-items: stretch;
-    gap: 16px;
-}
-
-.hl-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-    padding: 16px;
-    border: 2px solid rgba(128, 128, 128, 0.25);
-    border-radius: 14px;
-    background: rgba(128, 128, 128, 0.08);
-    color: inherit;
-    font: inherit;
-    cursor: pointer;
-    transition: border-color 0.2s ease, transform 0.2s ease,
-        background 0.2s ease;
-}
-
-.hl-card:hover:not(:disabled) {
-    border-color: #1685ff;
-    background: rgba(22, 133, 255, 0.1);
-    transform: translateY(-3px);
-}
-
-.hl-card:disabled {
-    cursor: default;
-}
-
-.hl-card img {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-    border-radius: 8px;
-    background: rgba(128, 128, 128, 0.15);
-}
-
-.hl-card strong {
-    overflow-wrap: anywhere;
-    text-align: center;
-    font-size: 1.1rem;
-}
-
-.hl-rank {
-    color: #1685ff;
-    font-weight: 800;
-}
-
-.hl-choice {
-    color: #999;
-    font-size: 0.85rem;
-}
-
-.hl-versus {
-    align-self: center;
-    color: #999;
-    font-weight: 800;
-}
-
-.hl-feedback {
-    margin-top: 20px;
-    padding: 14px;
-    border-radius: 8px;
-    background: rgba(128, 128, 128, 0.12);
-    line-height: 1.5;
-}
-
-.hl-results {
-    margin-top: 24px;
-    padding: 24px;
-    border-radius: 12px;
-    background: rgba(128, 128, 128, 0.1);
-}
-
-.hl-results h2 {
-    margin-top: 0;
-}
-
-.hl-footer {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 24px;
-}
-
-.hl-message {
-    margin-top: 16px;
-    color: #e91e63;
-}
-
-@media (max-width: 600px) {
-    .hl-cards {
-        grid-template-columns: 1fr;
-    }
-
-    .hl-versus {
-        text-align: center;
-    }
-
-    .hl-card {
-        padding: 12px;
-    }
-}
-
-/* Higher or Lower — layout fixes */
-.page-higher-lower {
-    width: min(1100px, calc(100% - 40px));
-    margin: 40px auto;
-    box-sizing: border-box;
-}
-
-.page-higher-lower *,
-.page-higher-lower *::before,
-.page-higher-lower *::after {
-    box-sizing: border-box;
-}
-
-.hl-header {
-    margin-bottom: 28px;
-}
-
-.hl-header h1 {
-    margin: 0 0 12px;
-    line-height: 1.15;
-    overflow-wrap: anywhere;
-}
-
-.hl-header p {
-    margin: 0;
-    line-height: 1.6;
-}
-
-.hl-scoreboard {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 180px));
-    gap: 16px;
-    margin: 24px 0 32px;
-}
-
-.hl-scoreboard > div {
-    min-width: 0;
-    min-height: 90px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 10px;
-    border-radius: 12px;
-    background: rgba(128, 128, 128, 0.12);
-}
-
-.hl-scoreboard span {
-    font-size: 14px;
-    line-height: 1.4;
-}
-
-.hl-scoreboard strong {
-    font-size: 28px;
-    line-height: 1.2;
-}
-
-.hl-matchup {
-    width: 100%;
-}
-
-.hl-instruction {
-    margin: 0 0 20px;
-    line-height: 1.5;
-}
-
-.hl-cards {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    align-items: stretch;
-    gap: 20px;
-    width: 100%;
-}
-
-.hl-card {
-    width: 100%;
-    min-width: 0;
-    min-height: 260px;
-    padding: 18px;
-    gap: 14px;
-    overflow-wrap: anywhere;
-    line-height: 1.5;
-}
-
-.hl-card img {
-    display: block;
-    width: 100%;
-    max-height: 220px;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-}
-
-.hl-card strong {
-    line-height: 1.35;
-}
-
-.hl-versus {
-    padding: 0 4px;
-}
-
-.hl-feedback {
-    margin: 24px 0;
-    padding: 16px;
-    line-height: 1.6;
-    border-radius: 10px;
-}
-
-.hl-results {
-    width: 100%;
-    max-width: 560px;
-    margin: 28px 0;
-    padding: 24px;
-    border-radius: 14px;
-    background: rgba(128, 128, 128, 0.10);
-}
-
-.hl-results h2 {
-    margin: 0 0 18px;
-    line-height: 1.25;
-}
-
-.hl-results p {
-    margin: 12px 0;
-    line-height: 1.6;
-    overflow-wrap: anywhere;
-}
-
-.hl-results button {
-    margin: 8px 8px 0 0;
-}
-
-.hl-footer {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 24px;
-}
-
-@media (max-width: 650px) {
-    .page-higher-lower {
-        width: calc(100% - 24px);
-        margin: 24px auto;
-    }
-
-    .hl-cards {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 14px;
-    }
-
-    .hl-versus {
-        text-align: center;
-    }
-
-    .hl-card {
-        min-height: 0;
-    }
-
-    .hl-card img {
-        max-height: 240px;
-    }
-
-    .hl-scoreboard {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .hl-results {
-        padding: 18px;
-    }
-}
-
-/
-/* =========================
-   GAMES — match the List page
-   ========================= */
-
-.games-page {
     width: min(1100px, calc(100% - 2rem));
     margin-inline: auto;
     padding-block: 2rem;
     color: var(--color-on-background);
-    font-family: "Lexend Deca", sans-serif;
+    font-family: var(--font-main);
     box-sizing: border-box;
 }
 
 .games-page *,
 .games-page *::before,
-.games-page *::after {
+.games-page *::after,
+.page-higher-lower *,
+.page-higher-lower *::before,
+.page-higher-lower *::after {
     box-sizing: border-box;
 }
 
@@ -883,14 +387,14 @@ input[type="checkbox"] {
     margin-bottom: 0.75rem;
     color: var(--color-primary);
     font-size: 0.8rem;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.08em;
 }
 
 .games-page .games-hero h1 {
     margin: 0 0 0.75rem;
     color: var(--color-on-background);
-    font-family: "Lexend Deca", sans-serif;
+    font-family: var(--font-main);
     font-size: clamp(2rem, 5vw, 3rem);
     font-weight: 700;
     line-height: 1.2;
@@ -922,14 +426,12 @@ input[type="checkbox"] {
 
 .games-page .games-section-heading h2 {
     margin: 0;
-    color: var(--color-on-background);
-    font-size: 1.4rem;
-    font-weight: 600;
+    font-size: 1.25rem;
+    font-weight: 700;
     line-height: 1.4;
 }
 
 .games-page .games-section-heading > span {
-    color: var(--color-on-background);
     font-size: 0.75rem;
     opacity: 0.6;
 }
@@ -942,37 +444,31 @@ input[type="checkbox"] {
 }
 
 .games-page a.game-card {
-    --card-accent: var(--color-primary);
-
     display: flex;
     flex-direction: column;
     min-width: 0;
     min-height: 16rem;
     margin: 0;
     padding: 1.5rem;
-    border: 1px solid var(--color-background-hover);
+    border: 1px solid var(--border-subtle);
     border-radius: 0.75rem;
-    background-color: var(--color-background);
+    background: var(--color-background);
     color: var(--color-on-background);
-    font-family: "Lexend Deca", sans-serif;
+    font-family: var(--font-main);
     text-decoration: none;
     box-shadow: none;
-    transition:
-        background-color 0.2s ease,
-        border-color 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .games-page a.game-card:hover {
-    background-color: var(--color-background-hover);
     border-color: var(--color-primary);
+    background: var(--color-background-hover);
 }
 
-.games-page .roulette-card {
-    --card-accent: var(--color-primary);
-}
-
-.games-page .higher-card {
-    --card-accent: var(--color-primary);
+.games-page a.game-card:focus-visible,
+.hl-card:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
 }
 
 .games-page .game-card-top {
@@ -983,7 +479,6 @@ input[type="checkbox"] {
 }
 
 .games-page .game-number {
-    color: var(--color-on-background);
     font-size: 0.75rem;
     font-weight: 500;
     opacity: 0.6;
@@ -995,9 +490,9 @@ input[type="checkbox"] {
     height: 2.75rem;
     flex-shrink: 0;
     place-items: center;
-    border: 1px solid var(--color-background-hover);
+    border: 1px solid var(--border-subtle);
     border-radius: 0.5rem;
-    background-color: var(--color-background);
+    background: var(--color-background);
     font-size: 1.4rem;
 }
 
@@ -1009,16 +504,15 @@ input[type="checkbox"] {
 .games-page .game-card-content h3 {
     margin: 0 0 0.75rem;
     color: var(--color-on-background);
-    font-family: "Lexend Deca", sans-serif;
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-family: var(--font-main);
+    font-size: 1.4rem;
+    font-weight: 700;
     line-height: 1.35;
     overflow-wrap: anywhere;
 }
 
 .games-page .game-card-content p {
     margin: 0;
-    color: var(--color-on-background);
     font-size: 0.9rem;
     line-height: 1.7;
     opacity: 0.7;
@@ -1031,11 +525,10 @@ input[type="checkbox"] {
     flex-wrap: wrap;
     gap: 0.75rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--color-background-hover);
+    border-top: 1px solid var(--border-subtle);
 }
 
 .games-page .game-card-bottom > span:first-child {
-    color: var(--color-on-background);
     font-size: 0.75rem;
     opacity: 0.6;
 }
@@ -1043,21 +536,241 @@ input[type="checkbox"] {
 .games-page .game-play {
     color: var(--color-primary);
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .games-page .games-footer {
     margin-top: 2rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--color-background-hover);
-    color: var(--color-on-background);
+    border-top: 1px solid var(--border-subtle);
     font-size: 0.85rem;
     text-align: center;
     opacity: 0.6;
 }
 
+/* ========================================
+   HIGHER OR LOWER
+   ======================================== */
+
+.hl-header {
+    margin-bottom: 1.75rem;
+}
+
+.hl-header h1 {
+    margin: 0 0 0.75rem;
+    font-family: var(--font-main);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.hl-header p,
+.hl-muted {
+    color: var(--color-on-background);
+    line-height: 1.6;
+    opacity: 0.7;
+}
+
+.hl-header p {
+    margin: 0;
+}
+
+.hl-settings {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.875rem;
+    width: 100%;
+    max-width: 30rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.75rem;
+    background: var(--color-background);
+}
+
+.hl-settings h2 {
+    margin: 0 0 0.25rem;
+}
+
+.hl-scoreboard {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 180px));
+    gap: 1rem;
+    margin-block: 1.5rem 2rem;
+}
+
+.hl-scoreboard > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.625rem;
+    min-width: 0;
+    min-height: 5.5rem;
+    padding: 1rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.75rem;
+    background: var(--surface-muted);
+}
+
+.hl-scoreboard span {
+    font-size: 0.875rem;
+    line-height: 1.4;
+    opacity: 0.7;
+}
+
+.hl-scoreboard strong {
+    font-size: 1.75rem;
+    line-height: 1.2;
+}
+
+.hl-matchup {
+    width: 100%;
+    min-width: 0;
+}
+
+.hl-instruction {
+    margin: 0 0 1.25rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.hl-cards {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: stretch;
+    gap: 1.25rem;
+    width: 100%;
+}
+
+.hl-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.875rem;
+    width: 100%;
+    min-width: 0;
+    min-height: 16rem;
+    padding: 1.125rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.75rem;
+    background: var(--color-background);
+    color: var(--color-on-background);
+    font: inherit;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.hl-card:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    background: var(--color-background-hover);
+}
+
+.hl-card:disabled {
+    cursor: default;
+}
+
+.hl-card img {
+    display: block;
+    width: 100%;
+    max-height: 220px;
+    aspect-ratio: 16 / 9;
+    border-radius: 0.5rem;
+    background: var(--surface-raised);
+    object-fit: cover;
+}
+
+.hl-card strong {
+    font-size: 1.1rem;
+    line-height: 1.35;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.hl-rank {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.hl-choice {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.hl-versus {
+    align-self: center;
+    padding-inline: 0.25rem;
+    font-weight: 700;
+    opacity: 0.6;
+}
+
+.hl-feedback {
+    margin-block: 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.625rem;
+    background: var(--surface-muted);
+    line-height: 1.6;
+}
+
+.hl-results {
+    width: 100%;
+    max-width: 35rem;
+    margin-block: 1.75rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.75rem;
+    background: var(--surface-muted);
+}
+
+.hl-results h2 {
+    margin: 0 0 1rem;
+    line-height: 1.3;
+}
+
+.hl-results p {
+    margin-block: 0.75rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.hl-results button {
+    margin: 0.5rem 0.5rem 0 0;
+}
+
+.hl-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.hl-message {
+    margin-top: 1rem;
+    color: var(--color-error);
+}
+
+/* ========================================
+   RESPONSIVE LAYOUT
+   ======================================== */
+
+@media (max-width: 900px) {
+    body > header {
+        gap: 1rem;
+        padding-inline: 1rem;
+    }
+
+    .page-leaderboard {
+        grid-template-columns: minmax(0, 1fr);
+        width: calc(100% - 1rem);
+    }
+}
+
 @media (max-width: 700px) {
-    .games-page {
+    .games-page,
+    .page-higher-lower {
         width: calc(100% - 1.5rem);
         padding-block: 1.5rem;
     }
@@ -1073,5 +786,59 @@ input[type="checkbox"] {
     .games-page a.game-card {
         min-height: 14rem;
         padding: 1.25rem;
+    }
+
+    .hl-cards {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.875rem;
+    }
+
+    .hl-versus {
+        text-align: center;
+    }
+
+    .hl-card {
+        min-height: 0;
+    }
+
+    .hl-card img {
+        max-height: 240px;
+    }
+
+    .hl-scoreboard {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .hl-results {
+        padding: 1.125rem;
+    }
+
+    .page-leaderboard .board-container,
+    .page-leaderboard .player-container {
+        padding: 0.75rem;
+    }
+
+    .page-leaderboard .board th,
+    .page-leaderboard .board td,
+    .page-leaderboard .player .table td {
+        padding: 0.55rem 0.35rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .hl-scoreboard {
+        gap: 0.625rem;
+    }
+
+    .hl-scoreboard > div {
+        padding: 0.75rem;
+    }
+
+    .hl-scoreboard strong {
+        font-size: 1.5rem;
+    }
+
+    .hl-settings {
+        padding: 1rem;
     }
 }
