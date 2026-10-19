@@ -1,0 +1,25 @@
+
+name: Archive level list history
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - data/_list.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Show changed list
+        run: |
+          echo "The level list changed."
+          cat data/_list.json
