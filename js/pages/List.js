@@ -85,8 +85,15 @@ export default {
                         >
                             <button @click="selected = i">
                                 <span class="type-label-lg">
-                                    {{ level?.name || ('Unavailable (' + err + ')') }}
-                                </span>
+    {{ level?.name || ('Unavailable (' + err + ')') }}
+</span>
+<span
+    v-if="level && rankChange(level)"
+    class="rank-change"
+    :class="rankChange(level).type"
+>
+    {{ rankChange(level).label }}
+</span>
                             </button>
                         </td>
                     </tr>
@@ -239,7 +246,7 @@ export default {
         errors: [],
         roleIconMap,
         store,
-
+        rankChanges: {},
         snapshotDates: [],
         selectedDate: "",
         historical: false,
@@ -282,7 +289,8 @@ export default {
         }
 
         await this.loadSnapshotDates();
-        this.loading = false;
+await this.updateRankChanges();
+this.loading = false;
     },
 
     methods: {
@@ -297,6 +305,108 @@ formatDate(date) {
         day: "numeric",
         month: "long",
         year: "numeric",
+        
+async updateRankChanges() {
+    this.rankChanges = {};
+
+    if (!this.snapshotDates.length) return;
+
+    const selectedSnapshot = this.historical
+        ? this.snapshotDates.find(
+            item => item.date.slice(0, 10) === this.selectedDate
+        )
+        : null;
+
+    const comparisonSnapshot = this.historical
+        ? this.snapshotDates[
+            this.snapshotDates.findIndex(
+                item => item.date.slice(0, 10) === this.selectedDate
+            ) + 1
+        ]
+        : this.snapshotDates[0];
+
+    let currentOrder;
+    let previousOrder;
+
+    try {
+        if (this.historical) {
+            if (!selectedSnapshot) return;
+
+            const response = await fetch(
+                "/archive/" + selectedSnapshot.file
+            );
+            if (!response.ok) return;
+            currentOrder = await response.json();
+        } else {
+            currentOrder = (this.currentList || [])
+                .map(([level]) => level?.path || level?.name)
+                .filter(Boolean);
+        }
+
+        if (!comparisonSnapshot) {
+            previousOrder = [];
+        } else {
+            const response = await fetch(
+                "/archive/" + comparisonSnapshot.file
+            );
+            if (!response.ok) return;
+            previousOrder = await response.json();
+        }
+    } catch (error) {
+        console.error("Failed to calculate rank changes:", error);
+        return;
+    }
+
+    const canonical = value => {
+        const level = (this.currentList || [])
+            .map(([item]) => item)
+            .find(item =>
+                item && (item.path === value || item.name === value)
+            );
+
+        return level?.path || value;
+    };
+
+    const previousRanks = new Map(
+        previousOrder.map((value, index) => [
+            canonical(value),
+            index + 1,
+        ])
+    );
+
+    currentOrder.forEach((value, index) => {
+        const key = canonical(value);
+        const rank = index + 1;
+        const oldRank = previousRanks.get(key);
+
+        let change;
+
+        if (oldRank === undefined) {
+            change = { type: "new", label: "NEW" };
+        } else if (oldRank > rank) {
+            change = {
+                type: "up",
+                label: "↑ " + (oldRank - rank),
+            };
+        } else if (oldRank < rank) {
+            change = {
+                type: "down",
+                label: "↓ " + (rank - oldRank),
+            };
+        } else {
+            change = { type: "same", label: "—" };
+        }
+
+        this.rankChanges[key] = change;
+    });
+},
+
+rankChange(level) {
+    if (!level) return null;
+    return this.rankChanges[level.path]
+        || this.rankChanges[level.name]
+        || null;
+},
     });
 },
 
@@ -380,7 +490,7 @@ formatDate(date) {
 
                 this.historical = true;
                 this.selected = 0;
-
+await this.updateRankChanges();
                 if (!this.list.length) {
                     this.selectedError = "This snapshot contains no levels.";
                 }
