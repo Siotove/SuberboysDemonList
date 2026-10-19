@@ -30,9 +30,21 @@ jobs:
           const indexPath = 'archive/index.json';
           const changesPath = 'archive/changes.json';
 
-          const index = fs.existsSync(indexPath)
-            ? JSON.parse(fs.readFileSync(indexPath, 'utf8'))
-            : [];
+          let index = [];
+
+if (fs.existsSync(indexPath)) {
+  try {
+    index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+  } catch (error) {
+    throw new Error(
+      `Invalid JSON in ${indexPath}: ${error.message}`
+    );
+  }
+}
+
+if (!Array.isArray(index)) {
+  throw new Error(`${indexPath} must contain a JSON array.`);
+}
 
           const known = new Set(index.map(x => x.commit));
 
@@ -55,10 +67,20 @@ jobs:
               { encoding: 'utf8' }
             );
 
-            const levels = JSON.parse(raw);
-            if (!Array.isArray(levels)) {
-              throw new Error(`Invalid level list at ${sha}`);
-            }
+            let levels;
+
+try {
+  levels = JSON.parse(raw);
+} catch (error) {
+  console.log(`Invalid JSON in commit ${sha}`);
+  console.log(`File contents:\n${raw}`);
+  throw error;
+}
+
+if (!Array.isArray(levels) ||
+    !levels.every(level => typeof level === 'string')) {
+  throw new Error(`Invalid level list in commit ${sha}`);
+}
 
             const shortSha = sha.slice(0, 7);
             const date = new Date(timestamp).toISOString().slice(0, 10);
