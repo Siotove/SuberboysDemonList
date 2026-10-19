@@ -131,29 +131,33 @@ export default {
         this.progression = roulette.progression;
     },
     computed: {
-        currentLevel() {
-            return this.levels[this.progression.length];
-        },
-        currentPercentage() {
-            return this.progression[this.progression.length - 1] || 0;
-        },
-        placeholder() {
-            return `At least ${this.currentPercentage + 1}%`;
-        },
-        hasCompleted() {
-            return (
-                this.progression[this.progression.length - 1] >= 100 ||
-                this.progression.length === this.levels.length
-            );
-        },
-        isActive() {
-            return (
-                this.progression.length > 0 &&
-                !this.givenUp &&
-                !this.hasCompleted
-            );
-        },
+    currentLevel() {
+        return this.levels[this.progression.length];
     },
+    currentPercentage() {
+        return this.progression[this.progression.length - 1] || 0;
+    },
+    requiredPercentage() {
+        const round = this.progression.length + 1;
+        return (round * (round + 1)) / 2;
+    },
+    placeholder() {
+        return `Reach at least ${this.requiredPercentage}%`;
+    },
+    hasCompleted() {
+        return (
+            this.progression[this.progression.length - 1] >= 100 ||
+            this.progression.length === this.levels.length
+        );
+    },
+    isActive() {
+        return (
+            this.progression.length > 0 &&
+            !this.givenUp &&
+            !this.hasCompleted
+        );
+    },
+},
     methods: {
     medalClass(rank) {
         if (rank === 1) return 'medal-gold';
