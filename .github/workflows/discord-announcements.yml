@@ -117,30 +117,61 @@ jobs:
               ].join(' · ');
             }
 
-            const lines = [];
+            
+const lines = [];
 
-            for (const level of added) {
-              const p = placement(after, level);
-              lines.push(
-                `🟢 **${level}** has been added at **#${p.rank}**\n` +
-                neighbours(p)
-              );
-            }
+function positionText(level, verb, list) {
+  const p = placement(list, level);
 
-            for (const level of moved) {
-              const oldRank = before.indexOf(level) + 1;
-              const p = placement(after, level);
-              lines.push(
-                `🔄 **${level}** moved from **#${oldRank}** to **#${p.rank}**\n` +
-                neighbours(p)
-              );
-            }
+  if (p.rank === 1) {
+    return `**${level}** Was ${verb} To Number 1 As The New Top 1`;
+  }
 
-            for (const level of removed) {
-              const oldRank = before.indexOf(level) + 1;
-              lines.push(`🔴 **${level}** has been removed (was **#${oldRank}**).`);
-            }
+  let message = `**${level}** Was ${verb} To #${p.rank}`;
 
+  if (p.above) {
+    message += `, Above **${p.above}**`;
+  }
+
+  if (p.below) {
+    message += ` & Below **${p.below}**`;
+  }
+
+  return message;
+}
+
+for (const level of added) {
+  lines.push(positionText(level, 'Added', after));
+}
+
+for (const level of moved) {
+  const oldRank = before.indexOf(level) + 1;
+  const newRank = after.indexOf(level) + 1;
+
+  if (newRank === 1) {
+    lines.push(
+      `**${level}** Was Moved To Number 1 As The New Top 1`
+    );
+  } else {
+    let message = `**${level}** Was Moved From #${oldRank} to #${newRank}`;
+
+    const p = placement(after, level);
+
+    if (p.above) {
+      message += `, Above **${p.above}**`;
+    }
+
+    if (p.below) {
+      message += ` & Below **${p.below}**`;
+    }
+
+    lines.push(message);
+  }
+}
+
+for (const level of removed) {
+  lines.push(`**${level}** Was Just Deleted Off The List`);
+}
             if (lines.length === 0) {
               console.log('No additions, removals, or reorderings detected.');
               return;
