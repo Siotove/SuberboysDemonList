@@ -238,3 +238,20 @@
 .page-list .rank-change.same {
     opacity: 0.35;
 }
+
+.account-footer {
+    grid-column: 1 / -1;
+    padding: 1.5rem;
+    text-align: center;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.account-footer a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.account-footer a:hover {
+    text-decoration: underline;
+}
