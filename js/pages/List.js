@@ -62,7 +62,7 @@ export default {
                     <tr v-for="([level, err], i) in list" :key="i">
                         <td class="rank">
                             <p
-                                v-if="i + 1 <= 25"
+                                v-if="i + 1 <= 150"
                                 class="type-label-lg"
                                 :class="{
                                     'rank-gold': i === 0,
@@ -139,7 +139,7 @@ export default {
 
                     <h2>Records</h2>
 
-                    <p v-if="selected + 1 <= 75">
+                    <p v-if="selected + 1 <= 150">
                         <strong>{{ level.percentToQualify }}%</strong> or better to qualify
                     </p>
                     <p v-else>
