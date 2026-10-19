@@ -1,4 +1,3 @@
-
 export default {
     template: `
         <main class="account-page">
@@ -60,6 +59,7 @@ export default {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'same-origin',
+                    cache: 'no-store',
                     body: JSON.stringify({
                         email: this.email,
                         password: this.password
@@ -73,8 +73,21 @@ export default {
                     return;
                 }
 
-                this.$router.push('/profile');
-            } catch {
+                const check = await fetch('/api/auth/me', {
+                    credentials: 'same-origin',
+                    cache: 'no-store'
+                });
+
+                const session = await check.json();
+
+                if (!check.ok || !session.user) {
+                    this.message =
+                        'Login succeeded, but your session was not saved. Please check the Worker cookie settings.';
+                    return;
+                }
+
+                await this.$router.push('/profile');
+            } catch (error) {
                 this.message = 'Could not connect. Please try again.';
             } finally {
                 this.loading = false;
