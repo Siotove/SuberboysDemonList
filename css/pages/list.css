@@ -206,3 +206,9 @@
     font-size: inherit;
     font-weight: inherit;
 }
+.page-list .historical-controls select,
+.page-list .historical-controls button {
+    font-family: "Lexend Deca", sans-serif;
+    font-size: 17.1428571429px;
+    font-weight: 500;
+}
