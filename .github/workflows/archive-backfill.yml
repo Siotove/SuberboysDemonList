@@ -1,0 +1,127 @@
+
+name: Backfill level archive
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Backfill snapshots and changes
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const { execFileSync } = require('child_process');
+
+          const dir = 'archive/snapshots';
+          fs.mkdirSync(dir, { recursive: true });
+          fs.mkdirSync('archive', { recursive: true });
+
+          const indexPath = 'archive/index.json';
+          const changesPath = 'archive/changes.json';
+
+          const index = fs.existsSync(indexPath)
+            ? JSON.parse(fs.readFileSync(indexPath, 'utf8'))
+            : [];
+
+          const known = new Set(index.map(x => x.commit));
+
+          const commits = execFileSync(
+            'git',
+            ['log', '--reverse', '--format=%H', '--', 'data/_list.json'],
+            { encoding: 'utf8' }
+          ).trim().split('\n').filter(Boolean);
+
+          for (const sha of commits) {
+            if (known.has(sha)) continue;
+
+            const timestamp = execFileSync(
+              'git', ['show', '-s', '--format=%cI', sha],
+              { encoding: 'utf8' }
+            ).trim();
+
+            const raw = execFileSync(
+              'git', ['show', `${sha}:data/_list.json`],
+              { encoding: 'utf8' }
+            );
+
+            const levels = JSON.parse(raw);
+            if (!Array.isArray(levels)) {
+              throw new Error(`Invalid level list at ${sha}`);
+            }
+
+            const shortSha = sha.slice(0, 7);
+            const date = new Date(timestamp).toISOString().slice(0, 10);
+            const filename = `${date}-${shortSha}.json`;
+
+            fs.writeFileSync(
+              path.join(dir, filename),
+              JSON.stringify(levels, null, 2) + '\n'
+            );
+
+            index.push({
+              date: timestamp,
+              commit: sha,
+              file: `snapshots/${filename}`
+            });
+            known.add(sha);
+          }
+
+          index.sort((a, b) =>
+            a.date.localeCompare(b.date) ||
+            a.commit.localeCompare(b.commit)
+          );
+
+          const readLevels = item => JSON.parse(
+            fs.readFileSync(path.join('archive', item.file), 'utf8')
+          );
+
+          const changes = index.map((item, i) => {
+            const current = readLevels(item);
+            const previous = i ? readLevels(index[i - 1]) : [];
+            const currentSet = new Set(current);
+            const previousSet = new Set(previous);
+
+            return {
+              date: item.date,
+              commit: item.commit,
+              added: current.filter(x => !previousSet.has(x)),
+              removed: previous.filter(x => !currentSet.has(x)),
+              moved: current
+                .filter(x => previousSet.has(x))
+                .filter(x => previous.indexOf(x) !== current.indexOf(x))
+                .map(level => ({
+                  level,
+                  from: previous.indexOf(level),
+                  to: current.indexOf(level)
+                }))
+            };
+          });
+
+          fs.writeFileSync(indexPath, JSON.stringify(index, null, 2) + '\n');
+          fs.writeFileSync(changesPath, JSON.stringify(changes, null, 2) + '\n');
+
+          console.log(`Archive now contains ${index.length} snapshots.`);
+          NODE
+
+      - name: Commit backfilled archive
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add archive/
+          if git diff --cached --quiet; then
+            echo "Archive is already up to date."
+          else
+            git commit -m "Backfill historical level archive"
+            git push
+          fi
