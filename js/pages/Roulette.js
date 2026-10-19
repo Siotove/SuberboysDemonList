@@ -107,29 +107,33 @@ export default {
                 </section>
 
                 <section v-else class="options">
-                    <p>Round: {{ progression.length + (hasCompleted ? 0 : 1) }}</p>
-                    <p>Target: {{ requiredPercentage }}%</p>
-                    <p>Completed rounds: {{ progression.length }}</p>
+    <div class="roulette-round-info">
+        <p>Round: {{ progression.length + (hasCompleted ? 0 : 1) }}</p>
+        <p>Target: {{ requiredPercentage }}%</p>
+        <p>Completed rounds: {{ progression.length }}</p>
+    </div>
 
-                    <Btn
-                        v-if="!givenUp && !hasCompleted"
-                        @click.native.prevent="onGiveUp"
-                        style="background-color:#e91e63"
-                    >
-                        Give Up
-                    </Btn>
+                        <div class="roulette-actions">
+        <Btn
+            v-if="!givenUp && !hasCompleted"
+            @click.native.prevent="onGiveUp"
+            style="background-color:#e91e63"
+        >
+            Give Up
+        </Btn>
 
-                    <Btn @click.native.prevent="onExport">
-                        Export Save
-                    </Btn>
+        <Btn @click.native.prevent="onExport">
+            Export Save
+        </Btn>
 
-                    <Btn
-                        v-if="givenUp || hasCompleted"
-                        @click.native.prevent="backToSettings"
-                    >
-                        New Run
-                    </Btn>
-                </section>
+        <Btn
+            v-if="givenUp || hasCompleted"
+            @click.native.prevent="backToSettings"
+        >
+            New Run
+        </Btn>
+    </div>
+</section>
             </div>
 
             <section class="levels-container">
