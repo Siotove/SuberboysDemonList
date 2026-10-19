@@ -289,16 +289,17 @@ export default {
         embed,
         score,
 
-        formatDate(date) {
-            return new Date(date + "T12:00:00").toLocaleDateString(
-                "en-GB",
-                {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                }
-            );
-        },
+        
+formatDate(date) {
+    const [year, month, day] = date.slice(0, 10).split("-").map(Number);
+
+    return new Date(year, month - 1, day).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    });
+},
+
 
         async loadSnapshotDates() {
             try {
