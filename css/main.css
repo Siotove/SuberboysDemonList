@@ -394,3 +394,48 @@ input[type="checkbox"] {
         width: calc(100% - 1rem);
     }
 }
+
+/* Remove excess whitespace from the stats display */
+.page-leaderboard .player-container {
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.page-leaderboard .player {
+    min-width: 0;
+    width: 100%;
+}
+
+.page-leaderboard .player .table {
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+/* Give each column only the space it needs */
+.page-leaderboard .player .table td.rank {
+    width: 2.75rem;
+    padding: 0.65rem 0.35rem;
+    white-space: nowrap;
+}
+
+.page-leaderboard .player .table td.level {
+    width: auto;
+    min-width: 0;
+    padding: 0.65rem 0.35rem;
+    overflow-wrap: anywhere;
+}
+
+.page-leaderboard .player .table td.score {
+    width: 4.5rem;
+    padding: 0.65rem 0.35rem;
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Prevent links from forcing the table wider */
+.page-leaderboard .player .table td.level a {
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
