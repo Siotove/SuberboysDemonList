@@ -8,5 +8,12 @@
     "directory": ".",
     "binding": "ASSETS",
     "run_worker_first": ["/api/*"]
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "db",
+      "database_name": "suberboys-accounts",
+      "database_id": "9b7197a0-0966-4795-b0b8-c262f3ae5dcd"
+    }
+  ]
 }
