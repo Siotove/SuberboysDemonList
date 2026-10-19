@@ -155,3 +155,47 @@
 .page-list .list .level.rank-bronze button:hover {
     color: #cd7f32 !important;
 }
+
+/* Historical list controls */
+.page-list .historical-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.page-list .historical-controls label {
+    font-weight: bold;
+}
+
+.page-list .historical-controls select,
+.page-list .historical-controls button {
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+    border: 1px solid var(--color-background-hover);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    font: inherit;
+    max-width: 100%;
+}
+
+.page-list .historical-controls select {
+    cursor: pointer;
+}
+
+.page-list .historical-controls button {
+    cursor: pointer;
+}
+
+.page-list .historical-controls button:hover,
+.page-list .historical-controls select:hover {
+    background-color: var(--color-background-hover);
+}
+
+.page-list .historical-controls .history-label {
+    width: 100%;
+    margin: 0;
+    font-weight: bold;
+}
