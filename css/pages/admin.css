@@ -1,7 +1,10 @@
 
-/* Admin page */
+/* ===========================
+   Admin panel
+   =========================== */
+
 .admin-page {
-  --admin-card: var(--card-bg, var(--card-background, #ffffff));
+  --admin-card: var(--card-bg, var(--card-background, var(--background, #fff)));
   --admin-border: var(--border-color, #dedee7);
   --admin-text: var(--text-color, #20202a);
   --admin-muted: var(--muted-text, #777787);
@@ -11,6 +14,7 @@
   margin: 0 auto;
   padding: 32px 20px 60px;
   color: var(--admin-text);
+  font-family: "Lexend Deca", sans-serif;
   box-sizing: border-box;
 }
 
@@ -20,103 +24,61 @@
   box-sizing: border-box;
 }
 
+/* Headings */
 .admin-page h1 {
-  margin: 0 0 8px;
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
-  font-weight: 800;
-  letter-spacing: -0.04em;
+  margin: 0 0 12px;
+  font-family: "Lexend Deca", sans-serif;
+  font-size: clamp(32px, 5vw, 51.43px);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -2px;
 }
 
 .admin-page h2 {
-  margin: 0;
-  font-size: 1.25rem;
+  margin: 0 0 18px;
+  font-family: "Lexend Deca", sans-serif;
+  font-size: clamp(23px, 3vw, 34.29px);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -1px;
 }
 
 .admin-page h3 {
   margin: 0 0 6px;
-  font-size: 1.05rem;
+  font-family: "Lexend Deca", sans-serif;
+  font-size: 20px;
+  line-height: 1.35;
+  font-weight: 700;
   overflow-wrap: anywhere;
 }
 
 .admin-page p {
-  line-height: 1.6;
-}
-
-.admin-section {
-  margin-top: 28px;
-  padding: 24px;
-  background: var(--admin-card);
-  border: 1px solid var(--admin-border);
-  border-radius: 18px;
-  box-shadow: 0 8px 28px rgb(0 0 0 / 5%);
-}
-
-.admin-section > h2 {
-  margin-bottom: 20px;
-}
-
-.admin-page button,
-.admin-page select,
-.admin-page input {
-  font: inherit;
-}
-
-.admin-page button,
-.admin-page select {
-  min-height: 42px;
-  border-radius: 10px;
-}
-
-.admin-page button {
-  padding: 10px 16px;
-  border: 1px solid var(--admin-border);
-  cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-}
-
-.admin-page button:hover {
-  transform: translateY(-1px);
-}
-
-.admin-page button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.admin-page select {
-  width: 100%;
-  min-width: 0;
-  padding: 9px 12px;
-  color: var(--admin-text);
-  background: var(--admin-card);
-  border: 1px solid var(--admin-border);
-}
-
-.admin-page button:focus-visible,
-.admin-page select:focus-visible {
-  outline: 2px solid var(--admin-accent);
-  outline-offset: 3px;
-}
-
-.admin-page .admin-section button {
-  color: white;
-  background: var(--admin-accent);
-  border-color: transparent;
-}
-
-.admin-page .admin-error {
-  padding: 12px 14px;
-  color: #d64545;
-  background: rgb(220 60 60 / 9%);
-  border: 1px solid rgb(220 60 60 / 25%);
-  border-radius: 10px;
+  font-family: "Lexend Deca", sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  font-weight: 500;
 }
 
 .admin-page .admin-muted {
   color: var(--admin-muted);
 }
 
+/* Main sections */
+.admin-page .admin-section {
+  margin-top: 28px;
+  padding: 24px;
+  color: var(--admin-text);
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 5%);
+}
+
+.admin-page .admin-section > h2 {
+  margin-bottom: 20px;
+}
+
+/* Player list */
 .admin-page .players-list {
   display: grid;
   gap: 14px;
@@ -124,10 +86,16 @@
 
 .admin-page .player-card {
   min-width: 0;
-  padding: 18px;
+  padding: 20px;
+  color: var(--admin-text);
+  background: var(--admin-card);
   border: 1px solid var(--admin-border);
   border-radius: 14px;
-  background: var(--admin-card);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.admin-page .player-card:hover {
+  border-color: var(--admin-accent);
 }
 
 .admin-page .player-card-header {
@@ -136,68 +104,145 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .admin-page .player-email {
   margin: 0;
   color: var(--admin-muted);
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
 
 .admin-page .player-admin-badge {
   display: inline-block;
   margin-left: 8px;
-  padding: 4px 8px;
+  padding: 5px 9px;
   color: var(--admin-accent);
-  background: rgb(124 92 255 / 12%);
+  background: color-mix(in srgb, var(--admin-accent) 12%, transparent);
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.3px;
+  vertical-align: middle;
 }
 
+/* Identity linking */
 .admin-page .player-link-status {
   margin: 12px 0;
   color: var(--admin-muted);
-  font-size: 0.9rem;
+  font-size: 13px;
 }
 
 .admin-page .player-link-controls {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
   align-items: center;
+  gap: 10px;
 }
 
-.admin-page .player-message {
-  margin: 10px 0 0;
-  font-size: 0.9rem;
+.admin-page select,
+.admin-page input {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 13px;
+  color: var(--admin-text);
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  font-family: "Lexend Deca", sans-serif;
+  font-size: 13px;
 }
 
-.admin-page .player-message.success {
-  color: #22a06b;
+.admin-page select:focus,
+.admin-page input:focus {
+  border-color: var(--admin-accent);
+  outline: 2px solid color-mix(in srgb, var(--admin-accent) 20%, transparent);
 }
 
-.admin-page .player-message.error {
-  color: #d64545;
+/* Buttons */
+.admin-page button {
+  min-height: 42px;
+  padding: 10px 16px;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  font-family: "Lexend Deca", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 150ms ease, opacity 150ms ease;
+}
+
+.admin-page .admin-section button {
+  color: white;
+  background: var(--admin-accent);
+  border-color: transparent;
+}
+
+.admin-page button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.admin-page button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-page button:focus-visible {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: 3px;
 }
 
 .admin-page .admin-refresh {
   margin-top: 18px;
 }
 
+/* Status messages */
+.admin-page .player-message {
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+
+.admin-page .player-message.success {
+  color: #22a06b;
+}
+
+.admin-page .player-message.error,
+.admin-page .admin-error {
+  color: #d64545;
+}
+
+.admin-page .admin-error {
+  padding: 13px 15px;
+  background: rgb(220 60 60 / 8%);
+  border: 1px solid rgb(220 60 60 / 25%);
+  border-radius: 10px;
+}
+
+/* Loading and empty states */
+.admin-page .admin-loading,
+.admin-page .admin-empty {
+  padding: 24px;
+  color: var(--admin-muted);
+  text-align: center;
+  border: 1px dashed var(--admin-border);
+  border-radius: 12px;
+}
+
+/* Responsive layout */
 @media (max-width: 600px) {
   .admin-page {
     padding: 24px 14px 40px;
   }
 
-  .admin-section {
+  .admin-page .admin-section {
     padding: 17px;
     border-radius: 14px;
   }
 
   .admin-page .player-card {
-    padding: 14px;
+    padding: 15px;
   }
 
   .admin-page .player-link-controls {
