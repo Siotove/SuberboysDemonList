@@ -1415,3 +1415,79 @@ main.admin-page {
         box-sizing: border-box;
     }
 }
+
+/* Profile typography overrides */
+.profile-page h1 {
+    font-size: 34px;
+    line-height: 1.2;
+    letter-spacing: -1px;
+    margin: 8px 0 12px;
+}
+
+.profile-page h2 {
+    font-size: 24px;
+    line-height: 1.3;
+    letter-spacing: -0.5px;
+    margin: 8px 0 16px;
+}
+
+.profile-page h3 {
+    font-size: 19px;
+    line-height: 1.35;
+    letter-spacing: 0;
+}
+
+.profile-page p {
+    font-size: 15px;
+    line-height: 1.6;
+    letter-spacing: 0;
+}
+
+.profile-page h1::before,
+.profile-page h1::after,
+.profile-page h2::before,
+.profile-page h2::after,
+.profile-page h3::before,
+.profile-page h3::after,
+.profile-page p::before,
+.profile-page p::after {
+    display: none;
+}
+
+.profile-page .profile-eyebrow {
+    font-size: 12px;
+    line-height: 1.5;
+    letter-spacing: 2px;
+}
+
+.profile-page .profile-quick-link strong {
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+.profile-page .profile-quick-link small {
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.profile-page .profile-primary-button,
+.profile-page .profile-secondary-button,
+.profile-page .profile-logout-button {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.profile-page label {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+    .profile-page h1 {
+        font-size: 28px;
+    }
+
+    .profile-page h2 {
+        font-size: 21px;
+    }
+}
