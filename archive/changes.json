@@ -39776,5 +39776,38 @@
         "to": 10
       }
     ]
+  },
+  {
+    "date": "2026-10-20T15:27:44.000Z",
+    "commit": "dc8920670cfdaad487d91189cb0383b5b77a297a",
+    "added": [],
+    "removed": [],
+    "moved": [
+      {
+        "level": "AinaPoni",
+        "from": 13,
+        "to": 10
+      },
+      {
+        "level": "MilestoneIII",
+        "from": 14,
+        "to": 11
+      },
+      {
+        "level": "Sadaclysm",
+        "from": 11,
+        "to": 12
+      },
+      {
+        "level": "Thermo",
+        "from": 10,
+        "to": 13
+      },
+      {
+        "level": "TungTung",
+        "from": 12,
+        "to": 14
+      }
+    ]
   }
 ]
