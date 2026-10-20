@@ -15,10 +15,7 @@
       "database_name": "suberboys-accounts",
       "database_id": "9b7197a0-0966-4795-b0b8-c262f3ae5dcd"
     }
-  ]
-}
-{
-  // ...
+  ],
   "observability": {
     "logs": {
       "enabled": true,
@@ -34,6 +31,5 @@
     "issue_detection": {
       "enabled": false
     }
-  },
-  // ...
+  }
 }
