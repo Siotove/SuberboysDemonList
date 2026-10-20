@@ -111,7 +111,25 @@ export async function fetchLeaderboard() {
             });
         });
     });
+const identityResponse = await fetch('/api/leaderboard/identities', {
+    credentials: 'same-origin',
+    cache: 'no-store'
+});
 
+if (identityResponse.ok) {
+    const identityData = await identityResponse.json();
+
+    for (const name of identityData.identities || []) {
+        const key = getUserKey(name);
+
+        scoreMap[key] ??= {
+            verified: [],
+            completed: [],
+            progressed: [],
+            completedPaths: new Set(),
+        };
+    }
+}
     const res = Object.entries(scoreMap).map(([user, scores]) => {
         const { verified, completed, progressed, completedPaths } = scores;
 
