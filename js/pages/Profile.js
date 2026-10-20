@@ -3,7 +3,11 @@ export default {
         <main class="account-page">
             <section class="account-card">
                 <h1>Player profile</h1>
-
+<p>
+    <router-link to="/submit">
+        Submit a Record
+    </router-link>
+</p>
                 <p v-if="loading">Loading your profile...</p>
 
                 <div v-else-if="user">
