@@ -1,7 +1,7 @@
 
 CREATE TABLE IF NOT EXISTS submissions (
     id TEXT PRIMARY KEY,
-    user_id INTEGER NOT NULL,
+    user_id TEXT NOT NULL,
     type TEXT NOT NULL
         CHECK (type IN ('completion', 'verification')),
     status TEXT NOT NULL DEFAULT 'pending'
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS submissions (
         ),
     payload TEXT NOT NULL
         CHECK (json_valid(payload)),
-    reviewed_by INTEGER,
+    reviewed_by TEXT,
     reviewed_at TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
