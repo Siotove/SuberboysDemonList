@@ -1,6 +1,6 @@
 
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
-const PBKDF2_ITERATIONS = 310000;
+const PBKDF2_ITERATIONS = 100000;
 
 function json(data, status = 200, headers = {}) {
     return Response.json(data, { status, headers });
