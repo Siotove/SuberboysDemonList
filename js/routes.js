@@ -6,7 +6,7 @@ import Leaderboard from './pages/Leaderboard.js';
 import Roulette from './pages/Roulette.js';
 import Packs from './pages/Packs.js';
 import Games from './pages/Games.js';
-
+import Admin from './pages/Admin.js';
 import Login from './pages/Login.js';
 import Register from './pages/Register.js';
 import Profile from './pages/Profile.js';
@@ -20,7 +20,7 @@ export default [
     { path: '/games/roulette', component: Roulette },
     { path: '/roulette', redirect: '/games/roulette' },
     { path: '/packs', component: Packs },
-
+    { path: '/admin', component: Admin },
     { path: '/login', component: Login },
     { path: '/register', component: Register },
     { path: '/profile', component: Profile },
