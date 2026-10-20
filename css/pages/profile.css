@@ -1,0 +1,445 @@
+
+/* ========================================
+   SUBERBOYS DEMON LIST — PROFILE PAGE
+   Matches the List and Games page layout
+======================================== */
+
+.profile-page {
+    display: block !important;
+    width: calc(100% - 48px);
+    max-width: 1200px;
+    margin: 36px auto;
+    padding: 0;
+    box-sizing: border-box;
+    color: var(--text-color, #20212a);
+}
+
+.profile-page *,
+.profile-page *::before,
+.profile-page *::after {
+    box-sizing: border-box;
+}
+
+/* Main sections */
+
+.profile-page .profile-hero,
+.profile-page .profile-panel {
+    display: block;
+    width: 100%;
+    margin: 0 0 24px;
+    padding: 28px;
+    border-radius: 12px;
+    border: 1px solid rgba(120, 120, 140, 0.2);
+    background: var(--profile-card-bg, #ffffff);
+    color: inherit;
+}
+
+/* Profile introduction */
+
+.profile-page .profile-hero {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(
+            circle at 90% 0%,
+            rgba(111, 83, 255, 0.13),
+            transparent 42%
+        ),
+        var(--profile-card-bg, #ffffff);
+}
+
+.profile-page .profile-avatar {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    margin: 0 0 20px;
+    border-radius: 50%;
+    background: #7055ff;
+    color: #ffffff;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.profile-page .profile-eyebrow {
+    margin: 0 0 8px;
+    color: #7658ff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    line-height: 1.5;
+}
+
+.profile-page .profile-hero h1 {
+    margin: 0 0 12px;
+    font-size: clamp(30px, 4vw, 42px);
+    line-height: 1.2;
+    letter-spacing: -1px;
+}
+
+.profile-page .profile-username {
+    margin: 12px 0 4px;
+    font-size: 23px;
+    line-height: 1.35;
+    letter-spacing: 0;
+}
+
+.profile-page .profile-muted {
+    color: #777987;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.profile-page .profile-hero > .profile-muted {
+    margin: 8px 0 0;
+}
+
+/* Buttons */
+
+.profile-page .profile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.profile-page .profile-primary-button,
+.profile-page .profile-secondary-button,
+.profile-page .profile-logout-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 11px 18px;
+    border-radius: 8px;
+    font-family: "Lexend Deca", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        transform 0.18s ease;
+}
+
+.profile-page .profile-primary-button {
+    border: 1px solid #7055ff;
+    background: #7055ff;
+    color: #ffffff;
+}
+
+.profile-page .profile-primary-button:hover {
+    background: #5e43eb;
+    border-color: #5e43eb;
+    transform: translateY(-1px);
+}
+
+.profile-page .profile-secondary-button {
+    border: 1px solid rgba(120, 120, 140, 0.35);
+    background: transparent;
+    color: inherit;
+}
+
+.profile-page .profile-secondary-button:hover {
+    background: rgba(120, 120, 140, 0.09);
+}
+
+.profile-page button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Panel headings */
+
+.profile-page .profile-panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.profile-page .profile-panel h2 {
+    margin: 0;
+    font-size: 25px;
+    line-height: 1.35;
+    letter-spacing: -0.5px;
+    text-transform: none;
+}
+
+.profile-page .profile-panel h3 {
+    margin: 4px 0;
+    font-size: 19px;
+    line-height: 1.4;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+/* Linked identity */
+
+.profile-page .profile-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 11px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.profile-page .profile-status-linked {
+    background: rgba(43, 180, 112, 0.13);
+    color: #16844c;
+}
+
+.profile-page .profile-status-unlinked {
+    background: rgba(230, 166, 48, 0.15);
+    color: #a56c08;
+}
+
+.profile-page .profile-identity {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px;
+    border: 1px solid rgba(120, 120, 140, 0.16);
+    border-radius: 10px;
+    background: rgba(120, 120, 140, 0.045);
+}
+
+.profile-page .profile-identity-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 48px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #7055ff;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.profile-page .profile-identity p {
+    margin: 0;
+}
+
+/* Identity linking form */
+
+.profile-page .profile-link-form > p {
+    line-height: 1.7;
+}
+
+.profile-page .profile-link-form form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.profile-page .profile-link-form label {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.profile-page .profile-link-form input {
+    width: 100%;
+    max-width: 480px;
+    min-height: 44px;
+    padding: 11px 13px;
+    border: 1px solid rgba(120, 120, 140, 0.35);
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+}
+
+.profile-page .profile-link-form input:focus {
+    outline: 2px solid #7055ff;
+    outline-offset: 2px;
+}
+
+/* Quick access cards */
+
+.profile-page .profile-quick-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.profile-page .profile-quick-link {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid rgba(120, 120, 140, 0.22);
+    border-radius: 10px;
+    background: rgba(120, 120, 140, 0.035);
+    color: inherit;
+    text-decoration: none;
+    transition:
+        border-color 0.18s ease,
+        background 0.18s ease,
+        transform 0.18s ease;
+}
+
+.profile-page .profile-quick-link:hover {
+    border-color: #8974ff;
+    background: rgba(112, 85, 255, 0.06);
+    transform: translateY(-2px);
+}
+
+.profile-page .profile-quick-link strong {
+    display: block;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.profile-page .profile-quick-link small {
+    display: block;
+    margin-top: 5px;
+    color: #777987;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.profile-page .profile-quick-icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 9px;
+    background: rgba(112, 85, 255, 0.13);
+    color: #7055ff;
+    font-size: 23px;
+}
+
+/* Account and messages */
+
+.profile-page .profile-account-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.profile-page .profile-account-panel h2 {
+    margin-bottom: 6px;
+}
+
+.profile-page .profile-account-panel p {
+    margin: 0;
+}
+
+.profile-page .profile-logout-button {
+    border: 1px solid rgba(220, 70, 70, 0.4);
+    background: transparent;
+    color: #d74343;
+}
+
+.profile-page .profile-logout-button:hover {
+    background: rgba(220, 70, 70, 0.08);
+}
+
+.profile-page .profile-message {
+    margin: 0 0 20px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    background: rgba(112, 85, 255, 0.09);
+    line-height: 1.6;
+}
+
+/* Remove global heading and paragraph spacer elements
+   only inside this page */
+
+.profile-page h1::before,
+.profile-page h1::after,
+.profile-page h2::before,
+.profile-page h2::after,
+.profile-page h3::before,
+.profile-page h3::after,
+.profile-page p::before,
+.profile-page p::after {
+    display: none;
+    content: none;
+}
+
+/* Dark theme: compatible with the site's header toggle */
+
+header.dark ~ .profile-page,
+body:has(header.dark) .profile-page {
+    --profile-card-bg: #171923;
+    --text-color: #f4f4f8;
+}
+
+header.dark ~ .profile-page .profile-muted,
+body:has(header.dark) .profile-page .profile-muted,
+header.dark ~ .profile-page .profile-quick-link small,
+body:has(header.dark) .profile-page .profile-quick-link small {
+    color: #a7a9b8;
+}
+
+header.dark ~ .profile-page .profile-identity,
+body:has(header.dark) .profile-page .profile-identity,
+header.dark ~ .profile-page .profile-quick-link,
+body:has(header.dark) .profile-page .profile-quick-link {
+    background-color: rgba(255, 255, 255, 0.035);
+    border-color: rgba(255, 255, 255, 0.09);
+}
+
+/* Responsive layout */
+
+@media (max-width: 700px) {
+    .profile-page {
+        width: calc(100% - 28px);
+        margin: 20px auto;
+    }
+
+    .profile-page .profile-hero,
+    .profile-page .profile-panel {
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+
+    .profile-page .profile-quick-links {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .profile-page .profile-quick-link {
+        padding: 14px;
+    }
+
+    .profile-page .profile-panel h2 {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 420px) {
+    .profile-page .profile-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .profile-page .profile-actions a {
+        width: 100%;
+    }
+
+    .profile-page .profile-account-panel {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .profile-page .profile-logout-button {
+        align-self: flex-start;
+    }
+}
