@@ -102,7 +102,51 @@ function validOrigin(request) {
     const origin = request.headers.get("Origin");
     return !origin || origin === new URL(request.url).origin;
 }
+async function existingLeaderboardName(env, origin, name) {
+    const listResponse = await env.ASSETS.fetch(
+        new Request(new URL("/data/_list.json", origin))
+    );
 
+    if (!listResponse.ok) {
+        throw new Error("Could not read leaderboard data");
+    }
+
+    const files = await listResponse.json();
+
+    if (!Array.isArray(files)) {
+        throw new Error("Invalid leaderboard list");
+    }
+
+    for (const file of files) {
+        if (typeof file !== "string" ||
+            !/^[a-zA-Z0-9_-]+$/.test(file)) {
+            continue;
+        }
+
+        const response = await env.ASSETS.fetch(
+            new Request(
+                new URL(`/data/${encodeURIComponent(file)}.json`, origin)
+            )
+        );
+
+        if (!response.ok) {
+            throw new Error(`Could not read level data: ${file}`);
+        }
+
+        const level = await response.json();
+
+        if (!Array.isArray(level.records)) continue;
+
+        const exists = level.records.some(record =>
+            typeof record.user === "string" &&
+            record.user.trim().toLowerCase() === name.toLowerCase()
+        );
+
+        if (exists) return true;
+    }
+
+    return false;
+}
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
@@ -127,7 +171,123 @@ if (!url.pathname.startsWith("/api/")) {
         if (request.method === "POST" && !validOrigin(request)) {
             return json({ error: "Invalid request origin" }, 403);
         }
+if (url.pathname === "/api/leaderboard/profile" &&
+    request.method === "GET") {
+    const user = await currentUser(request, env.db);
 
+    if (!user) {
+        return json({ error: "Please log in." }, 401, {
+            "Cache-Control": "no-store"
+        });
+    }
+
+    const profile = await env.db.prepare(`
+        SELECT leaderboard_name
+        FROM leaderboard_profiles
+        WHERE user_id = ?
+    `).bind(user.id).first();
+
+    return json({ profile: profile || null }, 200, {
+        "Cache-Control": "no-store"
+    });
+}
+
+if (url.pathname === "/api/leaderboard/join" &&
+    request.method === "POST") {
+    const user = await currentUser(request, env.db);
+
+    if (!user) {
+        return json({ error: "Please log in." }, 401);
+    }
+
+    let body;
+
+    try {
+        body = await request.json();
+    } catch {
+        return json({ error: "Invalid JSON body." }, 400);
+    }
+
+    const leaderboardName =
+        typeof body.leaderboardName === "string"
+            ? body.leaderboardName.trim()
+            : "";
+
+    if (
+        leaderboardName.length < 1 ||
+        leaderboardName.length > 24 ||
+        /[\u0000-\u001F\u007F]/.test(leaderboardName)
+    ) {
+        return json({
+            error: "Leaderboard names must be 1–24 characters."
+        }, 400);
+    }
+
+    const existingProfile = await env.db.prepare(`
+        SELECT leaderboard_name
+        FROM leaderboard_profiles
+        WHERE user_id = ?
+    `).bind(user.id).first();
+
+    if (existingProfile) {
+        return json({
+            error: "Your account already has a leaderboard identity."
+        }, 409);
+    }
+
+    const reserved = await existingLeaderboardName(
+        env, url.origin, leaderboardName
+    );
+
+    if (reserved) {
+        return json({
+            error: "That name belongs to an existing leaderboard player. Contact an admin to link it."
+        }, 409);
+    }
+
+    const duplicate = await env.db.prepare(`
+        SELECT id
+        FROM leaderboard_profiles
+        WHERE leaderboard_name = ? COLLATE NOCASE
+    `).bind(leaderboardName).first();
+
+    if (duplicate) {
+        return json({
+            error: "That leaderboard name is already taken."
+        }, 409);
+    }
+
+    const id = crypto.randomUUID();
+
+    try {
+        await env.db.prepare(`
+            INSERT INTO leaderboard_profiles
+                (id, user_id, leaderboard_name)
+            VALUES (?, ?, ?)
+        `).bind(id, user.id, leaderboardName).run();
+    } catch (error) {
+        // The database UNIQUE constraints also protect against
+        // two requests attempting to claim the same name.
+        const message = String(error?.message || "");
+
+        if (/unique constraint/i.test(message)) {
+            return json({
+                error: "That account or leaderboard name is already linked."
+            }, 409);
+        }
+
+        throw error;
+    }
+
+    return json({
+        success: true,
+        profile: {
+            leaderboard_name: leaderboardName
+        }
+    }, 201, {
+        "Cache-Control": "no-store"
+    });
+}
         try {
             if (url.pathname === "/api/auth/register" &&
                 request.method === "POST") {
