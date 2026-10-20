@@ -6,6 +6,47 @@ import {
 
 const LEVEL_FILE_PATTERN = /^[a-zA-Z0-9_-]{1,80}$/;
 
+async function resolveLevelFile(env, selectedValue) {
+    const list = JSON.parse(
+        (await readRepoFile(env, "data/_list.json")).text
+    );
+
+    if (!Array.isArray(list)) {
+        throw new Error("Published level list is invalid.");
+    }
+
+    for (const fileName of list) {
+        if (
+            typeof fileName !== "string" ||
+            !LEVEL_FILE_PATTERN.test(fileName)
+        ) {
+            continue;
+        }
+
+        // Support either a filename or a displayed level name.
+        if (fileName === selectedValue) {
+            return fileName;
+        }
+
+        const file = await readRepoFile(
+            env,
+            `data/${fileName}.json`
+        );
+
+        const level = JSON.parse(file.text);
+
+        if (
+            typeof level.name === "string" &&
+            level.name.trim().toLowerCase() ===
+                selectedValue.trim().toLowerCase()
+        ) {
+            return fileName;
+        }
+    }
+
+    return null;
+}
+
 function errorResponse(json, message, status = 400) {
     return json({ error: message }, status, {
         "Cache-Control": "no-store"
@@ -102,16 +143,20 @@ export async function handleSubmissionRoute(
                 return errorResponse(json, "Invalid completion details.");
             }
 
-            // Ensure the requested level exists in the published list.
-            const list = JSON.parse(
-                (await readRepoFile(env, "data/_list.json")).text
-            );
+            
+const resolvedFile = await resolveLevelFile(env, levelFile);
 
-            if (!Array.isArray(list) || !list.includes(levelFile)) {
-                return errorResponse(json, "Level not found.", 404);
-            }
+if (!resolvedFile) {
+    return errorResponse(json, "Level not found.", 404);
+}
 
-            payload = { levelFile, link, percent, hz };
+payload = {
+    levelFile: resolvedFile,
+    link,
+    percent,
+    hz
+};
+
         } else if (type === "verification") {
             const name = typeof body.name === "string" ? body.name.trim() : "";
             const fileName = typeof body.fileName === "string"
