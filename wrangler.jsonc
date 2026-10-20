@@ -1,4 +1,4 @@
-
+// Trigger fresh build
 {
   "$schema": "https://schema.cloudflare.com/wrangler/config-schema.json",
   "name": "suberboysdemonlist",
