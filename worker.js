@@ -1,3 +1,4 @@
+import { handleSubmissionRoute } from "./submission-routes.js";
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const PBKDF2_ITERATIONS = 100000;
 
