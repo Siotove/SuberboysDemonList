@@ -1,7 +1,7 @@
 
 /* ========================================
-   ADMIN PANEL
-   Matches the Suberboys light/dark modes
+   SUBERBOYS DEMON LIST — ADMIN PANEL
+   Uses the existing site light/dark theme
    ======================================== */
 
 main.admin-page {
@@ -11,7 +11,7 @@ main.admin-page {
     min-height: 0;
     flex: 1;
     overflow-y: auto;
-    padding: 2rem 1rem 4rem;
+    padding: 2rem max(1rem, calc((100% - 1000px) / 2)) 4rem;
     box-sizing: border-box;
 
     background: var(--color-background);
@@ -25,36 +25,33 @@ main.admin-page {
     box-sizing: border-box;
 }
 
-.admin-page .admin-content {
-    width: 100%;
-    max-width: 1050px;
-    margin: 0 auto;
-}
-
 /* Page heading */
 
 .admin-page h1 {
     margin: 0 0 0.5rem;
     font-family: var(--font-main);
     font-size: clamp(2rem, 5vw, 3.2rem);
-    font-weight: 700;
     line-height: 1.15;
+    font-weight: 700;
     letter-spacing: -1.5px;
-    overflow-wrap: anywhere;
 }
 
-.admin-page .admin-subtitle {
-    margin: 0 0 2rem;
-    font-size: 0.95rem;
-    line-height: 1.7;
+.admin-page > div > p:first-child {
+    margin: 0 0 1.75rem;
     opacity: 0.7;
+}
+
+.admin-page p {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
 }
 
 /* Sections */
 
 .admin-page .admin-section {
     margin-top: 1.5rem;
-    padding: 1.5rem;
+    padding: clamp(1rem, 3vw, 1.75rem);
     border: 1px solid var(--border-subtle);
     border-radius: 12px;
     background: var(--color-background);
@@ -62,22 +59,26 @@ main.admin-page {
 }
 
 .admin-page .admin-section > h2 {
-    margin: 0 0 1.25rem;
+    margin: 0 0 0.5rem;
     font-family: var(--font-main);
     font-size: 1.4rem;
     line-height: 1.4;
     letter-spacing: -0.5px;
 }
 
-/* Player list */
-
-.admin-page .players-list {
-    display: grid;
-    gap: 0.875rem;
+.admin-page .admin-section > p {
+    margin: 0.5rem 0 1rem;
+    opacity: 0.75;
 }
 
-.admin-page .player-card {
-    min-width: 0;
+/* Player account cards */
+
+.admin-page .admin-player {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+    margin-top: 0.875rem;
     padding: 1.25rem;
     border: 1px solid var(--border-subtle);
     border-radius: 10px;
@@ -85,81 +86,73 @@ main.admin-page {
     transition: border-color 160ms ease;
 }
 
-.admin-page .player-card:hover {
+.admin-page .admin-player:hover {
     border-color: var(--color-primary);
 }
 
-.admin-page .player-card-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-}
-
-.admin-page .player-card h3 {
-    margin: 0 0 0.35rem;
+.admin-page .admin-player h3 {
+    grid-column: 1 / -1;
+    margin: 0;
     font-family: var(--font-main);
     font-size: 1.1rem;
     line-height: 1.4;
     overflow-wrap: anywhere;
 }
 
-.admin-page .player-email {
-    margin: 0;
-    font-size: 0.8rem;
-    line-height: 1.6;
-    opacity: 0.65;
-    overflow-wrap: anywhere;
-}
-
-.admin-page .player-admin-badge {
+.admin-page .admin-player h3 span {
     display: inline-block;
     margin-left: 0.4rem;
-    padding: 0.25rem 0.5rem;
+    padding: 0.2rem 0.5rem;
     border-radius: 4px;
     background: var(--surface-raised);
     color: var(--color-primary);
     font-size: 0.7rem;
-    font-weight: 700;
     vertical-align: middle;
 }
 
-/* Identity status */
-
-.admin-page .player-link-status {
-    margin: 0.75rem 0;
-    font-size: 0.85rem;
-    line-height: 1.6;
-    opacity: 0.75;
+.admin-page .admin-player > p {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 0.82rem;
+    overflow-wrap: anywhere;
 }
 
-.admin-page .player-link-controls {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.75rem;
+.admin-page .admin-player > p:nth-of-type(1) {
+    opacity: 0.65;
 }
 
-/* Form controls */
+.admin-page .admin-player > p:nth-of-type(2) {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+}
 
-.admin-page select,
-.admin-page input:not([type="checkbox"]) {
+.admin-page .admin-player strong {
+    font-weight: 700;
+}
+
+/* Identity selector */
+
+.admin-page .admin-player label {
+    align-self: center;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.admin-page select {
     width: 100%;
     min-width: 0;
     min-height: 42px;
-    padding: 0.65rem 0.75rem;
+    padding: 0.65rem 2rem 0.65rem 0.75rem;
     border: 1px solid var(--border-subtle);
     border-radius: 7px;
     background: var(--color-background);
     color: var(--color-on-background);
     font-family: var(--font-main);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
 }
 
-.admin-page select:focus-visible,
-.admin-page input:focus-visible {
+.admin-page select:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
 }
@@ -174,16 +167,21 @@ main.admin-page {
     background: var(--color-background-hover);
     color: var(--color-on-background-hover);
     font-family: var(--font-main);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
     transition: opacity 150ms ease, transform 150ms ease;
 }
 
-.admin-page .admin-section button {
+.admin-page .admin-player button {
+    width: 100%;
     border-color: transparent;
     background: var(--color-primary);
     color: var(--color-on-primary);
+}
+
+.admin-page .admin-section > button {
+    margin-top: 1rem;
 }
 
 .admin-page button:hover:not(:disabled) {
@@ -192,7 +190,7 @@ main.admin-page {
 }
 
 .admin-page button:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
 }
 
@@ -201,46 +199,39 @@ main.admin-page {
     outline-offset: 3px;
 }
 
-.admin-page .admin-refresh {
-    margin-top: 1rem;
-}
+/* Status messages */
 
-/* Messages */
-
-.admin-page .player-message {
-    margin: 0.75rem 0 0;
+.admin-page .admin-player > p[role="status"] {
+    grid-column: 1 / -1;
+    margin-top: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    background: var(--surface-raised);
     font-size: 0.8rem;
-    line-height: 1.6;
 }
 
-.admin-page .player-message.success {
-    color: #168653;
-}
-
-.admin-page .player-message.error,
-.admin-page .admin-error {
+.admin-page [role="alert"] {
     color: var(--color-error);
 }
 
-.admin-page .admin-error {
-    margin: 1rem 0;
-    padding: 0.875rem 1rem;
-    border: 1px solid var(--color-error);
-    border-radius: 8px;
-    background: var(--surface-muted);
-    overflow-wrap: anywhere;
+.admin-page hr {
+    display: none;
 }
 
-.admin-page .admin-loading,
-.admin-page .admin-empty {
-    padding: 1.5rem;
-    border: 1px dashed var(--border-subtle);
-    border-radius: 8px;
-    text-align: center;
-    opacity: 0.7;
+/* Submissions section */
+
+.admin-page .admin-section:last-child {
+    margin-bottom: 1rem;
 }
 
-/* Responsive */
+/* Loading and empty states */
+
+.admin-page > p[role="alert"],
+.admin-page > p:first-of-type {
+    line-height: 1.7;
+}
+
+/* Responsive layout */
 
 @media (max-width: 600px) {
     main.admin-page {
@@ -251,15 +242,22 @@ main.admin-page {
         padding: 1rem;
     }
 
-    .admin-page .player-card {
+    .admin-page .admin-player {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.65rem;
         padding: 1rem;
     }
 
-    .admin-page .player-link-controls {
-        grid-template-columns: minmax(0, 1fr);
+    .admin-page .admin-player h3,
+    .admin-page .admin-player > p {
+        grid-column: 1;
     }
 
-    .admin-page .player-link-controls button {
+    .admin-page .admin-player label {
+        margin-top: 0.25rem;
+    }
+
+    .admin-page .admin-player button {
         width: 100%;
     }
 }
