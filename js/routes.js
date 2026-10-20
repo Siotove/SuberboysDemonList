@@ -1,4 +1,4 @@
-
+import Submit from './pages/Submit.js';
 import HigherLower from './pages/HigherLower.js';
 import List from './pages/List.js';
 import Achievements from './pages/Achievements.js';
@@ -12,6 +12,7 @@ import Register from './pages/Register.js';
 import Profile from './pages/Profile.js';
 
 export default [
+    { path: '/submit', component: Submit },
     { path: '/', component: List },
     { path: '/leaderboard', component: Leaderboard },
     { path: '/achievements', component: Achievements },
