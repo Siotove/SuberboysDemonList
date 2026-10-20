@@ -1,255 +1,265 @@
 
-/* ===========================
-   Admin panel
-   =========================== */
+/* ========================================
+   ADMIN PANEL
+   Matches the Suberboys light/dark modes
+   ======================================== */
 
-.admin-page {
-  --admin-card: var(--card-bg, var(--card-background, var(--background, #fff)));
-  --admin-border: var(--border-color, #dedee7);
-  --admin-text: var(--text-color, #20202a);
-  --admin-muted: var(--muted-text, #777787);
-  --admin-accent: var(--accent-color, #7c5cff);
+main.admin-page {
+    display: block;
+    width: 100%;
+    height: 0;
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem 1rem 4rem;
+    box-sizing: border-box;
 
-  width: min(1100px, 100%);
-  margin: 0 auto;
-  padding: 32px 20px 60px;
-  color: var(--admin-text);
-  font-family: "Lexend Deca", sans-serif;
-  box-sizing: border-box;
+    background: var(--color-background);
+    color: var(--color-on-background);
+    font-family: var(--font-main);
 }
 
 .admin-page *,
 .admin-page *::before,
 .admin-page *::after {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
-/* Headings */
+.admin-page .admin-content {
+    width: 100%;
+    max-width: 1050px;
+    margin: 0 auto;
+}
+
+/* Page heading */
+
 .admin-page h1 {
-  margin: 0 0 12px;
-  font-family: "Lexend Deca", sans-serif;
-  font-size: clamp(32px, 5vw, 51.43px);
-  line-height: 1.1;
-  font-weight: 700;
-  letter-spacing: -2px;
+    margin: 0 0 0.5rem;
+    font-family: var(--font-main);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -1.5px;
+    overflow-wrap: anywhere;
 }
 
-.admin-page h2 {
-  margin: 0 0 18px;
-  font-family: "Lexend Deca", sans-serif;
-  font-size: clamp(23px, 3vw, 34.29px);
-  line-height: 1.2;
-  font-weight: 700;
-  letter-spacing: -1px;
+.admin-page .admin-subtitle {
+    margin: 0 0 2rem;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    opacity: 0.7;
 }
 
-.admin-page h3 {
-  margin: 0 0 6px;
-  font-family: "Lexend Deca", sans-serif;
-  font-size: 20px;
-  line-height: 1.35;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
+/* Sections */
 
-.admin-page p {
-  font-family: "Lexend Deca", sans-serif;
-  font-size: 15px;
-  line-height: 1.7;
-  font-weight: 500;
-}
-
-.admin-page .admin-muted {
-  color: var(--admin-muted);
-}
-
-/* Main sections */
 .admin-page .admin-section {
-  margin-top: 28px;
-  padding: 24px;
-  color: var(--admin-text);
-  background: var(--admin-card);
-  border: 1px solid var(--admin-border);
-  border-radius: 18px;
-  box-shadow: 0 8px 28px rgb(0 0 0 / 5%);
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    background: var(--color-background);
+    color: var(--color-on-background);
 }
 
 .admin-page .admin-section > h2 {
-  margin-bottom: 20px;
+    margin: 0 0 1.25rem;
+    font-family: var(--font-main);
+    font-size: 1.4rem;
+    line-height: 1.4;
+    letter-spacing: -0.5px;
 }
 
 /* Player list */
+
 .admin-page .players-list {
-  display: grid;
-  gap: 14px;
+    display: grid;
+    gap: 0.875rem;
 }
 
 .admin-page .player-card {
-  min-width: 0;
-  padding: 20px;
-  color: var(--admin-text);
-  background: var(--admin-card);
-  border: 1px solid var(--admin-border);
-  border-radius: 14px;
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+    min-width: 0;
+    padding: 1.25rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    background: var(--surface-muted);
+    transition: border-color 160ms ease;
 }
 
 .admin-page .player-card:hover {
-  border-color: var(--admin-accent);
+    border-color: var(--color-primary);
 }
 
 .admin-page .player-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 16px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.admin-page .player-card h3 {
+    margin: 0 0 0.35rem;
+    font-family: var(--font-main);
+    font-size: 1.1rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
 }
 
 .admin-page .player-email {
-  margin: 0;
-  color: var(--admin-muted);
-  font-size: 13px;
-  overflow-wrap: anywhere;
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    opacity: 0.65;
+    overflow-wrap: anywhere;
 }
 
 .admin-page .player-admin-badge {
-  display: inline-block;
-  margin-left: 8px;
-  padding: 5px 9px;
-  color: var(--admin-accent);
-  background: color-mix(in srgb, var(--admin-accent) 12%, transparent);
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  vertical-align: middle;
+    display: inline-block;
+    margin-left: 0.4rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    background: var(--surface-raised);
+    color: var(--color-primary);
+    font-size: 0.7rem;
+    font-weight: 700;
+    vertical-align: middle;
 }
 
-/* Identity linking */
+/* Identity status */
+
 .admin-page .player-link-status {
-  margin: 12px 0;
-  color: var(--admin-muted);
-  font-size: 13px;
+    margin: 0.75rem 0;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    opacity: 0.75;
 }
 
 .admin-page .player-link-controls {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
 }
+
+/* Form controls */
 
 .admin-page select,
-.admin-page input {
-  width: 100%;
-  min-width: 0;
-  padding: 11px 13px;
-  color: var(--admin-text);
-  background: var(--admin-card);
-  border: 1px solid var(--admin-border);
-  border-radius: 10px;
-  font-family: "Lexend Deca", sans-serif;
-  font-size: 13px;
+.admin-page input:not([type="checkbox"]) {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 7px;
+    background: var(--color-background);
+    color: var(--color-on-background);
+    font-family: var(--font-main);
+    font-size: 0.85rem;
 }
 
-.admin-page select:focus,
-.admin-page input:focus {
-  border-color: var(--admin-accent);
-  outline: 2px solid color-mix(in srgb, var(--admin-accent) 20%, transparent);
+.admin-page select:focus-visible,
+.admin-page input:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
 }
 
 /* Buttons */
+
 .admin-page button {
-  min-height: 42px;
-  padding: 10px 16px;
-  border: 1px solid var(--admin-border);
-  border-radius: 10px;
-  font-family: "Lexend Deca", sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 150ms ease, opacity 150ms ease;
+    min-height: 42px;
+    padding: 0.65rem 1rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 7px;
+    background: var(--color-background-hover);
+    color: var(--color-on-background-hover);
+    font-family: var(--font-main);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 150ms ease, transform 150ms ease;
 }
 
 .admin-page .admin-section button {
-  color: white;
-  background: var(--admin-accent);
-  border-color: transparent;
+    border-color: transparent;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
 }
 
 .admin-page button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  opacity: 0.9;
+    opacity: 0.85;
+    transform: translateY(-1px);
 }
 
 .admin-page button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .admin-page button:focus-visible {
-  outline: 2px solid var(--admin-accent);
-  outline-offset: 3px;
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
 }
 
 .admin-page .admin-refresh {
-  margin-top: 18px;
+    margin-top: 1rem;
 }
 
-/* Status messages */
+/* Messages */
+
 .admin-page .player-message {
-  margin: 10px 0 0;
-  font-size: 13px;
+    margin: 0.75rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.6;
 }
 
 .admin-page .player-message.success {
-  color: #22a06b;
+    color: #168653;
 }
 
 .admin-page .player-message.error,
 .admin-page .admin-error {
-  color: #d64545;
+    color: var(--color-error);
 }
 
 .admin-page .admin-error {
-  padding: 13px 15px;
-  background: rgb(220 60 60 / 8%);
-  border: 1px solid rgb(220 60 60 / 25%);
-  border-radius: 10px;
+    margin: 1rem 0;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--color-error);
+    border-radius: 8px;
+    background: var(--surface-muted);
+    overflow-wrap: anywhere;
 }
 
-/* Loading and empty states */
 .admin-page .admin-loading,
 .admin-page .admin-empty {
-  padding: 24px;
-  color: var(--admin-muted);
-  text-align: center;
-  border: 1px dashed var(--admin-border);
-  border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px dashed var(--border-subtle);
+    border-radius: 8px;
+    text-align: center;
+    opacity: 0.7;
 }
 
-/* Responsive layout */
+/* Responsive */
+
 @media (max-width: 600px) {
-  .admin-page {
-    padding: 24px 14px 40px;
-  }
+    main.admin-page {
+        padding: 1.5rem 0.875rem 3rem;
+    }
 
-  .admin-page .admin-section {
-    padding: 17px;
-    border-radius: 14px;
-  }
+    .admin-page .admin-section {
+        padding: 1rem;
+    }
 
-  .admin-page .player-card {
-    padding: 15px;
-  }
+    .admin-page .player-card {
+        padding: 1rem;
+    }
 
-  .admin-page .player-link-controls {
-    grid-template-columns: 1fr;
-  }
+    .admin-page .player-link-controls {
+        grid-template-columns: minmax(0, 1fr);
+    }
 
-  .admin-page .player-link-controls button {
-    width: 100%;
-  }
+    .admin-page .player-link-controls button {
+        width: 100%;
+    }
 }
