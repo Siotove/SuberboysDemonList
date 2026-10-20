@@ -89,7 +89,7 @@ async function currentUser(request, db) {
     const now = Math.floor(Date.now() / 1000);
 
     const row = await db.prepare(`
-        SELECT users.id, users.username, users.created_at
+        SELECT users.id, users.username, users.created_at, users.is_admin
         FROM sessions
         JOIN users ON users.id = sessions.user_id
         WHERE sessions.token_hash = ? AND sessions.expires_at > ?
@@ -241,7 +241,7 @@ if (url.pathname === "/api/leaderboard/join" &&
 
     if (reserved) {
         return json({
-            error: "That name belongs to an existing leaderboard player. Contact an admin to link it."
+            error: "That name belongs to an existing leaderboard player. Contact an admin (mutts basically) to link it."
         }, 409);
     }
 
@@ -414,6 +414,29 @@ if (url.pathname === "/api/leaderboard/identities" &&
         identities: result.results.map(
             row => row.leaderboard_name
         )
+    }, 200, {
+        "Cache-Control": "no-store"
+    });
+}
+            if (url.pathname === "/api/admin/me" &&
+    request.method === "GET") {
+    const user = await currentUser(request, env.db);
+
+    if (!user) {
+        return json({ error: "Please log in." }, 401, {
+            "Cache-Control": "no-store"
+        });
+    }
+
+    if (user.is_admin !== 1) {
+        return json({ error: "Admin access required." }, 403, {
+            "Cache-Control": "no-store"
+        });
+    }
+
+    return json({
+        admin: true,
+        username: user.username
     }, 200, {
         "Cache-Control": "no-store"
     });
