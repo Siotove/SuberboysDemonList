@@ -245,8 +245,12 @@ if (!url.pathname.startsWith("/api/")) {
 
             return json({ error: "Not found" }, 404);
         } catch (error) {
-            console.error("Account API error:", error);
-            return json({ error: "Server error. Please try again." }, 500);
-        }
+    console.error("Account API error:", error?.stack || error);
+
+    return json({
+        error: "Server error. Please try again.",
+        requestId: crypto.randomUUID()
+    }, 500);
+}
     }
 };
