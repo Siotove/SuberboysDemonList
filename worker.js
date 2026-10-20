@@ -402,7 +402,22 @@ if (url.pathname === "/api/leaderboard/join" &&
                     "Cache-Control": "no-store"
                 });
             }
+if (url.pathname === "/api/leaderboard/identities" &&
+    request.method === "GET") {
+    const result = await env.db.prepare(`
+        SELECT leaderboard_name
+        FROM leaderboard_profiles
+        ORDER BY leaderboard_name COLLATE NOCASE
+    `).all();
 
+    return json({
+        identities: result.results.map(
+            row => row.leaderboard_name
+        )
+    }, 200, {
+        "Cache-Control": "no-store"
+    });
+}
             return json({ error: "Not found" }, 404);
         } catch (error) {
     console.error("Account API error:", error?.stack || error);
