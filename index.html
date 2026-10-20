@@ -58,6 +58,9 @@
                 <router-link class="nav__tab" to="/achievements">
     <span class="type-label-lg">Achievements</span>
 </router-link>
+                <router-link class="nav__tab" to="/profile">
+    <span class="type-label-lg">Profile</span>
+</router-link>
                 <div class="nav__actions">
                     <button
                         class="nav__icon"
@@ -73,12 +76,12 @@
                         <img src="/assets/discord.svg" alt="Discord Logo" />
                     </a>
                     <!-- List record submission form, add a link to replace the '#' when putting a link to your list submission form-->
-                    <a
-                        class="nav__cta type-label-lg"
-                        href="https://docs.google.com/forms/d/e/1FAIpQLScxPuD3NYL8uZCAumtveLG57yjerZx0LwMiCwf9onf-vNbWyg/viewform?usp=publish-editor"
-                        target="_blank"
-                        >Submit Record</a
-                    >
+                    <router-link
+    class="nav__cta type-label-lg"
+    to="/submit"
+>
+    Submit Record
+</router-link>
                 </div>
             </nav>
         </header>
