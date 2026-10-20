@@ -3,6 +3,7 @@ const OWNER = "Siotove";
 const REPO = "SuberboysDemonList";
 const BRANCH = "main";
 
+
 async function githubApi(env, path, options = {}) {
     if (!env.GITHUB_TOKEN) {
         throw new Error("GitHub token secret is not configured.");
@@ -23,12 +24,20 @@ async function githubApi(env, path, options = {}) {
     );
 
     if (!response.ok) {
-        console.error("GitHub API request failed:", response.status);
+        const details = (await response.text()).slice(0, 500);
+
+        console.error("GitHub API request failed:", {
+            path,
+            status: response.status,
+            details
+        });
+
         throw new Error(`GitHub API failed (${response.status}).`);
     }
 
     return response.status === 204 ? null : response.json();
 }
+
 
 export async function readRepoFile(env, path) {
     const safePath = path.split("/").map(encodeURIComponent).join("/");
