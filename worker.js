@@ -822,7 +822,16 @@ export default {
                 });
             }
 
-            return json({ error: "Not found" }, 404);
+            const submissionResponse = await handleSubmissionRoute(
+    request,
+    env,
+    url,
+    { json, currentUser }
+);
+
+if (submissionResponse) return submissionResponse;
+
+return json({ error: "Not found" }, 404);
         } catch (error) {
             console.error(
                 "Account API error:",
