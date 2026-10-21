@@ -40092,5 +40092,145 @@
         "to": 29
       }
     ]
+  },
+  {
+    "date": "2026-10-21T19:59:11.000Z",
+    "commit": "241b23649055dbcadca981bcbbdd085fcbb2b93c",
+    "added": [],
+    "removed": [
+      "freddyfistbear"
+    ],
+    "moved": [
+      {
+        "level": "PolychromaticalII",
+        "from": 4,
+        "to": 3
+      },
+      {
+        "level": "CS2",
+        "from": 5,
+        "to": 4
+      },
+      {
+        "level": "Sandic",
+        "from": 6,
+        "to": 5
+      },
+      {
+        "level": "Shadow",
+        "from": 7,
+        "to": 6
+      },
+      {
+        "level": "USadaclysm",
+        "from": 8,
+        "to": 7
+      },
+      {
+        "level": "Test68",
+        "from": 9,
+        "to": 8
+      },
+      {
+        "level": "Polychromatical",
+        "from": 10,
+        "to": 9
+      },
+      {
+        "level": "Acheroneasy",
+        "from": 11,
+        "to": 10
+      },
+      {
+        "level": "AinaPoni",
+        "from": 12,
+        "to": 11
+      },
+      {
+        "level": "MilestoneIII",
+        "from": 13,
+        "to": 12
+      },
+      {
+        "level": "Sadaclysm",
+        "from": 14,
+        "to": 13
+      },
+      {
+        "level": "Thermo",
+        "from": 15,
+        "to": 14
+      },
+      {
+        "level": "TungTung",
+        "from": 16,
+        "to": 15
+      },
+      {
+        "level": "Dashgs",
+        "from": 17,
+        "to": 16
+      },
+      {
+        "level": "Fates",
+        "from": 18,
+        "to": 17
+      },
+      {
+        "level": "Application",
+        "from": 19,
+        "to": 18
+      },
+      {
+        "level": "MilestoneII",
+        "from": 20,
+        "to": 19
+      },
+      {
+        "level": "AinaPoniII",
+        "from": 21,
+        "to": 20
+      },
+      {
+        "level": "WinterWonder",
+        "from": 22,
+        "to": 21
+      },
+      {
+        "level": "MilestoneI",
+        "from": 23,
+        "to": 22
+      },
+      {
+        "level": "Ninefiveone",
+        "from": 24,
+        "to": 23
+      },
+      {
+        "level": "Getbetter",
+        "from": 25,
+        "to": 24
+      },
+      {
+        "level": "22",
+        "from": 26,
+        "to": 25
+      },
+      {
+        "level": "cu",
+        "from": 27,
+        "to": 26
+      },
+      {
+        "level": "Eternity",
+        "from": 28,
+        "to": 27
+      },
+      {
+        "level": "Khrome",
+        "from": 29,
+        "to": 28
+      }
+    ]
   }
 ]
