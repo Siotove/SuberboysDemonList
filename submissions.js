@@ -14,12 +14,13 @@ async function githubApi(env, path, options = {}) {
         {
             ...options,
             headers: {
-                Accept: "application/vnd.github+json",
-                Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-                "X-GitHub-Api-Version": "2022-11-28",
-                "Content-Type": "application/json",
-                ...options.headers
-            }
+    "User-Agent": "SuberboysDemonList/1.0",
+    Accept: "application/vnd.github+json",
+    Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+    "X-GitHub-Api-Version": "2022-11-28",
+    "Content-Type": "application/json",
+    ...options.headers
+}
         }
     );
 
