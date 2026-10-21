@@ -39929,5 +39929,28 @@
         "to": 28
       }
     ]
+  },
+  {
+    "date": "2026-10-21T19:50:34.000Z",
+    "commit": "e25d65f9245efd5c96ede92f5d0093fcf4898072",
+    "added": [],
+    "removed": [],
+    "moved": [
+      {
+        "level": "USadaclysm",
+        "from": 9,
+        "to": 7
+      },
+      {
+        "level": "Polychromatical",
+        "from": 10,
+        "to": 9
+      },
+      {
+        "level": "Acheroneasy",
+        "from": 7,
+        "to": 10
+      }
+    ]
   }
 ]
