@@ -9,6 +9,12 @@
     "percentToQualify": 100,
     "password": "Not Copyable",
     "records": [
+        {
+            "user": "Suberman2",
+            "link": "https://www.youtube.com/watch?v=invalid",
+            "percent": 100,
+            "hz": 420
+        }
     ]
 }
 
