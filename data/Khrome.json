@@ -44,6 +44,12 @@
             "link": "https://www.youtube.com/watch?v=invalid",
             "percent": 100,
             "hz": 60
+        },
+        {
+            "user": "XKuba",
+            "link": "https://www.youtube.com/watch?v=invalid",
+            "percent": 100,
+            "hz": 120
         }
     ]
 }
