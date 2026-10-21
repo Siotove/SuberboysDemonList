@@ -40255,5 +40255,23 @@
         "to": 28
       }
     ]
+  },
+  {
+    "date": "2026-10-21T22:37:14.000Z",
+    "commit": "2888b73af1b429a6ac61538395fbd4ef57ef10ce",
+    "added": [],
+    "removed": [],
+    "moved": [
+      {
+        "level": "Sandic",
+        "from": 5,
+        "to": 4
+      },
+      {
+        "level": "CS2",
+        "from": 4,
+        "to": 5
+      }
+    ]
   }
 ]
