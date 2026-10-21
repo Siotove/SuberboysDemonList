@@ -39809,5 +39809,125 @@
         "to": 14
       }
     ]
+  },
+  {
+    "date": "2026-10-21T19:44:50.000Z",
+    "commit": "dfedf19fbeb3b3dd2ecd6930f99a68436faf8c03",
+    "added": [
+      "Shadow"
+    ],
+    "removed": [],
+    "moved": [
+      {
+        "level": "Acheroneasy",
+        "from": 6,
+        "to": 7
+      },
+      {
+        "level": "Test68",
+        "from": 7,
+        "to": 8
+      },
+      {
+        "level": "USadaclysm",
+        "from": 8,
+        "to": 9
+      },
+      {
+        "level": "Polychromatical",
+        "from": 9,
+        "to": 10
+      },
+      {
+        "level": "AinaPoni",
+        "from": 10,
+        "to": 11
+      },
+      {
+        "level": "MilestoneIII",
+        "from": 11,
+        "to": 12
+      },
+      {
+        "level": "Sadaclysm",
+        "from": 12,
+        "to": 13
+      },
+      {
+        "level": "Thermo",
+        "from": 13,
+        "to": 14
+      },
+      {
+        "level": "TungTung",
+        "from": 14,
+        "to": 15
+      },
+      {
+        "level": "Dashgs",
+        "from": 15,
+        "to": 16
+      },
+      {
+        "level": "Fates",
+        "from": 16,
+        "to": 17
+      },
+      {
+        "level": "Application",
+        "from": 17,
+        "to": 18
+      },
+      {
+        "level": "MilestoneII",
+        "from": 18,
+        "to": 19
+      },
+      {
+        "level": "AinaPoniII",
+        "from": 19,
+        "to": 20
+      },
+      {
+        "level": "WinterWonder",
+        "from": 20,
+        "to": 21
+      },
+      {
+        "level": "MilestoneI",
+        "from": 21,
+        "to": 22
+      },
+      {
+        "level": "Ninefiveone",
+        "from": 22,
+        "to": 23
+      },
+      {
+        "level": "Getbetter",
+        "from": 23,
+        "to": 24
+      },
+      {
+        "level": "22",
+        "from": 24,
+        "to": 25
+      },
+      {
+        "level": "cu",
+        "from": 25,
+        "to": 26
+      },
+      {
+        "level": "Eternity",
+        "from": 26,
+        "to": 27
+      },
+      {
+        "level": "Khrome",
+        "from": 27,
+        "to": 28
+      }
+    ]
   }
 ]
