@@ -1,25 +1,32 @@
 {
-    "id": 116154999,
-    "name": "Polychromatical 2",
-    "author": "Suberman2",
-    "creators": ["Suberman2"],
-    "verifier": "Justgame",
-    "verification": "https://youtu.be/_FsZFmc-ORo",
-    "percentToQualify": 100,
-    "password": "Not Copyable",
-    "records": [
-        {
-            "user": "Suberman2",
-            "link": "https://youtu.be/_FsZFmc-ORo",
-            "percent": 100,
-            "hz": 120
-        },
-        {
-            "user": "LeoCobalt",
-            "link": "https://www.youtube.com/watch?v=invalid",
-            "percent": 100,
-            "hz": 120
-        }
-    ]
+  "id": 116154999,
+  "name": "Polychromatical 2",
+  "author": "Suberman2",
+  "creators": [
+    "Suberman2"
+  ],
+  "verifier": "Justgame",
+  "verification": "https://youtu.be/_FsZFmc-ORo",
+  "percentToQualify": 100,
+  "password": "Not Copyable",
+  "records": [
+    {
+      "user": "Suberman2",
+      "link": "https://youtu.be/_FsZFmc-ORo",
+      "percent": 100,
+      "hz": 120
+    },
+    {
+      "user": "LeoCobalt",
+      "link": "https://www.youtube.com/watch?v=invalid",
+      "percent": 100,
+      "hz": 120
+    },
+    {
+      "user": "Test",
+      "link": "https://www.youtube.com/watch?v=hW7gyj-miMs",
+      "percent": 100,
+      "hz": 360
+    }
+  ]
 }
-
