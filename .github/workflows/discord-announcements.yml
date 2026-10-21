@@ -14,6 +14,7 @@ permissions:
 jobs:
   announce:
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out repository history
         uses: actions/checkout@v4
@@ -39,22 +40,35 @@ jobs:
             );
 
             const list = JSON.parse(raw);
-            if (!Array.isArray(list) ||
-                !list.every(x => typeof x === 'string')) {
-              throw new Error('The level list must be a JSON array of strings.');
+
+            if (
+              !Array.isArray(list) ||
+              !list.every(x => typeof x === 'string')
+            ) {
+              throw new Error(
+                'The level list must be a JSON array of strings.'
+              );
             }
+
             return list;
           }
 
           async function main() {
             const webhook = process.env.DISCORD_WEBHOOK_URL;
-            if (!webhook) throw new Error('DISCORD_WEBHOOK_URL secret is missing.');
+
+            if (!webhook) {
+              throw new Error(
+                'DISCORD_WEBHOOK_URL secret is missing.'
+              );
+            }
 
             const before = getList(process.env.BEFORE_SHA);
             const after = getList(process.env.AFTER_SHA);
 
             if (new Set(after).size !== after.length) {
-              throw new Error('The new level list contains duplicate names.');
+              throw new Error(
+                'The new level list contains duplicate names.'
+              );
             }
 
             const oldSet = new Set(before);
@@ -63,10 +77,11 @@ jobs:
             const added = after.filter(x => !oldSet.has(x));
             const removed = before.filter(x => !newSet.has(x));
 
-            // Find a longest common subsequence so ordinary position shifts
-            // caused by additions/removals aren't reported as manual moves.
+            // Find the longest common subsequence so shifts caused
+            // by additions and removals aren't counted as manual moves.
             const oldCommon = before.filter(x => newSet.has(x));
             const newCommon = after.filter(x => oldSet.has(x));
+
             const dp = Array.from(
               { length: oldCommon.length + 1 },
               () => Array(newCommon.length + 1).fill(0)
@@ -81,7 +96,9 @@ jobs:
             }
 
             const stable = new Set();
-            let i = 0, j = 0;
+            let i = 0;
+            let j = 0;
+
             while (i < oldCommon.length && j < newCommon.length) {
               if (oldCommon[i] === newCommon[j]) {
                 stable.add(oldCommon[i]);
@@ -99,10 +116,19 @@ jobs:
                    before.indexOf(x) !== after.indexOf(x)
             );
 
+            // _list.json is ordered from highest rank to lowest rank.
+            // The previous array item is above; the next item is below.
             function placement(list, level) {
               const index = list.indexOf(level);
-              const above = index < list.length - 1 ? list[index + 1] : null;
-const below = index > 0 ? list[index - 1] : null;
+
+              const above = index > 0
+                ? list[index - 1]
+                : null;
+
+              const below = index < list.length - 1
+                ? list[index + 1]
+                : null;
+
               return {
                 rank: index + 1,
                 above,
@@ -110,52 +136,16 @@ const below = index > 0 ? list[index - 1] : null;
               };
             }
 
-            function neighbours(p) {
-              return [
-                p.above ? `Above: **${p.above}**` : 'Above: *(top of list)*',
-                p.below ? `Below: **${p.below}**` : 'Below: *(bottom of list)*'
-              ].join(' · ');
-            }      
+            const lines = [];
 
-          const lines = [];
+            function positionText(level, verb, list) {
+              const p = placement(list, level);
 
-          function positionText(level, verb, list) {
-            const p = placement(list, level);
+              if (p.rank === 1) {
+                return `**${level}** Was Moved To Number 1 As The New Top 1`;
+              }
 
-            if (p.rank === 1) {
-              return `**${level}** Was Moved To Number 1 As The New Top 1`;
-            }
-
-            let message = `**${level}** Was ${verb} To #${p.rank}`;
-
-            if (p.above) {
-              message += `, Above **${p.above}**`;
-            }
-
-            if (p.below) {
-              message += ` & Below **${p.below}**`;
-            }
-
-            return message;
-          }
-
-          for (const level of added) {
-            lines.push(positionText(level, 'Added', after));
-          }
-
-          for (const level of moved) {
-            const oldRank = before.indexOf(level) + 1;
-            const newRank = after.indexOf(level) + 1;
-
-            if (newRank === 1) {
-              lines.push(
-                `**${level}** Was Moved To Number 1 As The New Top 1`
-              );
-            } else {
-              let message =
-                `**${level}** Was Moved From #${oldRank} to #${newRank}`;
-
-              const p = placement(after, level);
+              let message = `**${level}** Was ${verb} To #${p.rank}`;
 
               if (p.above) {
                 message += `, Above **${p.above}**`;
@@ -165,15 +155,49 @@ const below = index > 0 ? list[index - 1] : null;
                 message += ` & Below **${p.below}**`;
               }
 
-              lines.push(message);
+              return message;
             }
-          }
 
-          for (const level of removed) {
-            lines.push(`**${level}** Was Just Deleted Off The List`);
-          }
+            for (const level of added) {
+              lines.push(positionText(level, 'Added', after));
+            }
+
+            for (const level of moved) {
+              const oldRank = before.indexOf(level) + 1;
+              const newRank = after.indexOf(level) + 1;
+
+              if (newRank === 1) {
+                lines.push(
+                  `**${level}** Was Moved To Number 1 As The New Top 1`
+                );
+              } else {
+                let message =
+                  `**${level}** Was Moved From #${oldRank} to #${newRank}`;
+
+                const p = placement(after, level);
+
+                if (p.above) {
+                  message += `, Above **${p.above}**`;
+                }
+
+                if (p.below) {
+                  message += ` & Below **${p.below}**`;
+                }
+
+                lines.push(message);
+              }
+            }
+
+            for (const level of removed) {
+              lines.push(
+                `**${level}** Was Just Deleted Off The List`
+              );
+            }
+
             if (lines.length === 0) {
-              console.log('No additions, removals, or reorderings detected.');
+              console.log(
+                'No additions, removals, or reorderings detected.'
+              );
               return;
             }
 
@@ -182,28 +206,41 @@ const below = index > 0 ? list[index - 1] : null;
 
             for (const line of lines) {
               const next = current + '\n\n' + line;
+
               if (next.length > 1800 && current.length > 45) {
                 messages.push(current);
-                current = '**Demonlist Update(continued)**\n' + line;
+                current = '**Demonlist Update (continued)**\n' + line;
               } else {
                 current = next;
               }
             }
-            if (current.trim()) messages.push(current);
+
+            if (current.trim()) {
+              messages.push(current);
+            }
 
             for (const content of messages) {
               const response = await fetch(webhook, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content, allowed_mentions: { parse: [] } })
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  content,
+                  allowed_mentions: { parse: [] }
+                })
               });
 
               if (!response.ok) {
-                throw new Error(`Discord webhook failed with HTTP ${response.status}.`);
+                throw new Error(
+                  `Discord webhook failed with HTTP ${response.status}.`
+                );
               }
             }
 
-            console.log(`Sent ${lines.length} change announcement(s).`);
+            console.log(
+              `Sent ${lines.length} change announcement(s).`
+            );
           }
 
           main().catch(error => {
