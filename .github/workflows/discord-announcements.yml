@@ -101,8 +101,8 @@ jobs:
 
             function placement(list, level) {
               const index = list.indexOf(level);
-              const above = index > 0 ? list[index - 1] : null;
-              const below = index < list.length - 1 ? list[index + 1] : null;
+              const above = index < list.length - 1 ? list[index + 1] : null;
+const below = index > 0 ? list[index - 1] : null;
               return {
                 rank: index + 1,
                 above,
