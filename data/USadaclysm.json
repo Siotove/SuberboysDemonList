@@ -1,19 +1,26 @@
-
 {
-    "id": "99587817",
-    "name": "Unnerfed Sadaclysm",
-    "author": "Suberman2",
-    "creators": ["Suberman2"],
-    "verifier": "JJGamingGMD",
-    "verification": "https://www.youtube.com/watch?v=Dr-K6hBqddRRo",
-    "percentToQualify": 100,
-    "password": "Not Copyable",
-    "records": [
-        {
-            "user": "Suberman2",
-            "link": "https://www.youtube.com/watch?v=invalid",
-            "percent": 100,
-            "hz": 420
-        }
-    ]
+  "id": "99587817",
+  "name": "Unnerfed Sadaclysm",
+  "author": "Suberman2",
+  "creators": [
+    "Suberman2"
+  ],
+  "verifier": "JJGamingGMD",
+  "verification": "https://www.youtube.com/watch?v=Dr-K6hBqddRRo",
+  "percentToQualify": 100,
+  "password": "Not Copyable",
+  "records": [
+    {
+      "user": "Suberman2",
+      "link": "https://www.youtube.com/watch?v=invalid",
+      "percent": 100,
+      "hz": 420
+    },
+    {
+      "user": "Aras",
+      "link": "https://youtu.be/dQw4w9WgXcQ?is=pCV3OTDqM5BlMovc",
+      "percent": 100,
+      "hz": 360
+    }
+  ]
 }
