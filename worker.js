@@ -598,6 +598,132 @@ if (user.is_banned === 1) {
 
             }
 
+            // Get stats for the logged-in player's leaderboard identity.
+            if (
+                url.pathname === "/api/leaderboard/stats" &&
+                request.method === "GET"
+            ) {
+                const user = await currentUser(request, env.db);
+
+                if (!user) {
+                    return json({ error: "Please log in." }, 401, {
+                        "Cache-Control": "no-store"
+                    });
+                }
+
+                const profile = await env.db.prepare(`
+                    SELECT leaderboard_name
+                    FROM leaderboard_profiles
+                    WHERE user_id = ?
+                `).bind(user.id).first();
+
+                if (!profile) {
+                    return json({
+                        error: "Link your leaderboard identity first."
+                    }, 400, { "Cache-Control": "no-store" });
+                }
+
+                const listResponse = await env.ASSETS.fetch(
+                    new Request(new URL("/data/_list.json", url.origin))
+                );
+
+                if (!listResponse.ok) {
+                    throw new Error("Could not read leaderboard list.");
+                }
+
+                const files = await listResponse.json();
+
+                if (!Array.isArray(files)) {
+                    throw new Error("Invalid leaderboard list.");
+                }
+
+                const playerKey =
+                    profile.leaderboard_name.toLocaleLowerCase("en");
+
+                const completed = new Map();
+                let totalLevels = 0;
+
+                const rankRanges = {
+                    "Top 10": 0,
+                    "11–25": 0,
+                    "26–50": 0,
+                    "51+": 0
+                };
+
+                for (let index = 0; index < files.length; index++) {
+                    const file = files[index];
+
+                    if (
+                        typeof file !== "string" ||
+                        !/^[a-zA-Z0-9_-]+$/.test(file)
+                    ) {
+                        continue;
+                    }
+
+                    const response = await env.ASSETS.fetch(
+                        new Request(
+                            new URL(
+                                `/data/${encodeURIComponent(file)}.json`,
+                                url.origin
+                            )
+                        )
+                    );
+
+                    if (!response.ok) {
+                        throw new Error(`Could not read level ${file}.`);
+                    }
+
+                    const level = await response.json();
+                    const rank = index + 1;
+                    totalLevels++;
+
+                    if (!Array.isArray(level.records)) continue;
+
+                    const requiredPercent =
+                        Number(level.percentToQualify ?? 100);
+
+                    const record = level.records.find(item =>
+                        typeof item.user === "string" &&
+                        item.user.trim().toLocaleLowerCase("en") === playerKey &&
+                        Number.isFinite(Number(item.percent)) &&
+                        Number(item.percent) >= requiredPercent
+                    );
+
+                    if (!record || completed.has(file)) continue;
+
+                    completed.set(file, {
+                        file,
+                        name: level.name || file,
+                        rank,
+                        percent: Number(record.percent)
+                    });
+
+                    if (rank <= 10) rankRanges["Top 10"]++;
+                    else if (rank <= 25) rankRanges["11–25"]++;
+                    else if (rank <= 50) rankRanges["26–50"]++;
+                    else rankRanges["51+"]++;
+                }
+
+                const completions = [...completed.values()].sort(
+                    (a, b) => a.rank - b.rank
+                );
+
+                return json({
+                    leaderboardName: profile.leaderboard_name,
+                    totalCompletions: completions.length,
+                    totalLevels,
+                    completionPercentage: totalLevels
+                        ? Number(
+                            (completions.length / totalLevels * 100).toFixed(1)
+                        )
+                        : 0,
+                    hardest: completions[0] || null,
+                    rankRanges
+                }, 200, {
+                    "Cache-Control": "no-store"
+                });
+            }
+
             // Compare accepted completions for the logged-in player's identity.
             if (
                 url.pathname === "/api/leaderboard/compare" &&
