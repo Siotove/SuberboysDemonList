@@ -98,13 +98,23 @@ async function currentUser(request, db) {
     const now = Math.floor(Date.now() / 1000);
 
     const row = await db.prepare(`
-        SELECT users.id, users.username, users.created_at, users.is_admin
+        SELECT
+            users.id,
+            users.username,
+            users.created_at,
+            users.is_admin,
+            users.is_banned,
+            users.ban_reason,
+            users.banned_at
         FROM sessions
         JOIN users ON users.id = sessions.user_id
-        WHERE sessions.token_hash = ? AND sessions.expires_at > ?
+        WHERE sessions.token_hash = ?
+          AND sessions.expires_at > ?
     `).bind(tokenHash, now).first();
 
-    return row || null;
+    if (!row || row.is_banned === 1) return null;
+
+    return row;
 }
 
 function validOrigin(request) {
@@ -467,9 +477,9 @@ export default {
                 const password = String(body.password || "");
 
                 const user = await env.db.prepare(`
-                    SELECT id, username, email, password_hash
-                    FROM users
-                    WHERE email = ? COLLATE NOCASE
+                    SELECT id, username, email, password_hash, is_banned
+FROM users
+WHERE email = ? COLLATE NOCASE
                 `).bind(email).first();
 
                 if (
