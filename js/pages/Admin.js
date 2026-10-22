@@ -10,90 +10,206 @@ export default {
                 <p>Welcome, {{ username }}!</p>
 
                 <section class="admin-section">
-                    <h2>Player Management</h2>
+                    <h2>Dashboard</h2>
+                    <div class="admin-stats">
+                        <p>Accounts: <strong>{{ players.length }}</strong></p>
+                        <p>Banned: <strong>{{ bannedCount }}</strong></p>
+                        <p>Pending: <strong>{{ pendingCount }}</strong></p>
+                        <p>Approved: <strong>{{ approvedCount }}</strong></p>
+                        <p>Rejected: <strong>{{ rejectedCount }}</strong></p>
+                    </div>
+                </section>
 
-                    <p>
-                        Link registered accounts to existing leaderboard
-                        identities. Changing a link does not change scores.
-                    </p>
+                <section class="admin-section">
+                    <details :open="players.length <= 50">
+                        <summary>
+                            <h2 style="display:inline">Player Management</h2>
+                            <span> — {{ players.length }} accounts</span>
+                        </summary>
 
-                    <p v-if="playersLoading">Loading player accounts...</p>
-                    <p v-else-if="playersError" role="alert">
-                        {{ playersError }}
-                    </p>
-
-                    <div v-else>
-                        <p v-if="players.length === 0">
-                            No registered accounts found.
+                        <p>
+                            Search accounts, manage bans, and link accounts
+                            to existing leaderboard identities. Changing a
+                            link does not change scores.
                         </p>
 
-                        <div
-                            v-for="player in players"
-                            :key="player.id"
-                            class="admin-player"
-                        >
-                            <h3>
-                                {{ player.username }}
-                                <span v-if="player.is_admin === 1">(admin)</span>
-                            </h3>
+                        <p v-if="playersLoading">Loading player accounts...</p>
+                        <p v-else-if="playersError" role="alert">
+                            {{ playersError }}
+                        </p>
 
-                            <p>{{ player.email }}</p>
-                            <p>
-                                Current identity:
-                                <strong>
-                                    {{ player.leaderboard_name || 'Not linked' }}
-                                </strong>
-                            </p>
-
-                            <label :for="'profile-' + player.id">
-                                Leaderboard identity
-                            </label>
-
-                            <select
-                                :id="'profile-' + player.id"
-                                v-model="selectedProfiles[player.id]"
-                                :disabled="savingUser === player.id"
+                        <div v-else>
+                            <label for="player-search">Search accounts</label>
+                            <input
+                                id="player-search"
+                                v-model="playerSearch"
+                                type="search"
+                                placeholder="Username, email or leaderboard name..."
                             >
-                                <option value="">Not linked</option>
-                                <option
-                                    v-for="identity in identities"
-                                    :key="identity"
-                                    :value="identity"
-                                >
-                                    {{ identity }}
-                                </option>
+
+                            <label for="player-filter">Account status</label>
+                            <select id="player-filter" v-model="playerFilter">
+                                <option value="all">All accounts</option>
+                                <option value="linked">Linked</option>
+                                <option value="unlinked">Not linked</option>
+                                <option value="banned">Banned</option>
+                                <option value="active">Not banned</option>
                             </select>
 
-                            <button
-                                type="button"
-                                @click="saveProfile(player)"
-                                :disabled="
-                                    savingUser === player.id ||
-                                    selectedProfiles[player.id] ===
-                                    (player.leaderboard_name || '')
-                                "
-                            >
-                                {{
-                                    savingUser === player.id
-                                        ? 'Saving...'
-                                        : 'Save link'
-                                }}
-                            </button>
-
-                            <p v-if="playerMessages[player.id]" role="status">
-                                {{ playerMessages[player.id] }}
+                            <p>
+                                Showing {{ visiblePlayers.length }}
+                                of {{ filteredPlayers.length }} matching accounts.
                             </p>
-                            <hr>
-                        </div>
-                    </div>
 
-                    <button
-                        type="button"
-                        @click="loadPlayers"
-                        :disabled="playersLoading"
-                    >
-                        Refresh accounts
-                    </button>
+                            <p v-if="filteredPlayers.length === 0">
+                                No matching accounts.
+                            </p>
+
+                            <div
+                                v-for="player in visiblePlayers"
+                                :key="player.id"
+                                class="admin-player"
+                            >
+                                <h3>
+                                    {{ player.username }}
+                                    <span v-if="player.is_admin === 1">(admin)</span>
+                                    <span v-if="player.is_banned === 1">
+                                        — BANNED
+                                    </span>
+                                </h3>
+
+                                <p>{{ player.email }}</p>
+                                <p>
+                                    Current identity:
+                                    <strong>
+                                        {{ player.leaderboard_name || 'Not linked' }}
+                                    </strong>
+                                </p>
+
+                                <p v-if="player.is_banned === 1">
+                                    <strong>Ban reason:</strong>
+                                    {{ player.ban_reason || 'No reason provided' }}
+                                </p>
+
+                                <details>
+                                    <summary>Manage leaderboard link</summary>
+
+                                    <label :for="'profile-' + player.id">
+                                        Leaderboard identity
+                                    </label>
+
+                                    <input
+                                        :id="'identity-search-' + player.id"
+                                        v-model="identitySearch[player.id]"
+                                        type="search"
+                                        placeholder="Search leaderboard identities..."
+                                    >
+
+                                    <select
+                                        :id="'profile-' + player.id"
+                                        v-model="selectedProfiles[player.id]"
+                                        :disabled="savingUser === player.id"
+                                    >
+                                        <option value="">Not linked</option>
+                                        <option
+                                            v-if="
+                                                player.leaderboard_name &&
+                                                !filteredIdentities(player).includes(
+                                                    player.leaderboard_name
+                                                )
+                                            "
+                                            :value="player.leaderboard_name"
+                                        >
+                                            {{ player.leaderboard_name }} (current)
+                                        </option>
+                                        <option
+                                            v-for="identity in filteredIdentities(player)"
+                                            :key="identity"
+                                            :value="identity"
+                                        >
+                                            {{ identity }}
+                                        </option>
+                                    </select>
+
+                                    <button
+                                        type="button"
+                                        @click="saveProfile(player)"
+                                        :disabled="
+                                            savingUser === player.id ||
+                                            selectedProfiles[player.id] ===
+                                            (player.leaderboard_name || '')
+                                        "
+                                    >
+                                        {{
+                                            savingUser === player.id
+                                                ? 'Saving...'
+                                                : 'Save link'
+                                        }}
+                                    </button>
+
+                                    <p
+                                        v-if="playerMessages[player.id]"
+                                        role="status"
+                                    >
+                                        {{ playerMessages[player.id] }}
+                                    </p>
+                                </details>
+
+                                <div v-if="player.is_admin !== 1">
+                                    <button
+                                        v-if="player.is_banned !== 1"
+                                        type="button"
+                                        @click="banPlayer(player)"
+                                        :disabled="banningUser === player.id"
+                                    >
+                                        {{
+                                            banningUser === player.id
+                                                ? 'Banning...'
+                                                : 'Ban account'
+                                        }}
+                                    </button>
+
+                                    <button
+                                        v-else
+                                        type="button"
+                                        @click="unbanPlayer(player)"
+                                        :disabled="banningUser === player.id"
+                                    >
+                                        {{
+                                            banningUser === player.id
+                                                ? 'Unbanning...'
+                                                : 'Unban account'
+                                        }}
+                                    </button>
+
+                                    <p
+                                        v-if="banMessages[player.id]"
+                                        role="status"
+                                    >
+                                        {{ banMessages[player.id] }}
+                                    </p>
+                                </div>
+
+                                <hr>
+                            </div>
+
+                            <button
+                                v-if="visiblePlayers.length < filteredPlayers.length"
+                                type="button"
+                                @click="playerLimit += 50"
+                            >
+                                Show 50 more accounts
+                            </button>
+                        </div>
+
+                        <button
+                            type="button"
+                            @click="loadPlayers"
+                            :disabled="playersLoading"
+                        >
+                            Refresh accounts
+                        </button>
+                    </details>
                 </section>
 
                 <section class="admin-section">
@@ -102,17 +218,26 @@ export default {
                         Review completion records and new level verifications.
                     </p>
 
-                    <p v-if="submissionsLoading">
-                        Loading submissions...
-                    </p>
+                    <p v-if="submissionsLoading">Loading submissions...</p>
 
                     <p v-else-if="submissionsError" role="alert">
                         {{ submissionsError }}
                     </p>
 
                     <div v-else>
+                        <label for="submission-search">Search submissions</label>
+                        <input
+                            id="submission-search"
+                            v-model="submissionSearch"
+                            type="search"
+                            placeholder="Level, username, creator or submission ID..."
+                        >
+
                         <label for="submission-filter">Show</label>
-                        <select id="submission-filter" v-model="submissionFilter">
+                        <select
+                            id="submission-filter"
+                            v-model="submissionFilter"
+                        >
                             <option value="pending">Pending review</option>
                             <option value="failed">Failed</option>
                             <option value="processing">Processing</option>
@@ -121,8 +246,13 @@ export default {
                             <option value="all">All submissions</option>
                         </select>
 
+                        <p>
+                            Pending: {{ pendingCount }} |
+                            Matching submissions: {{ filteredSubmissions.length }}
+                        </p>
+
                         <p v-if="filteredSubmissions.length === 0">
-                            No submissions in this category.
+                            No matching submissions.
                         </p>
 
                         <article
@@ -131,6 +261,7 @@ export default {
                             class="admin-submission"
                         >
                             <hr>
+
                             <h3>
                                 {{ submission.type === 'completion'
                                     ? 'Completion'
@@ -141,9 +272,18 @@ export default {
                                 <strong>Status:</strong>
                                 {{ submission.status }}
                             </p>
-                            <p><strong>Submitted by:</strong> {{ submission.username }}</p>
-                            <p><strong>Submitted:</strong> {{ submission.created_at }}</p>
-                            <p><strong>Submission ID:</strong> {{ submission.id }}</p>
+                            <p>
+                                <strong>Submitted by:</strong>
+                                {{ submission.username }}
+                            </p>
+                            <p>
+                                <strong>Submitted:</strong>
+                                {{ submission.created_at }}
+                            </p>
+                            <p>
+                                <strong>Submission ID:</strong>
+                                {{ submission.id }}
+                            </p>
 
                             <div v-if="submission.type === 'completion'">
                                 <p>
@@ -164,9 +304,7 @@ export default {
                                         :href="submission.payload.link"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                    >
-                                        Open proof video
-                                    </a>
+                                    >Open proof video</a>
                                 </p>
                             </div>
 
@@ -189,7 +327,7 @@ export default {
                                 </p>
                                 <p>
                                     <strong>Creators:</strong>
-                                    {{ submission.payload.creators.join(', ') }}
+                                    {{ (submission.payload.creators || []).join(', ') }}
                                 </p>
                                 <p>
                                     <strong>Percent to qualify:</strong>
@@ -205,9 +343,7 @@ export default {
                                         :href="submission.payload.verification"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                    >
-                                        Open verification video
-                                    </a>
+                                    >Open verification video</a>
                                 </p>
                             </div>
 
@@ -276,24 +412,95 @@ export default {
             playerMessages: {},
             savingUser: null,
 
+            playerSearch: '',
+            playerFilter: 'all',
+            playerLimit: 50,
+            identitySearch: {},
+            banningUser: null,
+            banMessages: {},
+
             submissionsLoading: false,
             submissionsError: '',
             submissions: [],
             submissionFilter: 'pending',
+            submissionSearch: '',
             reviewingId: null,
             submissionMessages: {}
         };
     },
 
     computed: {
-        filteredSubmissions() {
-            if (this.submissionFilter === 'all') {
-                return this.submissions;
-            }
+        filteredPlayers() {
+            const query = this.playerSearch.trim().toLowerCase();
 
-            return this.submissions.filter(
-                submission => submission.status === this.submissionFilter
-            );
+            return this.players.filter(player => {
+                const matchesSearch = !query || [
+                    player.username,
+                    player.email,
+                    player.leaderboard_name
+                ].some(value =>
+                    String(value || '').toLowerCase().includes(query)
+                );
+
+                const banned = player.is_banned === 1;
+
+                const matchesFilter =
+                    this.playerFilter === 'all' ||
+                    (this.playerFilter === 'linked' &&
+                        !!player.leaderboard_name) ||
+                    (this.playerFilter === 'unlinked' &&
+                        !player.leaderboard_name) ||
+                    (this.playerFilter === 'banned' && banned) ||
+                    (this.playerFilter === 'active' && !banned);
+
+                return matchesSearch && matchesFilter;
+            });
+        },
+
+        visiblePlayers() {
+            return this.filteredPlayers.slice(0, this.playerLimit);
+        },
+
+        bannedCount() {
+            return this.players.filter(p => p.is_banned === 1).length;
+        },
+
+        pendingCount() {
+            return this.submissions.filter(s => s.status === 'pending').length;
+        },
+
+        approvedCount() {
+            return this.submissions.filter(s => s.status === 'approved').length;
+        },
+
+        rejectedCount() {
+            return this.submissions.filter(s => s.status === 'rejected').length;
+        },
+
+        filteredSubmissions() {
+            const query = this.submissionSearch.trim().toLowerCase();
+
+            return this.submissions.filter(submission => {
+                const matchesStatus =
+                    this.submissionFilter === 'all' ||
+                    submission.status === this.submissionFilter;
+
+                const payload = submission.payload || {};
+                const searchable = [
+                    submission.id,
+                    submission.username,
+                    submission.type,
+                    submission.status,
+                    payload.levelFile,
+                    payload.name,
+                    payload.fileName,
+                    payload.author,
+                    ...(payload.creators || [])
+                ].join(' ').toLowerCase();
+
+                return matchesStatus &&
+                    (!query || searchable.includes(query));
+            });
         }
     },
 
@@ -328,14 +535,24 @@ export default {
                 this.loadSubmissions()
             ]);
         } catch {
-            this.error =
-                'Could not verify admin access. Please try again.';
+            this.error = 'Could not verify admin access. Please try again.';
         } finally {
             this.loading = false;
         }
     },
 
     methods: {
+        filteredIdentities(player) {
+            const query = (this.identitySearch[player.id] || '')
+                .trim().toLowerCase();
+
+            return this.identities
+                .filter(identity =>
+                    !query || identity.toLowerCase().includes(query)
+                )
+                .slice(0, 100);
+        },
+
         async loadPlayers() {
             this.playersLoading = true;
             this.playersError = '';
@@ -365,6 +582,8 @@ export default {
                 );
 
                 this.playerMessages = {};
+                this.banMessages = {};
+                this.playerLimit = 50;
             } catch (error) {
                 this.playersError =
                     error.message || 'Could not load player accounts.';
@@ -406,6 +625,73 @@ export default {
                     error.message || 'Could not update the profile link.';
             } finally {
                 this.savingUser = null;
+            }
+        },
+
+        async banPlayer(player) {
+            const reason = window.prompt(
+                `Why are you banning ${player.username}? (Optional, max 500 characters)`
+            );
+
+            if (reason === null) return;
+
+            if (reason.trim().length > 500) {
+                window.alert('The ban reason must be 500 characters or fewer.');
+                return;
+            }
+
+            if (!window.confirm(
+                `Are you sure you want to ban ${player.username}?`
+            )) {
+                return;
+            }
+
+            await this.setBanStatus(player, 'ban', reason.trim());
+        },
+
+        async unbanPlayer(player) {
+            if (!window.confirm(
+                `Are you sure you want to unban ${player.username}?`
+            )) {
+                return;
+            }
+
+            await this.setBanStatus(player, 'unban', '');
+        },
+
+        async setBanStatus(player, action, reason) {
+            this.banningUser = player.id;
+            this.banMessages[player.id] = '';
+
+            try {
+                const response = await fetch('/api/admin/players/ban', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: player.id,
+                        action,
+                        reason
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || `Could not ${action} account.`
+                    );
+                }
+
+                this.banMessages[player.id] = result.message ||
+                    `Account ${action === 'ban' ? 'banned' : 'unbanned'}.`;
+
+                await this.loadPlayers();
+            } catch (error) {
+                this.banMessages[player.id] =
+                    error.message || `Could not ${action} account.`;
+            } finally {
+                this.banningUser = null;
             }
         },
 
