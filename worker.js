@@ -1347,14 +1347,104 @@ if (user.is_banned === 1) {
                     message: `${target.username} has been unbanned.`
                 }, 200, { "Cache-Control": "no-store" });
             }
-
             const submissionResponse = await handleSubmissionRoute(
     request,
     env,
     url,
     { json, currentUser }
 );
+// Admin: list levels and their difficulty assignments.
+if (
+    url.pathname === "/api/admin/levels" &&
+    request.method === "GET"
+) {
+    const auth = await requireAdmin(request, env);
 
+    if (auth.error) return auth.error;
+
+    const files = await getLevelList(env, url.origin);
+    const levels = [];
+
+    for (const fileName of files) {
+        const level = await readLevel(env, url.origin, fileName);
+
+        levels.push({
+            fileName,
+            id: level.id ?? null,
+            name: typeof level.name === "string"
+                ? level.name
+                : fileName,
+            difficulty: LEVEL_DIFFICULTIES.includes(level.difficulty)
+                ? level.difficulty
+                : ""
+        });
+    }
+
+    return json({ levels }, 200, {
+        "Cache-Control": "no-store"
+    });
+}
+
+// Admin: update a level's difficulty without changing its records or list position.
+if (
+    url.pathname === "/api/admin/levels/update" &&
+    request.method === "POST"
+) {
+    const auth = await requireAdmin(request, env);
+
+    if (auth.error) return auth.error;
+
+    let body;
+
+    try {
+        body = await request.json();
+    } catch {
+        return json({ error: "Invalid JSON body." }, 400);
+    }
+
+    const fileName =
+        typeof body.fileName === "string"
+            ? body.fileName
+            : "";
+
+    const difficulty =
+        typeof body.difficulty === "string"
+            ? body.difficulty
+            : "";
+
+    if (!LEVEL_FILE_PATTERN.test(fileName)) {
+        return json({ error: "Invalid level filename." }, 400);
+    }
+
+    if (
+        difficulty !== "" &&
+        !LEVEL_DIFFICULTIES.includes(difficulty)
+    ) {
+        return json({ error: "Invalid difficulty." }, 400);
+    }
+
+    // Only allow editing files currently present in data/_list.json.
+    const files = await getLevelList(env, url.origin);
+
+    if (!files.includes(fileName)) {
+        return json({ error: "Level not found." }, 404);
+    }
+
+    const level = await readLevel(env, url.origin, fileName);
+
+    // An empty difficulty means Unassigned.
+    if (difficulty === "") {
+        delete level.difficulty;
+    } else {
+        level.difficulty = difficulty;
+    }
+
+    // This endpoint needs repository-write support to persist changes.
+    // See the setup note below.
+    return json({
+        error: "Repository write support has not been configured."
+    }, 501);
+}
 if (submissionResponse) return submissionResponse;
 
 return json({ error: "Not found" }, 404);
