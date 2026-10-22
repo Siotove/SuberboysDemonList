@@ -306,6 +306,70 @@ comparison: null
     },
 
     methods: {
+        
+        async loadComparisonIdentities() {
+            try {
+                const response = await fetch('/api/leaderboard/identities', {
+                    credentials: 'same-origin',
+                    cache: 'no-store'
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || 'Could not load player identities.'
+                    );
+                }
+
+                const ownName = (
+                    this.leaderboardProfile?.leaderboard_name || ''
+                ).toLocaleLowerCase('en');
+
+                this.compareIdentities = (result.identities || [])
+                    .filter(name =>
+                        name.toLocaleLowerCase('en') !== ownName
+                    );
+            } catch {
+                this.compareMessage =
+                    'Could not load players for comparison. Please refresh.';
+            }
+        },
+
+        async comparePlayer() {
+            if (!this.compareOpponent) return;
+
+            this.compareLoading = true;
+            this.compareMessage = '';
+            this.comparison = null;
+
+            try {
+                const response = await fetch(
+                    '/api/leaderboard/compare?opponent=' +
+                    encodeURIComponent(this.compareOpponent),
+                    {
+                        credentials: 'same-origin',
+                        cache: 'no-store'
+                    }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || 'Could not compare players.'
+                    );
+                }
+
+                this.comparison = result;
+            } catch (error) {
+                this.compareMessage =
+                    error.message || 'Comparison failed. Please try again.';
+            } finally {
+                this.compareLoading = false;
+            }
+        },
+
         async loadLeaderboardProfile() {
             this.leaderboardLoading = true;
 
