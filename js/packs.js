@@ -47,7 +47,7 @@ export const PACK_DEFINITIONS = [
         name: 'Easy List Points',
         category: 'Bronze',
         bonus: 100,
-        levelPaths: ['Khrome, cu, AinaPoniII'],
+        levelPaths: ['Khrome', 'cu', 'AinaPoniII'],
     },
     {
         id: 'dfsd',
@@ -55,5 +55,12 @@ export const PACK_DEFINITIONS = [
         category: 'Bronze',
         bonus: 100,
         levelPaths: ['NGWave'],
+    },
+    {
+        id: 'milred',
+        name: 'R3dcorrupt Pack',
+        category: 'Gold',
+        bonus: 100,
+        levelPaths: ['Challenger', 'Shadow','Ultramarine','Hypermarine'],
     },
 ];
