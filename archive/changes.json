@@ -40425,5 +40425,160 @@
         "to": 30
       }
     ]
+  },
+  {
+    "date": "2026-10-22T16:32:05.000Z",
+    "commit": "5e67147a9c66f9942729c7f902c8ed021ec7cb86",
+    "added": [
+      "Challenger"
+    ],
+    "removed": [],
+    "moved": [
+      {
+        "level": "SocietyButNo3",
+        "from": 2,
+        "to": 3
+      },
+      {
+        "level": "PolychromaticalII",
+        "from": 3,
+        "to": 4
+      },
+      {
+        "level": "Sandic",
+        "from": 4,
+        "to": 5
+      },
+      {
+        "level": "CS2",
+        "from": 5,
+        "to": 6
+      },
+      {
+        "level": "Shadow",
+        "from": 6,
+        "to": 7
+      },
+      {
+        "level": "USadaclysm",
+        "from": 7,
+        "to": 8
+      },
+      {
+        "level": "Test68",
+        "from": 8,
+        "to": 9
+      },
+      {
+        "level": "Polychromatical",
+        "from": 9,
+        "to": 10
+      },
+      {
+        "level": "Acheroneasy",
+        "from": 10,
+        "to": 11
+      },
+      {
+        "level": "AinaPoni",
+        "from": 11,
+        "to": 12
+      },
+      {
+        "level": "MilestoneIII",
+        "from": 12,
+        "to": 13
+      },
+      {
+        "level": "Sadaclysm",
+        "from": 13,
+        "to": 14
+      },
+      {
+        "level": "MilestoneII",
+        "from": 14,
+        "to": 15
+      },
+      {
+        "level": "Hypermarine",
+        "from": 15,
+        "to": 16
+      },
+      {
+        "level": "Thermo",
+        "from": 16,
+        "to": 17
+      },
+      {
+        "level": "Ultramarine",
+        "from": 17,
+        "to": 18
+      },
+      {
+        "level": "TungTung",
+        "from": 18,
+        "to": 19
+      },
+      {
+        "level": "Fates",
+        "from": 19,
+        "to": 20
+      },
+      {
+        "level": "Dashgs",
+        "from": 20,
+        "to": 21
+      },
+      {
+        "level": "Application",
+        "from": 21,
+        "to": 22
+      },
+      {
+        "level": "AinaPoniII",
+        "from": 22,
+        "to": 23
+      },
+      {
+        "level": "WinterWonder",
+        "from": 23,
+        "to": 24
+      },
+      {
+        "level": "Ninefiveone",
+        "from": 24,
+        "to": 25
+      },
+      {
+        "level": "MilestoneI",
+        "from": 25,
+        "to": 26
+      },
+      {
+        "level": "Getbetter",
+        "from": 26,
+        "to": 27
+      },
+      {
+        "level": "22",
+        "from": 27,
+        "to": 28
+      },
+      {
+        "level": "Eternity",
+        "from": 28,
+        "to": 29
+      },
+      {
+        "level": "Khrome",
+        "from": 29,
+        "to": 30
+      },
+      {
+        "level": "cu",
+        "from": 30,
+        "to": 31
+      }
+    ]
   }
 ]
