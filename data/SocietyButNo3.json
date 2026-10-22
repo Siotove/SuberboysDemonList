@@ -1,20 +1,26 @@
 {
-    "id": 147520661,
-    "name": "Society But No 3",
-    "author": "Mothcloakinnit",
-    "creators": ["Suberman2, Mothcloakinnit, R3dcorrupt"],
-    "verifier": "Mothcloakinnit",
-    "verification": "https://youtu.be/xV6Gy3Vlkdo",
-    "percentToQualify": 100,
-    "password": "Not Copyable",
-    "records": [
-        {
-            "user": "Justgame",
-            "link": "https://www.youtube.com/watch?v=invalid",
-            "percent": 100,
-            "hz": 420
-        }
-    ]
+  "id": 147520661,
+  "name": "Society But No 3",
+  "author": "Mothcloakinnit",
+  "creators": [
+    "Suberman2, Mothcloakinnit, R3dcorrupt"
+  ],
+  "verifier": "Mothcloakinnit",
+  "verification": "https://youtu.be/xV6Gy3Vlkdo",
+  "percentToQualify": 100,
+  "password": "Not Copyable",
+  "records": [
+    {
+      "user": "Justgame",
+      "link": "https://www.youtube.com/watch?v=invalid",
+      "percent": 100,
+      "hz": 420
+    },
+    {
+      "user": "Feavo228",
+      "link": "https://bread.com",
+      "percent": 100,
+      "hz": 360
+    }
+  ]
 }
-
-
