@@ -269,7 +269,12 @@ export default {
             leaderboardName: '',
             leaderboardLoading: true,
             joining: false,
-            leaderboardMessage: ''
+            leaderboardMessage: '',
+            compareIdentities: [],
+compareOpponent: '',
+compareLoading: false,
+compareMessage: '',
+comparison: null
         };
     },
 
@@ -289,6 +294,9 @@ export default {
 
             if (this.user) {
                 await this.loadLeaderboardProfile();
+                if (this.leaderboardProfile) {
+    await this.loadComparisonIdentities();
+}
             }
         } catch {
             this.message = 'Could not load your profile. Please try again.';
