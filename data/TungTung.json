@@ -1,26 +1,32 @@
 {
-    "id": 138032992,
-    "name": "Tung Tung Wada Potluck IV",
-    "author": "Suberman2",
-    "creators": ["Suberman2, Undermine"],
-    "verifier": "Justgame",
-    "verification": "https://youtu.be/O-_yIZ4ahXE",
-    "percentToQualify": 100,
-    "password": "Not Copyable",
-    "records": [
-        {
-            "user": "Suberman2",
-            "link": "https://www.youtube.com/watch?v=invalid",
-            "percent": 100,
-            "hz": 420
-        },
-        {
-            "user": "LeoCobalt",
-            "link": "https://www.youtube.com/watch?v=invalid",
-            "percent": 100,
-            "hz": 120
-        }
-    ]
+  "id": 138032992,
+  "name": "Tung Tung Wada Potluck IV",
+  "author": "Suberman2",
+  "creators": [
+    "Suberman2, Undermine"
+  ],
+  "verifier": "Justgame",
+  "verification": "https://youtu.be/O-_yIZ4ahXE",
+  "percentToQualify": 100,
+  "password": "Not Copyable",
+  "records": [
+    {
+      "user": "Suberman2",
+      "link": "https://www.youtube.com/watch?v=invalid",
+      "percent": 100,
+      "hz": 420
+    },
+    {
+      "user": "LeoCobalt",
+      "link": "https://www.youtube.com/watch?v=invalid",
+      "percent": 100,
+      "hz": 120
+    },
+    {
+      "user": "Feavo228",
+      "link": "https://bread.com",
+      "percent": 10,
+      "hz": 360
+    }
+  ]
 }
-
-
