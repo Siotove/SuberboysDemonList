@@ -40641,5 +40641,87 @@
         "to": 16
       }
     ]
+  },
+  {
+    "date": "2026-10-22T23:50:37.000Z",
+    "commit": "6c69555d87f7cd6cb9bebbb8a0272e993e943f5d",
+    "added": [
+      "Spookweiner",
+      "Gaopownpunches",
+      "Casher"
+    ],
+    "removed": [],
+    "moved": [
+      {
+        "level": "Ultramarine",
+        "from": 18,
+        "to": 19
+      },
+      {
+        "level": "TungTung",
+        "from": 19,
+        "to": 20
+      },
+      {
+        "level": "Fates",
+        "from": 20,
+        "to": 21
+      },
+      {
+        "level": "Dashgs",
+        "from": 21,
+        "to": 22
+      },
+      {
+        "level": "Application",
+        "from": 22,
+        "to": 23
+      },
+      {
+        "level": "AinaPoniII",
+        "from": 23,
+        "to": 24
+      },
+      {
+        "level": "WinterWonder",
+        "from": 24,
+        "to": 26
+      },
+      {
+        "level": "Ninefiveone",
+        "from": 25,
+        "to": 27
+      },
+      {
+        "level": "MilestoneI",
+        "from": 26,
+        "to": 28
+      },
+      {
+        "level": "Getbetter",
+        "from": 27,
+        "to": 30
+      },
+      {
+        "level": "22",
+        "from": 28,
+        "to": 31
+      },
+      {
+        "level": "Eternity",
+        "from": 29,
+        "to": 32
+      },
+      {
+        "level": "Khrome",
+        "from": 30,
+        "to": 33
+      },
+      {
+        "level": "cu",
+        "from": 31,
+        "to": 34
+      }
+    ]
   }
 ]
