@@ -564,19 +564,207 @@ if (user.is_banned === 1) {
                 url.pathname === "/api/leaderboard/identities" &&
                 request.method === "GET"
             ) {
-                const result = await env.db.prepare(`
+                
+                const staticNames = await allLeaderboardNames(env, url.origin);
+
+                const linkedResult = await env.db.prepare(`
                     SELECT leaderboard_name
                     FROM leaderboard_profiles
-                    ORDER BY leaderboard_name COLLATE NOCASE
                 `).all();
 
+                const nameMap = new Map();
+
+                for (const name of staticNames) {
+                    nameMap.set(name.toLocaleLowerCase("en"), name);
+                }
+
+                for (const row of linkedResult.results) {
+                    const name = row.leaderboard_name;
+                    if (name) {
+                        const key = name.toLocaleLowerCase("en");
+                        if (!nameMap.has(key)) nameMap.set(key, name);
+                    }
+                }
+
                 return json({
-                    identities: result.results.map(
-                        row => row.leaderboard_name
+                    identities: [...nameMap.values()].sort((a, b) =>
+                        a.localeCompare(b, undefined, {
+                            sensitivity: "base"
+                        })
                     )
                 }, 200, {
                     "Cache-Control": "no-store"
                 });
+
+            }
+
+            // Compare accepted completions for the logged-in player's identity.
+            if (
+                url.pathname === "/api/leaderboard/compare" &&
+                request.method === "GET"
+            ) {
+                const user = await currentUser(request, env.db);
+
+                if (!user) {
+                    return json({ error: "Please log in." }, 401, {
+                        "Cache-Control": "no-store"
+                    });
+                }
+
+                const ownProfile = await env.db.prepare(`
+                    SELECT leaderboard_name
+                    FROM leaderboard_profiles
+                    WHERE user_id = ?
+                `).bind(user.id).first();
+
+                if (!ownProfile) {
+                    return json({
+                        error: "Link your leaderboard identity first."
+                    }, 400, { "Cache-Control": "no-store" });
+                }
+
+                const opponent = (url.searchParams.get("opponent") || "").trim();
+
+                if (!opponent || opponent.length > 100) {
+                    return json({
+                        error: "Choose a leaderboard player to compare."
+                    }, 400, { "Cache-Control": "no-store" });
+                }
+
+                if (
+                    opponent.toLocaleLowerCase("en") ===
+                    ownProfile.leaderboard_name.toLocaleLowerCase("en")
+                ) {
+                    return json({
+                        error: "Choose a different player."
+                    }, 400, { "Cache-Control": "no-store" });
+                }
+
+                const listResponse = await env.ASSETS.fetch(
+                    new Request(new URL("/data/_list.json", url.origin))
+                );
+
+                if (!listResponse.ok) {
+                    throw new Error("Could not read leaderboard list.");
+                }
+
+                const files = await listResponse.json();
+
+                if (!Array.isArray(files)) {
+                    throw new Error("Invalid leaderboard list.");
+                }
+
+                const ownName = ownProfile.leaderboard_name;
+                const ownKey = ownName.toLocaleLowerCase("en");
+                const opponentKey = opponent.toLocaleLowerCase("en");
+                const identities = new Map();
+                const ownLevels = new Map();
+                const opponentLevels = new Map();
+
+                for (let index = 0; index < files.length; index++) {
+                    const file = files[index];
+
+                    if (
+                        typeof file !== "string" ||
+                        !/^[a-zA-Z0-9_-]+$/.test(file)
+                    ) {
+                        continue;
+                    }
+
+                    const levelResponse = await env.ASSETS.fetch(
+                        new Request(
+                            new URL(
+                                `/data/${encodeURIComponent(file)}.json`,
+                                url.origin
+                            )
+                        )
+                    );
+
+                    if (!levelResponse.ok) {
+                        throw new Error(`Could not read level ${file}.`);
+                    }
+
+                    const level = await levelResponse.json();
+                    if (!Array.isArray(level.records)) continue;
+
+                    const requiredPercent = Number(level.percentToQualify ?? 100);
+                    const rank = index + 1;
+
+                    for (const record of level.records) {
+                        if (typeof record.user !== "string") continue;
+
+                        const name = record.user.trim();
+                        if (!name) continue;
+
+                        const key = name.toLocaleLowerCase("en");
+                        if (!identities.has(key)) identities.set(key, name);
+
+                        if (
+                            !Number.isFinite(Number(record.percent)) ||
+                            Number(record.percent) < requiredPercent
+                        ) {
+                            continue;
+                        }
+
+                        const entry = {
+                            file,
+                            name: level.name || file,
+                            rank,
+                            percent: Number(record.percent),
+                            link: typeof record.link === "string"
+                                ? record.link
+                                : ""
+                        };
+
+                        if (key === ownKey && !ownLevels.has(file)) {
+                            ownLevels.set(file, entry);
+                        }
+
+                        if (key === opponentKey && !opponentLevels.has(file)) {
+                            opponentLevels.set(file, entry);
+                        }
+                    }
+                }
+
+                const canonicalOpponent = identities.get(opponentKey);
+
+                if (!canonicalOpponent) {
+                    return json({
+                        error: "That player has no records on the current list."
+                    }, 404, { "Cache-Control": "no-store" });
+                }
+
+                const own = [...ownLevels.values()].sort(
+                    (a, b) => a.rank - b.rank
+                );
+                const theirs = [...opponentLevels.values()].sort(
+                    (a, b) => a.rank - b.rank
+                );
+
+                const shared = own.filter(level =>
+                    opponentLevels.has(level.file)
+                );
+                const ownUnique = own.filter(level =>
+                    !opponentLevels.has(level.file)
+                );
+                const opponentUnique = theirs.filter(level =>
+                    !ownLevels.has(level.file)
+                );
+
+                return json({
+                    ownName,
+                    opponentName: canonicalOpponent,
+                    identities: [...identities.values()].sort((a, b) =>
+                        a.localeCompare(b, undefined, { sensitivity: "base" })
+                    ),
+                    ownCount: own.length,
+                    opponentCount: theirs.length,
+                    ownHardest: own[0] || null,
+                    opponentHardest: theirs[0] || null,
+                    shared,
+                    ownUnique,
+                    opponentUnique
+                }, 200, { "Cache-Control": "no-store" });
             }
 
             // Check admin permissions.
