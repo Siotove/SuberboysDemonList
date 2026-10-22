@@ -1,4 +1,87 @@
 import { handleSubmissionRoute } from "./submission-routes.js";
+
+const LEVEL_DIFFICULTIES = [
+    "Extreme Demon",
+    "Insane Demon",
+    "Hard Demon",
+    "Medium Demon",
+    "Easy Demon",
+    "Insane",
+    "Harder",
+    "Hard",
+    "Normal",
+    "Easy",
+    "Auto"
+];
+
+const LEVEL_FILE_PATTERN = /^[a-zA-Z0-9_-]{1,80}$/;
+
+async function getLevelList(env, origin) {
+    const response = await env.ASSETS.fetch(
+        new Request(new URL("/data/_list.json", origin))
+    );
+
+    if (!response.ok) {
+        throw new Error("Could not read leaderboard list.");
+    }
+
+    const files = await response.json();
+
+    if (
+        !Array.isArray(files) ||
+        !files.every(file =>
+            typeof file === "string" &&
+            LEVEL_FILE_PATTERN.test(file)
+        )
+    ) {
+        throw new Error("Invalid leaderboard list.");
+    }
+
+    return files;
+}
+
+async function readLevel(env, origin, fileName) {
+    const response = await env.ASSETS.fetch(
+        new Request(
+            new URL(
+                `/data/${encodeURIComponent(fileName)}.json`,
+                origin
+            )
+        )
+    );
+
+    if (!response.ok) {
+        throw new Error(`Could not read level: ${fileName}`);
+    }
+
+    return response.json();
+}
+
+async function requireAdmin(request, env) {
+    const user = await currentUser(request, env.db);
+
+    if (!user) {
+        return {
+            error: json(
+                { error: "Please log in." },
+                401,
+                { "Cache-Control": "no-store" }
+            )
+        };
+    }
+
+    if (user.is_admin !== 1) {
+        return {
+            error: json(
+                { error: "Admin access required." },
+                403,
+                { "Cache-Control": "no-store" }
+            )
+        };
+    }
+
+    return { user };
+}
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const PBKDF2_ITERATIONS = 100000;
 
