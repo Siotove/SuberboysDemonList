@@ -1,4 +1,18 @@
 
+const DIFFICULTIES = [
+    'Extreme Demon',
+    'Insane Demon',
+    'Hard Demon',
+    'Medium Demon',
+    'Easy Demon',
+    'Insane',
+    'Harder',
+    'Hard',
+    'Normal',
+    'Easy',
+    'Auto'
+];
+
 export default {
     template: `
         <main class="admin-page">
@@ -9,17 +23,163 @@ export default {
             <div v-else-if="isAdmin">
                 <p>Welcome, {{ username }}!</p>
 
+                <!-- DASHBOARD -->
                 <section class="admin-section">
                     <h2>Dashboard</h2>
                     <div class="admin-stats">
                         <p>Accounts: <strong>{{ players.length }}</strong></p>
                         <p>Banned: <strong>{{ bannedCount }}</strong></p>
+                        <p>Levels: <strong>{{ levels.length }}</strong></p>
                         <p>Pending: <strong>{{ pendingCount }}</strong></p>
                         <p>Approved: <strong>{{ approvedCount }}</strong></p>
                         <p>Rejected: <strong>{{ rejectedCount }}</strong></p>
                     </div>
                 </section>
 
+                <!-- LEVEL MANAGEMENT -->
+                <section class="admin-section">
+                    <details open>
+                        <summary>
+                            <h2 style="display:inline">Level Management</h2>
+                            <span> — {{ levels.length }} levels</span>
+                        </summary>
+
+                        <p>
+                            Search published levels and assign their
+                            difficulty. Saving updates the level's difficulty.
+                        </p>
+
+                        <p v-if="levelsLoading">Loading levels...</p>
+
+                        <p v-else-if="levelsError" role="alert">
+                            {{ levelsError }}
+                        </p>
+
+                        <div v-else>
+                            <label for="level-search">Search levels</label>
+                            <input
+                                id="level-search"
+                                v-model="levelSearch"
+                                type="search"
+                                placeholder="Level name, filename or ID..."
+                            >
+
+                            <label for="difficulty-filter">
+                                Filter by difficulty
+                            </label>
+                            <select
+                                id="difficulty-filter"
+                                v-model="difficultyFilter"
+                            >
+                                <option value="all">All difficulties</option>
+                                <option value="unassigned">
+                                    Unassigned
+                                </option>
+                                <option
+                                    v-for="difficulty in difficulties"
+                                    :key="difficulty"
+                                    :value="difficulty"
+                                >
+                                    {{ difficulty }}
+                                </option>
+                            </select>
+
+                            <p>
+                                Showing {{ visibleLevels.length }}
+                                of {{ filteredLevels.length }} matching levels.
+                            </p>
+
+                            <p v-if="filteredLevels.length === 0">
+                                No matching levels.
+                            </p>
+
+                            <article
+                                v-for="level in visibleLevels"
+                                :key="level.fileName"
+                                class="admin-level"
+                            >
+                                <hr>
+
+                                <h3>{{ level.name }}</h3>
+
+                                <p>
+                                    <strong>Filename:</strong>
+                                    {{ level.fileName }}.json
+                                </p>
+
+                                <p v-if="level.id !== undefined && level.id !== null">
+                                    <strong>Level ID:</strong>
+                                    {{ level.id }}
+                                </p>
+
+                                <p>
+                                    <strong>Current difficulty:</strong>
+                                    {{ level.difficulty || 'Unassigned' }}
+                                </p>
+
+                                <label :for="'difficulty-' + level.fileName">
+                                    Set difficulty
+                                </label>
+
+                                <select
+                                    :id="'difficulty-' + level.fileName"
+                                    v-model="levelEdits[level.fileName]"
+                                    :disabled="savingLevel === level.fileName"
+                                >
+                                    <option value="">Unassigned</option>
+                                    <option
+                                        v-for="difficulty in difficulties"
+                                        :key="difficulty"
+                                        :value="difficulty"
+                                    >
+                                        {{ difficulty }}
+                                    </option>
+                                </select>
+
+                                <button
+                                    type="button"
+                                    @click="saveDifficulty(level)"
+                                    :disabled="
+                                        savingLevel === level.fileName ||
+                                        (levelEdits[level.fileName] || '') ===
+                                        (level.difficulty || '')
+                                    "
+                                >
+                                    {{
+                                        savingLevel === level.fileName
+                                            ? 'Saving...'
+                                            : 'Save difficulty'
+                                    }}
+                                </button>
+
+                                <p
+                                    v-if="levelMessages[level.fileName]"
+                                    role="status"
+                                >
+                                    {{ levelMessages[level.fileName] }}
+                                </p>
+                            </article>
+
+                            <button
+                                v-if="visibleLevels.length < filteredLevels.length"
+                                type="button"
+                                @click="levelLimit += 50"
+                            >
+                                Show 50 more levels
+                            </button>
+                        </div>
+
+                        <button
+                            type="button"
+                            @click="loadLevels"
+                            :disabled="levelsLoading"
+                        >
+                            {{ levelsLoading ? 'Refreshing...' : 'Refresh levels' }}
+                        </button>
+                    </details>
+                </section>
+
+                <!-- PLAYER MANAGEMENT -->
                 <section class="admin-section">
                     <details :open="players.length <= 50">
                         <summary>
@@ -79,6 +239,7 @@ export default {
                                 </h3>
 
                                 <p>{{ player.email }}</p>
+
                                 <p>
                                     Current identity:
                                     <strong>
@@ -111,6 +272,7 @@ export default {
                                         :disabled="savingUser === player.id"
                                     >
                                         <option value="">Not linked</option>
+
                                         <option
                                             v-if="
                                                 player.leaderboard_name &&
@@ -122,6 +284,7 @@ export default {
                                         >
                                             {{ player.leaderboard_name }} (current)
                                         </option>
+
                                         <option
                                             v-for="identity in filteredIdentities(player)"
                                             :key="identity"
@@ -212,8 +375,10 @@ export default {
                     </details>
                 </section>
 
+                <!-- SUBMISSION REVIEW -->
                 <section class="admin-section">
                     <h2>Submissions</h2>
+
                     <p>
                         Review completion records and new level verifications.
                     </p>
@@ -225,7 +390,10 @@ export default {
                     </p>
 
                     <div v-else>
-                        <label for="submission-search">Search submissions</label>
+                        <label for="submission-search">
+                            Search submissions
+                        </label>
+
                         <input
                             id="submission-search"
                             v-model="submissionSearch"
@@ -234,6 +402,7 @@ export default {
                         >
 
                         <label for="submission-filter">Show</label>
+
                         <select
                             id="submission-filter"
                             v-model="submissionFilter"
@@ -272,14 +441,17 @@ export default {
                                 <strong>Status:</strong>
                                 {{ submission.status }}
                             </p>
+
                             <p>
                                 <strong>Submitted by:</strong>
                                 {{ submission.username }}
                             </p>
+
                             <p>
                                 <strong>Submitted:</strong>
                                 {{ submission.created_at }}
                             </p>
+
                             <p>
                                 <strong>Submission ID:</strong>
                                 {{ submission.id }}
@@ -290,14 +462,17 @@ export default {
                                     <strong>Level:</strong>
                                     {{ submission.payload.levelFile }}
                                 </p>
+
                                 <p>
                                     <strong>Progress:</strong>
                                     {{ submission.payload.percent }}%
                                 </p>
+
                                 <p>
                                     <strong>Refresh rate:</strong>
                                     {{ submission.payload.hz }} Hz
                                 </p>
+
                                 <p>
                                     <strong>Video:</strong>
                                     <a
@@ -313,30 +488,37 @@ export default {
                                     <strong>Level name:</strong>
                                     {{ submission.payload.name }}
                                 </p>
+
                                 <p>
                                     <strong>Filename:</strong>
                                     {{ submission.payload.fileName }}.json
                                 </p>
+
                                 <p>
                                     <strong>Level ID:</strong>
                                     {{ submission.payload.id }}
                                 </p>
+
                                 <p>
                                     <strong>Author:</strong>
                                     {{ submission.payload.author }}
                                 </p>
+
                                 <p>
                                     <strong>Creators:</strong>
                                     {{ (submission.payload.creators || []).join(', ') }}
                                 </p>
+
                                 <p>
                                     <strong>Percent to qualify:</strong>
                                     {{ submission.payload.percentToQualify }}%
                                 </p>
+
                                 <p>
                                     <strong>Requested list position:</strong>
                                     {{ submission.payload.position }}
                                 </p>
+
                                 <p>
                                     <strong>Verification:</strong>
                                     <a
@@ -404,6 +586,18 @@ export default {
             username: '',
             error: 'You do not have permission to access this page.',
 
+            difficulties: DIFFICULTIES,
+
+            levelsLoading: false,
+            levelsError: '',
+            levels: [],
+            levelSearch: '',
+            difficultyFilter: 'all',
+            levelLimit: 50,
+            levelEdits: {},
+            levelMessages: {},
+            savingLevel: null,
+
             playersLoading: false,
             playersError: '',
             players: [],
@@ -411,7 +605,6 @@ export default {
             selectedProfiles: {},
             playerMessages: {},
             savingUser: null,
-
             playerSearch: '',
             playerFilter: 'all',
             playerLimit: 50,
@@ -430,6 +623,32 @@ export default {
     },
 
     computed: {
+        filteredLevels() {
+            const query = this.levelSearch.trim().toLowerCase();
+
+            return this.levels.filter(level => {
+                const matchesSearch = !query || [
+                    level.name,
+                    level.fileName,
+                    level.id
+                ].some(value =>
+                    String(value ?? '').toLowerCase().includes(query)
+                );
+
+                const difficulty = level.difficulty || '';
+                const matchesDifficulty =
+                    this.difficultyFilter === 'all' ||
+                    (this.difficultyFilter === 'unassigned' && !difficulty) ||
+                    difficulty === this.difficultyFilter;
+
+                return matchesSearch && matchesDifficulty;
+            });
+        },
+
+        visibleLevels() {
+            return this.filteredLevels.slice(0, this.levelLimit);
+        },
+
         filteredPlayers() {
             const query = this.playerSearch.trim().toLowerCase();
 
@@ -531,6 +750,7 @@ export default {
             this.isAdmin = true;
 
             await Promise.all([
+                this.loadLevels(),
                 this.loadPlayers(),
                 this.loadSubmissions()
             ]);
@@ -542,6 +762,91 @@ export default {
     },
 
     methods: {
+        async loadLevels() {
+            this.levelsLoading = true;
+            this.levelsError = '';
+
+            try {
+                const response = await fetch('/api/admin/levels', {
+                    credentials: 'same-origin',
+                    cache: 'no-store'
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || 'Could not load levels.'
+                    );
+                }
+
+                this.levels = (result.levels || []).map(level => ({
+                    ...level,
+                    difficulty: level.difficulty || ''
+                }));
+
+                this.levelEdits = Object.fromEntries(
+                    this.levels.map(level => [
+                        level.fileName,
+                        level.difficulty
+                    ])
+                );
+
+                this.levelMessages = {};
+                this.levelLimit = 50;
+            } catch (error) {
+                this.levelsError =
+                    error.message || 'Could not load levels.';
+            } finally {
+                this.levelsLoading = false;
+            }
+        },
+
+        async saveDifficulty(level) {
+            const difficulty = this.levelEdits[level.fileName] || '';
+
+            if (difficulty && !this.difficulties.includes(difficulty)) {
+                this.levelMessages[level.fileName] =
+                    'Please select a valid difficulty.';
+                return;
+            }
+
+            this.savingLevel = level.fileName;
+            this.levelMessages[level.fileName] = '';
+
+            try {
+                const response = await fetch('/api/admin/levels/update', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fileName: level.fileName,
+                        difficulty
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || 'Could not save difficulty.'
+                    );
+                }
+
+                level.difficulty = difficulty;
+                this.levelEdits[level.fileName] = difficulty;
+                this.levelMessages[level.fileName] =
+                    `Difficulty saved: ${difficulty || 'Unassigned'}.`;
+            } catch (error) {
+                this.levelMessages[level.fileName] =
+                    error.message || 'Could not save difficulty.';
+            } finally {
+                this.savingLevel = null;
+            }
+        },
+
         filteredIdentities(player) {
             const query = (this.identitySearch[player.id] || '')
                 .trim().toLowerCase();
