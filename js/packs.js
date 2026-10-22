@@ -52,7 +52,7 @@ export const PACK_DEFINITIONS = [
     {
         id: 'dfsd',
         name: 'Top 1 Pack 2 (unused)',
-        category: 'Bronze',
+        category: 'Gold',
         bonus: 100,
         levelPaths: ['NGWave'],
     },
@@ -60,7 +60,7 @@ export const PACK_DEFINITIONS = [
         id: 'milred',
         name: 'R3dcorrupt Pack',
         category: 'Gold',
-        bonus: 100,
+        bonus: 200,
         levelPaths: ['Challenger', 'Shadow','Ultramarine','Hypermarine'],
     },
 ];
