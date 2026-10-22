@@ -40598,5 +40598,48 @@
         "to": 3
       }
     ]
+  },
+  {
+    "date": "2026-10-22T23:34:20.000Z",
+    "commit": "5f5433aee4a124b742b6c014cce7df523b91c7f2",
+    "added": [],
+    "removed": [],
+    "moved": [
+      {
+        "level": "Hypermarine",
+        "from": 16,
+        "to": 10
+      },
+      {
+        "level": "Polychromatical",
+        "from": 10,
+        "to": 11
+      },
+      {
+        "level": "Acheroneasy",
+        "from": 11,
+        "to": 12
+      },
+      {
+        "level": "AinaPoni",
+        "from": 12,
+        "to": 13
+      },
+      {
+        "level": "MilestoneIII",
+        "from": 13,
+        "to": 14
+      },
+      {
+        "level": "Sadaclysm",
+        "from": 14,
+        "to": 15
+      },
+      {
+        "level": "MilestoneII",
+        "from": 15,
+        "to": 16
+      }
+    ]
   }
 ]
