@@ -40344,5 +40344,86 @@
         "to": 16
       }
     ]
+  },
+  {
+    "date": "2026-10-22T16:22:56.000Z",
+    "commit": "40f9bfc6053e914684c8b5f4741242dd3b1c38f3",
+    "added": [
+      "Hypermarine",
+      "Ultramarine"
+    ],
+    "removed": [],
+    "moved": [
+      {
+        "level": "Thermo",
+        "from": 15,
+        "to": 16
+      },
+      {
+        "level": "TungTung",
+        "from": 16,
+        "to": 18
+      },
+      {
+        "level": "Fates",
+        "from": 17,
+        "to": 19
+      },
+      {
+        "level": "Dashgs",
+        "from": 18,
+        "to": 20
+      },
+      {
+        "level": "Application",
+        "from": 19,
+        "to": 21
+      },
+      {
+        "level": "AinaPoniII",
+        "from": 20,
+        "to": 22
+      },
+      {
+        "level": "WinterWonder",
+        "from": 21,
+        "to": 23
+      },
+      {
+        "level": "Ninefiveone",
+        "from": 22,
+        "to": 24
+      },
+      {
+        "level": "MilestoneI",
+        "from": 23,
+        "to": 25
+      },
+      {
+        "level": "Getbetter",
+        "from": 24,
+        "to": 26
+      },
+      {
+        "level": "22",
+        "from": 25,
+        "to": 27
+      },
+      {
+        "level": "Eternity",
+        "from": 26,
+        "to": 28
+      },
+      {
+        "level": "Khrome",
+        "from": 27,
+        "to": 29
+      },
+      {
+        "level": "cu",
+        "from": 28,
+        "to": 30
+      }
+    ]
   }
 ]
