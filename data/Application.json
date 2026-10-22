@@ -1,15 +1,20 @@
-
 {
-    "id": 102216548,
-    "name": "Application",
-    "author": "Suberman2",
-    "creators": ["Suberman2"],
-    "verifier": "Justgame",
-    "verification": "https://youtu.be/QRc0w1Ma36w",
-    "percentToQualify": 100,
-    "password": "Not Copyable",
-    "records": [
-    ]
+  "id": 102216548,
+  "name": "Application",
+  "author": "Suberman2",
+  "creators": [
+    "Suberman2"
+  ],
+  "verifier": "Justgame",
+  "verification": "https://youtu.be/QRc0w1Ma36w",
+  "percentToQualify": 100,
+  "password": "Not Copyable",
+  "records": [
+    {
+      "user": "SimmebGaming",
+      "link": "https://youtu.be/p8btov71sYE",
+      "percent": 100,
+      "hz": 360
+    }
+  ]
 }
-
-
