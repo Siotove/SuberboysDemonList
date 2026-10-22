@@ -27,6 +27,12 @@
       "link": "https://bread.com",
       "percent": 100,
       "hz": 360
-    }
+    },
+      {
+            "user": "Zaynem12",
+            "link": "https://www.youtube.com/watch?v=invalid",
+            "percent": 100,
+            "hz": 240
+        }
   ]
 }
