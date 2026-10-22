@@ -60,6 +60,7 @@ export default {
                             <input
                                 id="level-search"
                                 v-model="levelSearch"
+                                @input="levelLimit = 50"
                                 type="search"
                                 placeholder="Level name, filename or ID..."
                             >
@@ -84,89 +85,99 @@ export default {
                                 </option>
                             </select>
 
-                            <p>
-                                Showing {{ visibleLevels.length }}
-                                of {{ filteredLevels.length }} matching levels.
+                            <p v-if="!levelSearch.trim()">
+                                Search by level name, filename or ID to display
+                                levels.
                             </p>
 
-                            <p v-if="filteredLevels.length === 0">
-                                No matching levels.
-                            </p>
-
-                            <article
-                                v-for="level in visibleLevels"
-                                :key="level.fileName"
-                                class="admin-level"
-                            >
-                                <hr>
-
-                                <h3>{{ level.name }}</h3>
-
+                            <template v-else>
                                 <p>
-                                    <strong>Filename:</strong>
-                                    {{ level.fileName }}.json
+                                    Showing {{ visibleLevels.length }}
+                                    of {{ filteredLevels.length }} matching levels.
                                 </p>
 
-                                <p v-if="level.id !== undefined && level.id !== null">
-                                    <strong>Level ID:</strong>
-                                    {{ level.id }}
+                                <p v-if="filteredLevels.length === 0">
+                                    No matching levels.
                                 </p>
 
-                                <p>
-                                    <strong>Current difficulty:</strong>
-                                    {{ level.difficulty || 'Unassigned' }}
-                                </p>
-
-                                <label :for="'difficulty-' + level.fileName">
-                                    Set difficulty
-                                </label>
-
-                                <select
-                                    :id="'difficulty-' + level.fileName"
-                                    v-model="levelEdits[level.fileName]"
-                                    :disabled="savingLevel === level.fileName"
+                                <article
+                                    v-for="level in visibleLevels"
+                                    :key="level.fileName"
+                                    class="admin-level"
                                 >
-                                    <option value="">Unassigned</option>
-                                    <option
-                                        v-for="difficulty in difficulties"
-                                        :key="difficulty"
-                                        :value="difficulty"
+                                    <hr>
+
+                                    <h3>{{ level.name }}</h3>
+
+                                    <p>
+                                        <strong>Filename:</strong>
+                                        {{ level.fileName }}.json
+                                    </p>
+
+                                    <p
+                                        v-if="level.id !== undefined &&
+                                              level.id !== null"
                                     >
-                                        {{ difficulty }}
-                                    </option>
-                                </select>
+                                        <strong>Level ID:</strong>
+                                        {{ level.id }}
+                                    </p>
+
+                                    <p>
+                                        <strong>Current difficulty:</strong>
+                                        {{ level.difficulty || 'Unassigned' }}
+                                    </p>
+
+                                    <label :for="'difficulty-' + level.fileName">
+                                        Set difficulty
+                                    </label>
+
+                                    <select
+                                        :id="'difficulty-' + level.fileName"
+                                        v-model="levelEdits[level.fileName]"
+                                        :disabled="savingLevel === level.fileName"
+                                    >
+                                        <option value="">Unassigned</option>
+                                        <option
+                                            v-for="difficulty in difficulties"
+                                            :key="difficulty"
+                                            :value="difficulty"
+                                        >
+                                            {{ difficulty }}
+                                        </option>
+                                    </select>
+
+                                    <button
+                                        type="button"
+                                        @click="saveDifficulty(level)"
+                                        :disabled="
+                                            savingLevel === level.fileName ||
+                                            (levelEdits[level.fileName] || '') ===
+                                            (level.difficulty || '')
+                                        "
+                                    >
+                                        {{
+                                            savingLevel === level.fileName
+                                                ? 'Saving...'
+                                                : 'Save difficulty'
+                                        }}
+                                    </button>
+
+                                    <p
+                                        v-if="levelMessages[level.fileName]"
+                                        role="status"
+                                    >
+                                        {{ levelMessages[level.fileName] }}
+                                    </p>
+                                </article>
 
                                 <button
+                                    v-if="visibleLevels.length < filteredLevels.length"
                                     type="button"
-                                    @click="saveDifficulty(level)"
-                                    :disabled="
-                                        savingLevel === level.fileName ||
-                                        (levelEdits[level.fileName] || '') ===
-                                        (level.difficulty || '')
-                                    "
+                                    @click="levelLimit += 50"
                                 >
-                                    {{
-                                        savingLevel === level.fileName
-                                            ? 'Saving...'
-                                            : 'Save difficulty'
-                                    }}
+                                    Show 50 more levels
                                 </button>
-
-                                <p
-                                    v-if="levelMessages[level.fileName]"
-                                    role="status"
-                                >
-                                    {{ levelMessages[level.fileName] }}
-                                </p>
-                            </article>
-
-                            <button
-                                v-if="visibleLevels.length < filteredLevels.length"
-                                type="button"
-                                @click="levelLimit += 50"
-                            >
-                                Show 50 more levels
-                            </button>
+                            </template>
                         </div>
 
                         <button
@@ -838,7 +849,7 @@ export default {
                 level.difficulty = difficulty;
                 this.levelEdits[level.fileName] = difficulty;
                 this.levelMessages[level.fileName] =
-                    `Difficulty saved: ${difficulty || 'Unassigned'}.`;
+                    \`Difficulty saved: \${difficulty || 'Unassigned'}.\`;
             } catch (error) {
                 this.levelMessages[level.fileName] =
                     error.message || 'Could not save difficulty.';
@@ -923,7 +934,7 @@ export default {
                 player.leaderboard_name = result.leaderboardName || null;
                 this.selectedProfiles[player.id] = result.leaderboardName || '';
                 this.playerMessages[player.id] = result.leaderboardName
-                    ? `Linked to ${result.leaderboardName}.`
+                    ? \`Linked to \${result.leaderboardName}.\`
                     : 'Leaderboard identity unlinked.';
             } catch (error) {
                 this.playerMessages[player.id] =
@@ -935,7 +946,7 @@ export default {
 
         async banPlayer(player) {
             const reason = window.prompt(
-                `Why are you banning ${player.username}? (Optional, max 500 characters)`
+                \`Why are you banning \${player.username}? (Optional, max 500 characters)\`
             );
 
             if (reason === null) return;
@@ -946,7 +957,7 @@ export default {
             }
 
             if (!window.confirm(
-                `Are you sure you want to ban ${player.username}?`
+                \`Are you sure you want to ban \${player.username}?\`
             )) {
                 return;
             }
@@ -956,7 +967,7 @@ export default {
 
         async unbanPlayer(player) {
             if (!window.confirm(
-                `Are you sure you want to unban ${player.username}?`
+                \`Are you sure you want to unban \${player.username}?\`
             )) {
                 return;
             }
@@ -984,17 +995,17 @@ export default {
 
                 if (!response.ok) {
                     throw new Error(
-                        result.error || `Could not ${action} account.`
+                        result.error || \`Could not \${action} account.\`
                     );
                 }
 
                 this.banMessages[player.id] = result.message ||
-                    `Account ${action === 'ban' ? 'banned' : 'unbanned'}.`;
+                    \`Account \${action === 'ban' ? 'banned' : 'unbanned'}.\`;
 
                 await this.loadPlayers();
             } catch (error) {
                 this.banMessages[player.id] =
-                    error.message || `Could not ${action} account.`;
+                    error.message || \`Could not \${action} account.\`;
             } finally {
                 this.banningUser = null;
             }
@@ -1031,7 +1042,7 @@ export default {
             const verb = action === 'approve' ? 'approve' : 'reject';
 
             if (!window.confirm(
-                `Are you sure you want to ${verb} this ${submission.type} submission?`
+                \`Are you sure you want to \${verb} this \${submission.type} submission?\`
             )) {
                 return;
             }
@@ -1057,17 +1068,17 @@ export default {
 
                 if (!response.ok) {
                     throw new Error(
-                        result.error || `Could not ${verb} submission.`
+                        result.error || \`Could not \${verb} submission.\`
                     );
                 }
 
                 this.submissionMessages[submission.id] =
-                    `Submission ${result.status}.`;
+                    \`Submission \${result.status}.\`;
 
                 await this.loadSubmissions();
             } catch (error) {
                 this.submissionMessages[submission.id] =
-                    error.message || `Could not ${verb} submission.`;
+                    error.message || \`Could not \${verb} submission.\`;
                 await this.loadSubmissions();
             } finally {
                 this.reviewingId = null;
