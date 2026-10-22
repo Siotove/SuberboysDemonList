@@ -490,7 +490,14 @@ WHERE email = ? COLLATE NOCASE
                         error: "Invalid email or password."
                     }, 401);
                 }
-
+if (user.is_banned === 1) {
+    return json({
+        error: "This account has been banned.",
+        banned: true
+    }, 403, {
+        "Cache-Control": "no-store"
+    });
+}
                 const tokenBytes = crypto.getRandomValues(
                     new Uint8Array(32)
                 );
