@@ -1,711 +1,1178 @@
 
-import {
-    readRepoFile,
-    writeRepoFilesAtomic
-} from "./submissions.js";
+import { handleSubmissionRoute } from "./submission-routes.js";
 
-const LEVEL_FILE_PATTERN = /^[a-zA-Z0-9_-]{1,80}$/;
-const LEVEL_DIFFICULTIES = [
-    "Extreme Demon",
-    "Insane Demon",
-    "Hard Demon",
-    "Medium Demon",
-    "Easy Demon",
-    "Insane",
-    "Harder",
-    "Hard",
-    "Normal",
-    "Easy",
-    "Auto"
-];
-function errorResponse(json, message, status = 400) {
-    return json(
-        { error: message },
-        status,
-        { "Cache-Control": "no-store" }
-    );
+const SESSION_SECONDS = 60 * 60 * 24 * 7;
+const PBKDF2_ITERATIONS = 100000;
+
+function json(data, status = 200, headers = {}) {
+    return Response.json(data, { status, headers });
 }
 
-async function readBody(request) {
-    const length = Number(request.headers.get("Content-Length") || 0);
-    if (length > 20000) return null;
+function cookieValue(request, name) {
+    const cookies = request.headers.get("Cookie") || "";
+    const prefix = `${name}=`;
+    const item = cookies.split(";")
+        .map(v => v.trim())
+        .find(v => v.startsWith(prefix));
 
-    try {
-        const text = await request.text();
-        if (text.length > 20000) return null;
-        return JSON.parse(text);
-    } catch {
-        return null;
+    return item ? item.slice(prefix.length) : null;
+}
+
+function cookieHeader(value, maxAge) {
+    return `sb_session=${value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`;
+}
+
+function base64url(bytes) {
+    let binary = "";
+
+    for (const byte of bytes) {
+        binary += String.fromCharCode(byte);
     }
+
+    return btoa(binary)
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
 }
 
-function validHttpsUrl(value) {
-    if (typeof value !== "string") return false;
+async function sha256(text) {
+    const digest = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(text)
+    );
 
+    return base64url(new Uint8Array(digest));
+}
+
+async function hashPassword(password, salt) {
+    const key = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(password),
+        "PBKDF2",
+        false,
+        ["deriveBits"]
+    );
+
+    const bits = await crypto.subtle.deriveBits({
+        name: "PBKDF2",
+        hash: "SHA-256",
+        salt,
+        iterations: PBKDF2_ITERATIONS
+    }, key, 256);
+
+    return base64url(new Uint8Array(bits));
+}
+
+async function createPasswordHash(password) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const hash = await hashPassword(password, salt);
+
+    return `${base64url(salt)}:${hash}`;
+}
+
+async function verifyPassword(password, stored) {
     try {
-        const url = new URL(value);
-        return url.protocol === "https:" &&
-            url.hostname.includes(".") &&
-            !url.username &&
-            !url.password;
+        const [saltText, expected] = stored.split(":");
+
+        if (!saltText || !expected) return false;
+
+        const saltString = atob(
+            saltText.replace(/-/g, "+").replace(/_/g, "/") +
+            "=".repeat((4 - saltText.length % 4) % 4)
+        );
+
+        const salt = Uint8Array.from(
+            saltString,
+            c => c.charCodeAt(0)
+        );
+
+        const actual = await hashPassword(password, salt);
+
+        if (actual.length !== expected.length) return false;
+
+        let difference = 0;
+
+        for (let i = 0; i < actual.length; i++) {
+            difference |= actual.charCodeAt(i) ^ expected.charCodeAt(i);
+        }
+
+        return difference === 0;
     } catch {
         return false;
     }
 }
 
-function validText(value, max = 100) {
-    return typeof value === "string" &&
-        value.trim().length > 0 &&
-        value.trim().length <= max &&
-        !/[\u0000-\u001F\u007F]/.test(value);
+async function currentUser(request, db) {
+    const token = cookieValue(request, "sb_session");
+
+    if (!token) return null;
+
+    const tokenHash = await sha256(token);
+    const now = Math.floor(Date.now() / 1000);
+
+    const user = await db.prepare(`
+        SELECT
+            users.id,
+            users.username,
+            users.created_at,
+            users.is_admin,
+            users.is_banned,
+            users.ban_reason,
+            users.banned_at
+        FROM sessions
+        JOIN users ON users.id = sessions.user_id
+        WHERE sessions.token_hash = ?
+          AND sessions.expires_at > ?
+    `).bind(tokenHash, now).first();
+
+    if (!user || Number(user.is_banned) === 1) return null;
+
+    return user;
 }
 
-async function adminUser(request, env, json, currentUser) {
+function validOrigin(request) {
+    const origin = request.headers.get("Origin");
+
+    return !origin || origin === new URL(request.url).origin;
+}
+
+function isAdmin(user) {
+    return !!user && Number(user.is_admin) === 1;
+}
+
+async function requireAdmin(request, env) {
     const user = await currentUser(request, env.db);
 
     if (!user) {
         return {
-            error: errorResponse(json, "Please log in.", 401)
+            user: null,
+            response: json(
+                { error: "Please log in." },
+                401,
+                { "Cache-Control": "no-store" }
+            )
         };
     }
 
-    if (user.is_admin !== 1) {
+    if (!isAdmin(user)) {
         return {
-            error: errorResponse(json, "Admin access required.", 403)
+            user: null,
+            response: json(
+                { error: "Admin access required." },
+                403,
+                { "Cache-Control": "no-store" }
+            )
         };
     }
 
-    return { user };
+    return { user, response: null };
 }
 
-async function resolveLevelFile(env, selectedValue) {
-    if (typeof selectedValue !== "string") return null;
-
-    const selected = selectedValue.trim();
-    if (!selected) return null;
-
-    const list = JSON.parse(
-        (await readRepoFile(env, "data/_list.json")).text
+async function readPublishedLevels(env, origin) {
+    const response = await env.ASSETS.fetch(
+        new Request(new URL("/data/_list.json", origin))
     );
 
-    if (!Array.isArray(list)) {
-        throw new Error("Published level list is invalid.");
+    if (!response.ok) {
+        throw new Error("Could not read leaderboard list.");
     }
 
-    // First support an exact filename match.
+    const files = await response.json();
+
+    if (!Array.isArray(files)) {
+        throw new Error("Invalid leaderboard list.");
+    }
+
+    return files;
+}
+
+async function readPublishedLevel(env, origin, file) {
     if (
-        LEVEL_FILE_PATTERN.test(selected) &&
-        list.includes(selected)
+        typeof file !== "string" ||
+        !/^[a-zA-Z0-9_-]{1,80}$/.test(file)
     ) {
-        return selected;
+        throw new Error("Invalid level filename.");
     }
 
-    // Otherwise match the displayed name stored inside each level JSON.
-    for (const fileName of list) {
+    const response = await env.ASSETS.fetch(
+        new Request(
+            new URL(`/data/${encodeURIComponent(file)}.json`, origin)
+        )
+    );
+
+    if (!response.ok) {
+        throw new Error(`Could not read level data: ${file}`);
+    }
+
+    return response.json();
+}
+
+async function existingLeaderboardName(env, origin, name) {
+    const files = await readPublishedLevels(env, origin);
+
+    for (const file of files) {
         if (
-            typeof fileName !== "string" ||
-            !LEVEL_FILE_PATTERN.test(fileName)
+            typeof file !== "string" ||
+            !/^[a-zA-Z0-9_-]{1,80}$/.test(file)
         ) {
             continue;
         }
 
-        const file = await readRepoFile(
-            env,
-            `data/${fileName}.json`
-        );
+        const level = await readPublishedLevel(env, origin, file);
 
-        const level = JSON.parse(file.text);
+        if (!Array.isArray(level.records)) continue;
 
-        if (
-            typeof level.name === "string" &&
-            level.name.trim().toLowerCase() === selected.toLowerCase()
-        ) {
-            return fileName;
+        if (level.records.some(record =>
+            typeof record.user === "string" &&
+            record.user.trim().toLowerCase() === name.toLowerCase()
+        )) {
+            return true;
         }
     }
 
-    return null;
+    return false;
 }
 
-export async function handleSubmissionRoute(
-    request,
-    env,
-    url,
-    { json, currentUser }
-) {
-    const db = env.db;
-    const path = url.pathname;
+async function allLeaderboardNames(env, origin) {
+    const files = await readPublishedLevels(env, origin);
+    const names = new Map();
 
-    // Submit a completion or new-level verification.
-    if (path === "/api/submissions" && request.method === "POST") {
-        const user = await currentUser(request, db);
-
-        if (!user) {
-            return errorResponse(json, "Please log in.", 401);
-        }
-
-        const profile = await db.prepare(`
-            SELECT leaderboard_name
-            FROM leaderboard_profiles
-            WHERE user_id = ?
-        `).bind(user.id).first();
-
-        if (!profile?.leaderboard_name) {
-            return errorResponse(
-                json,
-                "Link a leaderboard identity before submitting.",
-                409
-            );
-        }
-
-        const body = await readBody(request);
-
-        if (!body || typeof body !== "object" || Array.isArray(body)) {
-            return errorResponse(json, "Invalid or oversized JSON body.");
-        }
-
-        const type = body.type;
-
-        // The frontend sends details inside body.payload.
-        // Also accept flat request bodies for compatibility.
-        const details = body.payload ?? body;
-
+    for (const file of files) {
         if (
-            !details ||
-            typeof details !== "object" ||
-            Array.isArray(details)
+            typeof file !== "string" ||
+            !/^[a-zA-Z0-9_-]{1,80}$/.test(file)
         ) {
-            return errorResponse(json, "Invalid submission details.");
+            continue;
         }
 
-        let payload;
+        const level = await readPublishedLevel(env, origin, file);
 
-        if (type === "completion") {
-            const link = details.link;
-            const percent = Number(details.percent);
-            const hz = Number(details.hz);
+        if (!Array.isArray(level.records)) continue;
 
-            if (
-                !validHttpsUrl(link) ||
-                !Number.isInteger(percent) ||
-                percent < 1 ||
-                percent > 100 ||
-                !Number.isInteger(hz) ||
-                hz < 1 ||
-                hz > 1000
-            ) {
-                return errorResponse(json, "Invalid completion details.");
+        for (const record of level.records) {
+            if (typeof record.user !== "string") continue;
+
+            const name = record.user.trim();
+
+            if (!name) continue;
+
+            const key = name.toLocaleLowerCase("en");
+
+            if (!names.has(key)) {
+                names.set(key, name);
             }
-
-            let levelFile;
-
-            try {
-                levelFile = await resolveLevelFile(
-                    env,
-                    details.levelFile
-                );
-            } catch (error) {
-                console.error(
-                    "Could not resolve completion level:",
-                    error?.message
-                );
-
-                return errorResponse(
-                    json,
-                    "Could not check the level list. Please try again.",
-                    502
-                );
-            }
-
-            if (!levelFile) {
-                return errorResponse(json, "Level not found.", 404);
-            }
-
-            payload = { levelFile, link, percent, hz };
-        } else if (type === "verification") {
-            const name = typeof details.name === "string"
-                ? details.name.trim()
-                : "";
-
-            const fileName = typeof details.fileName === "string"
-                ? details.fileName.trim()
-                : "";
-
-            const levelId = typeof details.id === "string"
-                ? details.id.trim()
-                : "";
-
-            const author = typeof details.author === "string"
-                ? details.author.trim()
-                : "";
-
-            const creators = details.creators;
-            const verification = details.verification;
-            const percentToQualify = Number(details.percentToQualify);
-
-            const password = typeof details.password === "string"
-                ? details.password
-                : "";
-
-            const position = Number(details.position);
-
-            if (
-                !validText(name, 100) ||
-                !LEVEL_FILE_PATTERN.test(fileName) ||
-                !validText(levelId, 100) ||
-                !validText(author, 100) ||
-                !Array.isArray(creators) ||
-                creators.length < 1 ||
-                creators.length > 20 ||
-                !creators.every(c => validText(c, 100)) ||
-                !validHttpsUrl(verification) ||
-                !Number.isInteger(percentToQualify) ||
-                percentToQualify < 1 ||
-                percentToQualify > 100 ||
-                password.length > 100 ||
-                !Number.isInteger(position) ||
-                position < 1 ||
-                position > 1000
-            ) {
-                return errorResponse(json, "Invalid verification details.");
-            }
-
-            payload = {
-                name,
-                fileName,
-                id: levelId,
-                author,
-                creators: [...new Set(creators.map(c => c.trim()))],
-                verification,
-                percentToQualify,
-                password,
-                position
-            };
-        } else {
-            return errorResponse(
-                json,
-                "Type must be completion or verification."
-            );
         }
-
-        const id = crypto.randomUUID();
-
-        await db.prepare(`
-            INSERT INTO submissions (id, user_id, type, payload)
-            VALUES (?, ?, ?, ?)
-        `).bind(
-            id,
-            user.id,
-            type,
-            JSON.stringify(payload)
-        ).run();
-
-        return json(
-            { success: true, submissionId: id },
-            201,
-            { "Cache-Control": "no-store" }
-        );
     }
 
-    // A user's own submission history.
-    if (path === "/api/submissions/mine" && request.method === "GET") {
-        const user = await currentUser(request, db);
+    return [...names.values()].sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: "base" })
+    );
+}
 
-        if (!user) {
-            return errorResponse(json, "Please log in.", 401);
-        }
+async function allKnownIdentities(env, origin) {
+    const staticNames = await allLeaderboardNames(env, origin);
 
-        const result = await db.prepare(`
-            SELECT id, type, status, payload, created_at, updated_at,
-                   error_message
-            FROM submissions
-            WHERE user_id = ?
-            ORDER BY created_at DESC
-            LIMIT 100
-        `).bind(user.id).all();
+    const result = await env.db.prepare(`
+        SELECT leaderboard_name
+        FROM leaderboard_profiles
+    `).all();
 
-        return json({
-            submissions: result.results.map(row => ({
-                ...row,
-                payload: JSON.parse(row.payload)
-            }))
-        }, 200, { "Cache-Control": "no-store" });
+    const names = new Map();
+
+    for (const name of staticNames) {
+        names.set(name.toLocaleLowerCase("en"), name);
     }
 
-    // Admin: list published levels and their difficulties.
-    if (
-        path === "/api/admin/levels" &&
-        request.method === "GET"
-    ) {
-        const auth = await adminUser(request, env, json, currentUser);
-        if (auth.error) return auth.error;
+    for (const row of result.results || []) {
+        if (typeof row.leaderboard_name !== "string") continue;
 
-        const listFile = await readRepoFile(env, "data/_list.json");
-        const list = JSON.parse(listFile.text);
+        const name = row.leaderboard_name.trim();
 
-        if (
-            !Array.isArray(list) ||
-            !list.every(file =>
-                typeof file === "string" &&
-                LEVEL_FILE_PATTERN.test(file)
-            )
-        ) {
-            return errorResponse(json, "Published level list is invalid.", 500);
-        }
+        if (!name) continue;
 
-        const levels = [];
+        const key = name.toLocaleLowerCase("en");
 
-        for (let index = 0; index < list.length; index++) {
-            const file = list[index];
-            const result = await readRepoFile(env, `data/${file}.json`);
-            const level = JSON.parse(result.text);
+        if (!names.has(key)) names.set(key, name);
+    }
 
-            levels.push({
-                file,
-                name: typeof level.name === "string" ? level.name : file,
-                difficulty: LEVEL_DIFFICULTIES.includes(level.difficulty)
-                    ? level.difficulty
-                    : "",
-                rank: index + 1
+    return [...names.values()].sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: "base" })
+    );
+}
+
+function validUsername(username) {
+    return /^[a-zA-Z0-9_]{3,24}$/.test(username);
+}
+
+export default {
+    async fetch(request, env) {
+        const url = new URL(request.url);
+        const path = url.pathname;
+
+        if (path === "/api/test" && request.method === "GET") {
+            return json({
+                success: true,
+                message: "Suberboys backend is running!"
             });
         }
 
-        return json({ levels, difficulties: LEVEL_DIFFICULTIES }, 200, {
-            "Cache-Control": "no-store"
-        });
-    }
-
-    // Admin: update one level's difficulty.
-    if (
-        path === "/api/admin/levels/difficulty" &&
-        request.method === "POST"
-    ) {
-        const auth = await adminUser(request, env, json, currentUser);
-        if (auth.error) return auth.error;
-
-        const body = await readBody(request);
-
-        if (!body || typeof body !== "object" || Array.isArray(body)) {
-            return errorResponse(json, "Invalid JSON body.");
+        if (!path.startsWith("/api/")) {
+            return env.ASSETS.fetch(request);
         }
 
-        const file = body.file;
-        const difficulty = body.difficulty;
-
-        if (
-            typeof file !== "string" ||
-            !LEVEL_FILE_PATTERN.test(file)
-        ) {
-            return errorResponse(json, "Invalid level filename.");
-        }
-
-        if (!LEVEL_DIFFICULTIES.includes(difficulty)) {
-            return errorResponse(json, "Choose a valid difficulty.");
-        }
-
-        const listFile = await readRepoFile(env, "data/_list.json");
-        const list = JSON.parse(listFile.text);
-
-        if (!Array.isArray(list) || !list.includes(file)) {
-            return errorResponse(json, "Level not found.", 404);
-        }
-
-        const path = `data/${file}.json`;
-        const source = await readRepoFile(env, path);
-        const level = JSON.parse(source.text);
-
-        if (!level || typeof level !== "object" || Array.isArray(level)) {
-            return errorResponse(json, "Level data is invalid.", 500);
-        }
-
-        level.difficulty = difficulty;
-
-        await writeRepoFilesAtomic(env, [{
-            path,
-            text: JSON.stringify(level, null, 2) + "\n"
-        }], `Set ${file} difficulty to ${difficulty}`);
-
-        return json({
-            success: true,
-            file,
-            name: level.name || file,
-            difficulty
-        }, 200, {
-            "Cache-Control": "no-store"
-        });
-    }
-
-    // Admin queue.
-    if (path === "/api/admin/submissions" && request.method === "GET") {
-        const auth = await adminUser(request, env, json, currentUser);
-        if (auth.error) return auth.error;
-
-        const result = await db.prepare(`
-            SELECT s.id, s.user_id, u.username, s.type, s.status,
-                   s.payload, s.created_at, s.updated_at,
-                   s.reviewed_by, s.reviewed_at, s.error_message
-            FROM submissions s
-            JOIN users u ON u.id = s.user_id
-            ORDER BY
-                CASE s.status
-                    WHEN 'pending' THEN 0
-                    WHEN 'failed' THEN 1
-                    WHEN 'processing' THEN 2
-                    ELSE 3
-                END,
-                s.created_at ASC
-            LIMIT 200
-        `).all();
-
-        return json({
-            submissions: result.results.map(row => ({
-                ...row,
-                payload: JSON.parse(row.payload)
-            }))
-        }, 200, { "Cache-Control": "no-store" });
-    }
-
-    // Admin approval or rejection.
-    if (
-        path === "/api/admin/submissions/review" &&
-        request.method === "POST"
-    ) {
-        const auth = await adminUser(request, env, json, currentUser);
-        if (auth.error) return auth.error;
-
-        const body = await readBody(request);
-
-        if (!body || typeof body !== "object") {
-            return errorResponse(json, "Invalid JSON body.");
-        }
-
-        const id = typeof body.id === "string" ? body.id : "";
-        const action = body.action;
-
-        if (
-            !id ||
-            id.length > 64 ||
-            !["approve", "reject"].includes(action)
-        ) {
-            return errorResponse(json, "Invalid review request.");
-        }
-
-        const submission = await db.prepare(`
-            SELECT *
-            FROM submissions
-            WHERE id = ?
-        `).bind(id).first();
-
-        if (!submission) {
-            return errorResponse(json, "Submission not found.", 404);
-        }
-
-        if (action === "reject") {
-            const result = await db.prepare(`
-                UPDATE submissions
-                SET status = 'rejected',
-                    reviewed_by = ?,
-                    reviewed_at = datetime('now'),
-                    updated_at = datetime('now'),
-                    error_message = NULL
-                WHERE id = ? AND status = 'pending'
-            `).bind(auth.user.id, id).run();
-
-            if (!result.meta?.changes) {
-                return errorResponse(
-                    json,
-                    "This submission is no longer pending.",
-                    409
-                );
-            }
-
-            return json({ success: true, status: "rejected" });
-        }
-
-        // Claim pending submission to prevent simultaneous approvals.
-        const claim = await db.prepare(`
-            UPDATE submissions
-            SET status = 'processing',
-                reviewed_by = ?,
-                reviewed_at = datetime('now'),
-                updated_at = datetime('now'),
-                error_message = NULL
-            WHERE id = ? AND status = 'pending'
-        `).bind(auth.user.id, id).run();
-
-        if (!claim.meta?.changes) {
-            return errorResponse(
-                json,
-                "This submission is not pending.",
-                409
+        if (!["GET", "POST"].includes(request.method)) {
+            return json(
+                { error: "Method not allowed" },
+                405,
+                { Allow: "GET, POST" }
             );
+        }
+
+        if (
+            request.method === "POST" &&
+            !validOrigin(request)
+        ) {
+            return json({ error: "Invalid request origin." }, 403);
         }
 
         try {
-            const payload = JSON.parse(submission.payload);
+            // Register an account.
+            if (path === "/api/auth/register" && request.method === "POST") {
+                let body;
 
-            const profile = await db.prepare(`
-                SELECT leaderboard_name
-                FROM leaderboard_profiles
-                WHERE user_id = ?
-            `).bind(submission.user_id).first();
-
-            if (!profile?.leaderboard_name) {
-                throw new Error(
-                    "Submitter has no linked leaderboard identity."
-                );
-            }
-
-            if (submission.type === "completion") {
-                const { levelFile, link, percent, hz } = payload;
-
-                if (!LEVEL_FILE_PATTERN.test(levelFile)) {
-                    throw new Error("Invalid level filename.");
+                try {
+                    body = await request.json();
+                } catch {
+                    return json({ error: "Invalid JSON body." }, 400);
                 }
 
-                const resolvedFile = await resolveLevelFile(env, levelFile);
-
-                if (!resolvedFile) {
-                    throw new Error("Level is not in the published list.");
+                if (!body || typeof body !== "object" || Array.isArray(body)) {
+                    return json({ error: "Invalid request body." }, 400);
                 }
 
-                const filePath = `data/${resolvedFile}.json`;
-                const file = await readRepoFile(env, filePath);
-                const level = JSON.parse(file.text);
+                const username = String(body.username || "").trim();
+                const email = String(body.email || "").trim().toLowerCase();
+                const password = String(body.password || "");
 
-                if (!Array.isArray(level.records)) {
-                    throw new Error("Level records are invalid.");
+                if (!validUsername(username)) {
+                    return json({
+                        error: "Username must be 3–24 letters, numbers or underscores."
+                    }, 400);
                 }
-
-                const record = {
-                    user: profile.leaderboard_name,
-                    link,
-                    percent,
-                    hz
-                };
-
-                const alreadyApplied = level.records.some(r =>
-                    r.user === record.user &&
-                    r.link === record.link &&
-                    r.percent === record.percent &&
-                    r.hz === record.hz
-                );
-
-                if (!alreadyApplied) {
-                    level.records.push(record);
-
-                    await writeRepoFilesAtomic(env, [{
-                        path: filePath,
-                        text: JSON.stringify(level, null, 2) + "\n"
-                    }], `Approve completion ${id}`);
-                }
-            } else if (submission.type === "verification") {
-                const {
-                    name,
-                    fileName,
-                    id: levelId,
-                    author,
-                    creators,
-                    verification,
-                    percentToQualify,
-                    password,
-                    position
-                } = payload;
-
-                if (!LEVEL_FILE_PATTERN.test(fileName)) {
-                    throw new Error("Invalid level filename.");
-                }
-
-                const listFile = await readRepoFile(env, "data/_list.json");
-                const list = JSON.parse(listFile.text);
 
                 if (
-                    !Array.isArray(list) ||
-                    !list.every(v => typeof v === "string")
+                    email.length > 254 ||
+                    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
                 ) {
-                    throw new Error("Published level list is invalid.");
+                    return json({ error: "Enter a valid email address." }, 400);
                 }
 
-                if (list.includes(fileName)) {
-                    const existing = JSON.parse(
-                        (await readRepoFile(
-                            env,
-                            `data/${fileName}.json`
-                        )).text
-                    );
-
-                    if (existing.name !== name) {
-                        throw new Error("That filename is already in use.");
-                    }
-                } else {
-                    if (position > list.length + 1) {
-                        throw new Error(
-                            "Position is outside the current list."
-                        );
-                    }
-
-                    const level = {
-                        id: levelId,
-                        name,
-                        author,
-                        creators,
-                        verifier: profile.leaderboard_name,
-                        verification,
-                        percentToQualify,
-                        password,
-                        records: []
-                    };
-
-                    list.splice(position - 1, 0, fileName);
-
-                    await writeRepoFilesAtomic(env, [
-                        {
-                            path: `data/${fileName}.json`,
-                            text: JSON.stringify(level, null, 2) + "\n"
-                        },
-                        {
-                            path: "data/_list.json",
-                            text: JSON.stringify(list, null, 2) + "\n"
-                        }
-                    ], `Approve level verification ${id}`);
+                if (password.length < 12 || password.length > 128) {
+                    return json({
+                        error: "Password must be between 12 and 128 characters."
+                    }, 400);
                 }
-            } else {
-                throw new Error("Unknown submission type.");
+
+                const existing = await env.db.prepare(`
+                    SELECT id
+                    FROM users
+                    WHERE username = ? COLLATE NOCASE
+                       OR email = ? COLLATE NOCASE
+                `).bind(username, email).first();
+
+                if (existing) {
+                    return json({
+                        error: "That username or email is already registered."
+                    }, 409);
+                }
+
+                const id = crypto.randomUUID();
+                const passwordHash = await createPasswordHash(password);
+
+                try {
+                    await env.db.prepare(`
+                        INSERT INTO users
+                            (id, username, email, password_hash)
+                        VALUES (?, ?, ?, ?)
+                    `).bind(id, username, email, passwordHash).run();
+                } catch (error) {
+                    if (/unique constraint/i.test(String(error?.message || ""))) {
+                        return json({
+                            error: "That username or email is already registered."
+                        }, 409);
+                    }
+
+                    throw error;
+                }
+
+                return json({
+                    success: true,
+                    message: "Account created. You can now log in."
+                }, 201);
             }
 
-            await db.prepare(`
-                UPDATE submissions
-                SET status = 'approved',
-                    updated_at = datetime('now'),
-                    error_message = NULL
-                WHERE id = ? AND status = 'processing'
-            `).bind(id).run();
+            // Log in.
+            if (path === "/api/auth/login" && request.method === "POST") {
+                let body;
 
-            return json({ success: true, status: "approved" });
+                try {
+                    body = await request.json();
+                } catch {
+                    return json({ error: "Invalid JSON body." }, 400);
+                }
+
+                if (!body || typeof body !== "object" || Array.isArray(body)) {
+                    return json({ error: "Invalid request body." }, 400);
+                }
+
+                const email = String(body.email || "").trim().toLowerCase();
+                const password = String(body.password || "");
+
+                const user = await env.db.prepare(`
+                    SELECT id, username, email, password_hash, is_banned
+                    FROM users
+                    WHERE email = ? COLLATE NOCASE
+                `).bind(email).first();
+
+                if (
+                    !user ||
+                    !(await verifyPassword(password, user.password_hash))
+                ) {
+                    return json({
+                        error: "Invalid email or password."
+                    }, 401);
+                }
+
+                if (Number(user.is_banned) === 1) {
+                    return json({
+                        error: "This account has been banned.",
+                        banned: true
+                    }, 403, {
+                        "Cache-Control": "no-store"
+                    });
+                }
+
+                const token = base64url(
+                    crypto.getRandomValues(new Uint8Array(32))
+                );
+
+                const tokenHash = await sha256(token);
+                const expiresAt =
+                    Math.floor(Date.now() / 1000) + SESSION_SECONDS;
+
+                await env.db.prepare(`
+                    INSERT INTO sessions
+                        (token_hash, user_id, expires_at)
+                    VALUES (?, ?, ?)
+                `).bind(tokenHash, user.id, expiresAt).run();
+
+                return json({
+                    success: true,
+                    user: { username: user.username }
+                }, 200, {
+                    "Set-Cookie": cookieHeader(token, SESSION_SECONDS),
+                    "Cache-Control": "no-store"
+                });
+            }
+
+            // Current user.
+            if (path === "/api/auth/me" && request.method === "GET") {
+                const user = await currentUser(request, env.db);
+
+                return json({ user }, 200, {
+                    "Cache-Control": "no-store"
+                });
+            }
+
+            // Log out.
+            if (path === "/api/auth/logout" && request.method === "POST") {
+                const token = cookieValue(request, "sb_session");
+
+                if (token) {
+                    await env.db.prepare(`
+                        DELETE FROM sessions
+                        WHERE token_hash = ?
+                    `).bind(await sha256(token)).run();
+                }
+
+                return json({ success: true }, 200, {
+                    "Set-Cookie": cookieHeader("", 0),
+                    "Cache-Control": "no-store"
+                });
+            }
+
+            // Current leaderboard profile.
+            if (
+                path === "/api/leaderboard/profile" &&
+                request.method === "GET"
+            ) {
+                const user = await currentUser(request, env.db);
+
+                if (!user) {
+                    return json({ error: "Please log in." }, 401, {
+                        "Cache-Control": "no-store"
+                    });
+                }
+
+                const profile = await env.db.prepare(`
+                    SELECT leaderboard_name
+                    FROM leaderboard_profiles
+                    WHERE user_id = ?
+                `).bind(user.id).first();
+
+                return json({ profile: profile || null }, 200, {
+                    "Cache-Control": "no-store"
+                });
+            }
+
+            // Join the leaderboard.
+            if (
+                path === "/api/leaderboard/join" &&
+                request.method === "POST"
+            ) {
+                const user = await currentUser(request, env.db);
+
+                if (!user) {
+                    return json({ error: "Please log in." }, 401);
+                }
+
+                let body;
+
+                try {
+                    body = await request.json();
+                } catch {
+                    return json({ error: "Invalid JSON body." }, 400);
+                }
+
+                const leaderboardName =
+                    typeof body?.leaderboardName === "string"
+                        ? body.leaderboardName.trim()
+                        : "";
+
+                if (
+                    leaderboardName.length < 1 ||
+                    leaderboardName.length > 24 ||
+                    /[\u0000-\u001F\u007F]/.test(leaderboardName)
+                ) {
+                    return json({
+                        error: "Leaderboard names must be 1–24 characters."
+                    }, 400);
+                }
+
+                const existingProfile = await env.db.prepare(`
+                    SELECT leaderboard_name
+                    FROM leaderboard_profiles
+                    WHERE user_id = ?
+                `).bind(user.id).first();
+
+                if (existingProfile) {
+                    return json({
+                        error: "Your account already has a leaderboard identity."
+                    }, 409);
+                }
+
+                if (await existingLeaderboardName(env, url.origin, leaderboardName)) {
+                    return json({
+                        error: "That name belongs to an existing leaderboard player. Contact an admin to link it."
+                    }, 409);
+                }
+
+                const duplicate = await env.db.prepare(`
+                    SELECT id
+                    FROM leaderboard_profiles
+                    WHERE leaderboard_name = ? COLLATE NOCASE
+                `).bind(leaderboardName).first();
+
+                if (duplicate) {
+                    return json({
+                        error: "That leaderboard name is already taken."
+                    }, 409);
+                }
+
+                try {
+                    await env.db.prepare(`
+                        INSERT INTO leaderboard_profiles
+                            (id, user_id, leaderboard_name)
+                        VALUES (?, ?, ?)
+                    `).bind(
+                        crypto.randomUUID(),
+                        user.id,
+                        leaderboardName
+                    ).run();
+                } catch (error) {
+                    if (/unique constraint/i.test(String(error?.message || ""))) {
+                        return json({
+                            error: "That account or leaderboard name is already linked."
+                        }, 409);
+                    }
+
+                    throw error;
+                }
+
+                return json({
+                    success: true,
+                    profile: { leaderboard_name: leaderboardName }
+                }, 201, {
+                    "Cache-Control": "no-store"
+                });
+            }
+
+            // Public list of known leaderboard identities.
+            if (
+                path === "/api/leaderboard/identities" &&
+                request.method === "GET"
+            ) {
+                const identities = await allKnownIdentities(env, url.origin);
+
+                return json({ identities }, 200, {
+                    "Cache-Control": "no-store"
+                });
+            }
+
+            // Player leaderboard stats.
+            if (
+                path === "/api/leaderboard/stats" &&
+                request.method === "GET"
+            ) {
+                const user = await currentUser(request, env.db);
+
+                if (!user) {
+                    return json({ error: "Please log in." }, 401, {
+                        "Cache-Control": "no-store"
+                    });
+                }
+
+                const profile = await env.db.prepare(`
+                    SELECT leaderboard_name
+                    FROM leaderboard_profiles
+                    WHERE user_id = ?
+                `).bind(user.id).first();
+
+                if (!profile?.leaderboard_name) {
+                    return json({
+                        error: "Link your leaderboard identity first."
+                    }, 400, { "Cache-Control": "no-store" });
+                }
+
+                const files = await readPublishedLevels(env, url.origin);
+                const playerKey =
+                    profile.leaderboard_name.toLocaleLowerCase("en");
+
+                const completed = new Map();
+                let totalLevels = 0;
+
+                const rankRanges = {
+                    "Top 10": 0,
+                    "11–25": 0,
+                    "26–50": 0,
+                    "51+": 0
+                };
+
+                for (let index = 0; index < files.length; index++) {
+                    const file = files[index];
+
+                    if (
+                        typeof file !== "string" ||
+                        !/^[a-zA-Z0-9_-]{1,80}$/.test(file)
+                    ) {
+                        continue;
+                    }
+
+                    const level = await readPublishedLevel(env, url.origin, file);
+                    const rank = index + 1;
+                    totalLevels++;
+
+                    if (!Array.isArray(level.records)) continue;
+
+                    const requiredPercent = Number(level.percentToQualify ?? 100);
+
+                    const record = level.records.find(item =>
+                        typeof item.user === "string" &&
+                        item.user.trim().toLocaleLowerCase("en") === playerKey &&
+                        Number.isFinite(Number(item.percent)) &&
+                        Number(item.percent) >= requiredPercent
+                    );
+
+                    if (!record || completed.has(file)) continue;
+
+                    completed.set(file, {
+                        file,
+                        name: level.name || file,
+                        rank,
+                        percent: Number(record.percent)
+                    });
+
+                    if (rank <= 10) rankRanges["Top 10"]++;
+                    else if (rank <= 25) rankRanges["11–25"]++;
+                    else if (rank <= 50) rankRanges["26–50"]++;
+                    else rankRanges["51+"]++;
+                }
+
+                const completions = [...completed.values()].sort(
+                    (a, b) => a.rank - b.rank
+                );
+
+                return json({
+                    leaderboardName: profile.leaderboard_name,
+                    totalCompletions: completions.length,
+                    totalLevels,
+                    completionPercentage: totalLevels
+                        ? Number(
+                            (completions.length / totalLevels * 100).toFixed(1)
+                        )
+                        : 0,
+                    hardest: completions[0] || null,
+                    rankRanges
+                }, 200, {
+                    "Cache-Control": "no-store"
+                });
+            }
+
+            // Compare accepted completions between two players.
+            if (
+                path === "/api/leaderboard/compare" &&
+                request.method === "GET"
+            ) {
+                const user = await currentUser(request, env.db);
+
+                if (!user) {
+                    return json({ error: "Please log in." }, 401, {
+                        "Cache-Control": "no-store"
+                    });
+                }
+
+                const ownProfile = await env.db.prepare(`
+                    SELECT leaderboard_name
+                    FROM leaderboard_profiles
+                    WHERE user_id = ?
+                `).bind(user.id).first();
+
+                if (!ownProfile?.leaderboard_name) {
+                    return json({
+                        error: "Link your leaderboard identity first."
+                    }, 400, { "Cache-Control": "no-store" });
+                }
+
+                const opponent = (url.searchParams.get("opponent") || "").trim();
+
+                if (!opponent || opponent.length > 100) {
+                    return json({
+                        error: "Choose a leaderboard player to compare."
+                    }, 400, { "Cache-Control": "no-store" });
+                }
+
+                if (
+                    opponent.toLocaleLowerCase("en") ===
+                    ownProfile.leaderboard_name.toLocaleLowerCase("en")
+                ) {
+                    return json({
+                        error: "Choose a different player."
+                    }, 400, { "Cache-Control": "no-store" });
+                }
+
+                const files = await readPublishedLevels(env, url.origin);
+                const ownKey = ownProfile.leaderboard_name.toLocaleLowerCase("en");
+                const opponentKey = opponent.toLocaleLowerCase("en");
+
+                const identities = new Map();
+                const ownLevels = new Map();
+                const opponentLevels = new Map();
+
+                for (let index = 0; index < files.length; index++) {
+                    const file = files[index];
+
+                    if (
+                        typeof file !== "string" ||
+                        !/^[a-zA-Z0-9_-]{1,80}$/.test(file)
+                    ) {
+                        continue;
+                    }
+
+                    const level = await readPublishedLevel(env, url.origin, file);
+
+                    if (!Array.isArray(level.records)) continue;
+
+                    const requiredPercent = Number(level.percentToQualify ?? 100);
+                    const rank = index + 1;
+
+                    for (const record of level.records) {
+                        if (typeof record.user !== "string") continue;
+
+                        const name = record.user.trim();
+                        if (!name) continue;
+
+                        const key = name.toLocaleLowerCase("en");
+
+                        if (!identities.has(key)) identities.set(key, name);
+
+                        if (
+                            !Number.isFinite(Number(record.percent)) ||
+                            Number(record.percent) < requiredPercent
+                        ) {
+                            continue;
+                        }
+
+                        const entry = {
+                            file,
+                            name: level.name || file,
+                            rank,
+                            percent: Number(record.percent),
+                            link: typeof record.link === "string"
+                                ? record.link
+                                : ""
+                        };
+
+                        if (key === ownKey && !ownLevels.has(file)) {
+                            ownLevels.set(file, entry);
+                        }
+
+                        if (key === opponentKey && !opponentLevels.has(file)) {
+                            opponentLevels.set(file, entry);
+                        }
+                    }
+                }
+
+                const canonicalOpponent = identities.get(opponentKey);
+
+                if (!canonicalOpponent) {
+                    return json({
+                        error: "That player has no records on the current list."
+                    }, 404, { "Cache-Control": "no-store" });
+                }
+
+                const own = [...ownLevels.values()].sort((a, b) => a.rank - b.rank);
+                const theirs = [...opponentLevels.values()].sort((a, b) => a.rank - b.rank);
+
+                return json({
+                    ownName: ownProfile.leaderboard_name,
+                    opponentName: canonicalOpponent,
+                    identities: [...identities.values()].sort((a, b) =>
+                        a.localeCompare(b, undefined, { sensitivity: "base" })
+                    ),
+                    ownCount: own.length,
+                    opponentCount: theirs.length,
+                    ownHardest: own[0] || null,
+                    opponentHardest: theirs[0] || null,
+                    shared: own.filter(level => opponentLevels.has(level.file)),
+                    ownUnique: own.filter(level => !opponentLevels.has(level.file)),
+                    opponentUnique: theirs.filter(level => !ownLevels.has(level.file))
+                }, 200, { "Cache-Control": "no-store" });
+            }
+
+            // Verify admin access.
+            if (path === "/api/admin/me" && request.method === "GET") {
+                const auth = await requireAdmin(request, env);
+
+                if (auth.response) return auth.response;
+
+                return json({
+                    admin: true,
+                    username: auth.user.username
+                }, 200, { "Cache-Control": "no-store" });
+            }
+
+            // Admin: list accounts and leaderboard identities.
+            if (
+                path === "/api/admin/players" &&
+                request.method === "GET"
+            ) {
+                const auth = await requireAdmin(request, env);
+
+                if (auth.response) return auth.response;
+
+                const result = await env.db.prepare(`
+                    SELECT
+                        users.id,
+                        users.username,
+                        users.email,
+                        users.created_at,
+                        users.is_admin,
+                        users.is_banned,
+                        users.ban_reason,
+                        users.banned_at,
+                        leaderboard_profiles.leaderboard_name
+                    FROM users
+                    LEFT JOIN leaderboard_profiles
+                        ON leaderboard_profiles.user_id = users.id
+                    ORDER BY users.username COLLATE NOCASE
+                `).all();
+
+                const identities = await allKnownIdentities(env, url.origin);
+
+                return json({
+                    players: result.results,
+                    identities
+                }, 200, { "Cache-Control": "no-store" });
+            }
+
+            // Admin: link, change or unlink a player's leaderboard identity.
+            if (
+                path === "/api/admin/players/link" &&
+                request.method === "POST"
+            ) {
+                const auth = await requireAdmin(request, env);
+
+                if (auth.response) return auth.response;
+
+                let body;
+
+                try {
+                    body = await request.json();
+                } catch {
+                    return json({ error: "Invalid JSON body." }, 400);
+                }
+
+                const userId = typeof body?.userId === "string"
+                    ? body.userId
+                    : "";
+
+                const requestedName = typeof body?.leaderboardName === "string"
+                    ? body.leaderboardName.trim()
+                    : "";
+
+                if (!userId || userId.length > 128) {
+                    return json({ error: "Choose a valid account." }, 400);
+                }
+
+                if (
+                    requestedName.length > 24 ||
+                    /[\u0000-\u001F\u007F]/.test(requestedName)
+                ) {
+                    return json({
+                        error: "Leaderboard names must be 1–24 characters."
+                    }, 400);
+                }
+
+                const targetUser = await env.db.prepare(`
+                    SELECT id
+                    FROM users
+                    WHERE id = ?
+                `).bind(userId).first();
+
+                if (!targetUser) {
+                    return json({ error: "Account not found." }, 404);
+                }
+
+                if (!requestedName) {
+                    await env.db.prepare(`
+                        DELETE FROM leaderboard_profiles
+                        WHERE user_id = ?
+                    `).bind(userId).run();
+
+                    return json({
+                        success: true,
+                        leaderboardName: null
+                    }, 200, { "Cache-Control": "no-store" });
+                }
+
+                const staticNames = await allLeaderboardNames(env, url.origin);
+
+                const known = staticNames.find(name =>
+                    name.toLocaleLowerCase("en") ===
+                    requestedName.toLocaleLowerCase("en")
+                );
+
+                const linkedNames = await env.db.prepare(`
+                    SELECT leaderboard_name
+                    FROM leaderboard_profiles
+                `).all();
+
+                const linked = linkedNames.results.find(row =>
+                    row.leaderboard_name.toLocaleLowerCase("en") ===
+                    requestedName.toLocaleLowerCase("en")
+                );
+
+                if (!known && !linked) {
+                    return json({
+                        error: "That name is not an existing leaderboard identity."
+                    }, 400);
+                }
+
+                const canonicalName = known || linked.leaderboard_name;
+
+                const claimed = await env.db.prepare(`
+                    SELECT user_id
+                    FROM leaderboard_profiles
+                    WHERE leaderboard_name = ? COLLATE NOCASE
+                      AND user_id <> ?
+                `).bind(canonicalName, userId).first();
+
+                if (claimed) {
+                    return json({
+                        error: "That identity is already linked to another account."
+                    }, 409);
+                }
+
+                const current = await env.db.prepare(`
+                    SELECT id
+                    FROM leaderboard_profiles
+                    WHERE user_id = ?
+                `).bind(userId).first();
+
+                try {
+                    if (current) {
+                        await env.db.prepare(`
+                            UPDATE leaderboard_profiles
+                            SET leaderboard_name = ?
+                            WHERE user_id = ?
+                        `).bind(canonicalName, userId).run();
+                    } else {
+                        await env.db.prepare(`
+                            INSERT INTO leaderboard_profiles
+                                (id, user_id, leaderboard_name)
+                            VALUES (?, ?, ?)
+                        `).bind(
+                            crypto.randomUUID(),
+                            userId,
+                            canonicalName
+                        ).run();
+                    }
+                } catch (error) {
+                    if (/unique constraint/i.test(String(error?.message || ""))) {
+                        return json({
+                            error: "That account or identity is already linked."
+                        }, 409);
+                    }
+
+                    throw error;
+                }
+
+                return json({
+                    success: true,
+                    leaderboardName: canonicalName
+                }, 200, { "Cache-Control": "no-store" });
+            }
+
+            // Admin: ban or unban an account.
+            if (
+                path === "/api/admin/players/ban" &&
+                request.method === "POST"
+            ) {
+                const auth = await requireAdmin(request, env);
+
+                if (auth.response) return auth.response;
+
+                let body;
+
+                try {
+                    body = await request.json();
+                } catch {
+                    return json({ error: "Invalid JSON body." }, 400);
+                }
+
+                const userId = typeof body?.userId === "string"
+                    ? body.userId
+                    : "";
+
+                const action = typeof body?.action === "string"
+                    ? body.action
+                    : "";
+
+                const reason = typeof body?.reason === "string"
+                    ? body.reason.trim()
+                    : "";
+
+                if (!userId || userId.length > 128) {
+                    return json({ error: "Choose a valid account." }, 400);
+                }
+
+                if (!["ban", "unban"].includes(action)) {
+                    return json({
+                        error: "Action must be ban or unban."
+                    }, 400);
+                }
+
+                if (reason.length > 500) {
+                    return json({
+                        error: "Ban reason must be 500 characters or fewer."
+                    }, 400);
+                }
+
+                const target = await env.db.prepare(`
+                    SELECT id, username, is_admin, is_banned
+                    FROM users
+                    WHERE id = ?
+                `).bind(userId).first();
+
+                if (!target) {
+                    return json({ error: "Account not found." }, 404);
+                }
+
+                if (Number(target.is_admin) === 1) {
+                    return json({
+                        error: "Admin accounts cannot be banned through this endpoint."
+                    }, 403);
+                }
+
+                if (action === "ban") {
+                    if (Number(target.is_banned) === 1) {
+                        return json({
+                            success: true,
+                            message: "Account is already banned."
+                        });
+                    }
+
+                    await env.db.prepare(`
+                        UPDATE users
+                        SET is_banned = 1,
+                            ban_reason = ?,
+                            banned_at = ?
+                        WHERE id = ?
+                    `).bind(
+                        reason || "No reason provided",
+                        Math.floor(Date.now() / 1000),
+                        userId
+                    ).run();
+
+                    await env.db.prepare(`
+                        DELETE FROM sessions
+                        WHERE user_id = ?
+                    `).bind(userId).run();
+
+                    return json({
+                        success: true,
+                        message: `${target.username} has been banned.`
+                    }, 200, { "Cache-Control": "no-store" });
+                }
+
+                await env.db.prepare(`
+                    UPDATE users
+                    SET is_banned = 0,
+                        ban_reason = NULL,
+                        banned_at = NULL
+                    WHERE id = ?
+                `).bind(userId).run();
+
+                return json({
+                    success: true,
+                    message: `${target.username} has been unbanned.`
+                }, 200, { "Cache-Control": "no-store" });
+            }
+
+            // Delegate submission history, review queue, approval and level
+            // difficulty management to submission-routes.js.
+            const submissionResponse = await handleSubmissionRoute(
+                request,
+                env,
+                url,
+                { json, currentUser }
+            );
+
+            if (submissionResponse) return submissionResponse;
+
+            return json({ error: "Not found." }, 404);
         } catch (error) {
             console.error(
-                "Submission approval failed:",
-                error?.message
+                "Account API error:",
+                error?.stack || error
             );
 
-            await db.prepare(`
-                UPDATE submissions
-                SET status = 'failed',
-                    updated_at = datetime('now'),
-                    error_message = ?
-                WHERE id = ? AND status = 'processing'
-            `).bind(
-                String(error?.message || "Approval failed.").slice(0, 500),
-                id
-            ).run();
-
-            return errorResponse(
-                json,
-                "Approval failed. The submission is marked failed; check the error before retrying.",
-                500
-            );
+            return json({
+                error: "Server error. Please try again.",
+                requestId: crypto.randomUUID()
+            }, 500, {
+                "Cache-Control": "no-store"
+            });
         }
     }
-
-    return null;
-}
+};
