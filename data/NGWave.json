@@ -1,18 +1,26 @@
 {
-    "id": "134363218",
-    "name": "NG Wave Reborn",
-    "author": "Suberman2",
-    "creators": ["Suberman2, Quested"],
-    "verifier": "Justgame",
-    "verification": "https://youtu.be/1l1QKfObMw4",
-    "percentToQualify": 100,
-    "password": "Not Copyable",
-    "records": [
-         {
-            "user": "Mothcloakinnit",
-            "link": "https://www.youtube.com/watch?v=invalid",
-            "percent": 100,
-            "hz": 120
-        }
-    ]
+  "id": "134363218",
+  "name": "NG Wave Reborn",
+  "author": "Suberman2",
+  "creators": [
+    "Suberman2, Quested"
+  ],
+  "verifier": "Justgame",
+  "verification": "https://youtu.be/1l1QKfObMw4",
+  "percentToQualify": 100,
+  "password": "Not Copyable",
+  "records": [
+    {
+      "user": "Mothcloakinnit",
+      "link": "https://www.youtube.com/watch?v=invalid",
+      "percent": 100,
+      "hz": 120
+    },
+    {
+      "user": "Feavo228",
+      "link": "https://bread.com",
+      "percent": 100,
+      "hz": 360
+    }
+  ]
 }
