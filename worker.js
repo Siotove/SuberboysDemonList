@@ -1,87 +1,6 @@
+
 import { handleSubmissionRoute } from "./submission-routes.js";
 
-const LEVEL_DIFFICULTIES = [
-    "Extreme Demon",
-    "Insane Demon",
-    "Hard Demon",
-    "Medium Demon",
-    "Easy Demon",
-    "Insane",
-    "Harder",
-    "Hard",
-    "Normal",
-    "Easy",
-    "Auto"
-];
-
-const LEVEL_FILE_PATTERN = /^[a-zA-Z0-9_-]{1,80}$/;
-
-async function getLevelList(env, origin) {
-    const response = await env.ASSETS.fetch(
-        new Request(new URL("/data/_list.json", origin))
-    );
-
-    if (!response.ok) {
-        throw new Error("Could not read leaderboard list.");
-    }
-
-    const files = await response.json();
-
-    if (
-        !Array.isArray(files) ||
-        !files.every(file =>
-            typeof file === "string" &&
-            LEVEL_FILE_PATTERN.test(file)
-        )
-    ) {
-        throw new Error("Invalid leaderboard list.");
-    }
-
-    return files;
-}
-
-async function readLevel(env, origin, fileName) {
-    const response = await env.ASSETS.fetch(
-        new Request(
-            new URL(
-                `/data/${encodeURIComponent(fileName)}.json`,
-                origin
-            )
-        )
-    );
-
-    if (!response.ok) {
-        throw new Error(`Could not read level: ${fileName}`);
-    }
-
-    return response.json();
-}
-
-async function requireAdmin(request, env) {
-    const user = await currentUser(request, env.db);
-
-    if (!user) {
-        return {
-            error: json(
-                { error: "Please log in." },
-                401,
-                { "Cache-Control": "no-store" }
-            )
-        };
-    }
-
-    if (user.is_admin !== 1) {
-        return {
-            error: json(
-                { error: "Admin access required." },
-                403,
-                { "Cache-Control": "no-store" }
-            )
-        };
-    }
-
-    return { user };
-}
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const PBKDF2_ITERATIONS = 100000;
 
@@ -92,8 +11,10 @@ function json(data, status = 200, headers = {}) {
 function cookieValue(request, name) {
     const cookies = request.headers.get("Cookie") || "";
     const prefix = `${name}=`;
-    const item = cookies.split(";").map(v => v.trim())
+    const item = cookies.split(";")
+        .map(v => v.trim())
         .find(v => v.startsWith(prefix));
+
     return item ? item.slice(prefix.length) : null;
 }
 
@@ -103,7 +24,11 @@ function cookieHeader(value, maxAge) {
 
 function base64url(bytes) {
     let binary = "";
-    for (const byte of bytes) binary += String.fromCharCode(byte);
+
+    for (const byte of bytes) {
+        binary += String.fromCharCode(byte);
+    }
+
     return btoa(binary)
         .replace(/\+/g, "-")
         .replace(/\//g, "_")
@@ -115,6 +40,7 @@ async function sha256(text) {
         "SHA-256",
         new TextEncoder().encode(text)
     );
+
     return base64url(new Uint8Array(digest));
 }
 
@@ -140,12 +66,14 @@ async function hashPassword(password, salt) {
 async function createPasswordHash(password) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const hash = await hashPassword(password, salt);
+
     return `${base64url(salt)}:${hash}`;
 }
 
 async function verifyPassword(password, stored) {
     try {
         const [saltText, expected] = stored.split(":");
+
         if (!saltText || !expected) return false;
 
         const saltString = atob(
@@ -163,6 +91,7 @@ async function verifyPassword(password, stored) {
         if (actual.length !== expected.length) return false;
 
         let difference = 0;
+
         for (let i = 0; i < actual.length; i++) {
             difference |= actual.charCodeAt(i) ^ expected.charCodeAt(i);
         }
@@ -175,12 +104,13 @@ async function verifyPassword(password, stored) {
 
 async function currentUser(request, db) {
     const token = cookieValue(request, "sb_session");
+
     if (!token) return null;
 
     const tokenHash = await sha256(token);
     const now = Math.floor(Date.now() / 1000);
 
-    const row = await db.prepare(`
+    const user = await db.prepare(`
         SELECT
             users.id,
             users.username,
@@ -195,100 +125,127 @@ async function currentUser(request, db) {
           AND sessions.expires_at > ?
     `).bind(tokenHash, now).first();
 
-    if (!row || row.is_banned === 1) return null;
+    if (!user || Number(user.is_banned) === 1) return null;
 
-    return row;
+    return user;
 }
 
 function validOrigin(request) {
     const origin = request.headers.get("Origin");
+
     return !origin || origin === new URL(request.url).origin;
 }
 
-async function existingLeaderboardName(env, origin, name) {
-    const listResponse = await env.ASSETS.fetch(
+function isAdmin(user) {
+    return !!user && Number(user.is_admin) === 1;
+}
+
+async function requireAdmin(request, env) {
+    const user = await currentUser(request, env.db);
+
+    if (!user) {
+        return {
+            user: null,
+            response: json(
+                { error: "Please log in." },
+                401,
+                { "Cache-Control": "no-store" }
+            )
+        };
+    }
+
+    if (!isAdmin(user)) {
+        return {
+            user: null,
+            response: json(
+                { error: "Admin access required." },
+                403,
+                { "Cache-Control": "no-store" }
+            )
+        };
+    }
+
+    return { user, response: null };
+}
+
+async function readPublishedLevels(env, origin) {
+    const response = await env.ASSETS.fetch(
         new Request(new URL("/data/_list.json", origin))
     );
 
-    if (!listResponse.ok) {
-        throw new Error("Could not read leaderboard data");
+    if (!response.ok) {
+        throw new Error("Could not read leaderboard list.");
     }
 
-    const files = await listResponse.json();
+    const files = await response.json();
 
     if (!Array.isArray(files)) {
-        throw new Error("Invalid leaderboard list");
+        throw new Error("Invalid leaderboard list.");
     }
+
+    return files;
+}
+
+async function readPublishedLevel(env, origin, file) {
+    if (
+        typeof file !== "string" ||
+        !/^[a-zA-Z0-9_-]{1,80}$/.test(file)
+    ) {
+        throw new Error("Invalid level filename.");
+    }
+
+    const response = await env.ASSETS.fetch(
+        new Request(
+            new URL(`/data/${encodeURIComponent(file)}.json`, origin)
+        )
+    );
+
+    if (!response.ok) {
+        throw new Error(`Could not read level data: ${file}`);
+    }
+
+    return response.json();
+}
+
+async function existingLeaderboardName(env, origin, name) {
+    const files = await readPublishedLevels(env, origin);
 
     for (const file of files) {
         if (
             typeof file !== "string" ||
-            !/^[a-zA-Z0-9_-]+$/.test(file)
+            !/^[a-zA-Z0-9_-]{1,80}$/.test(file)
         ) {
             continue;
         }
 
-        const response = await env.ASSETS.fetch(
-            new Request(
-                new URL(`/data/${encodeURIComponent(file)}.json`, origin)
-            )
-        );
-
-        if (!response.ok) {
-            throw new Error(`Could not read level data: ${file}`);
-        }
-
-        const level = await response.json();
+        const level = await readPublishedLevel(env, origin, file);
 
         if (!Array.isArray(level.records)) continue;
 
-        const exists = level.records.some(record =>
+        if (level.records.some(record =>
             typeof record.user === "string" &&
             record.user.trim().toLowerCase() === name.toLowerCase()
-        );
-
-        if (exists) return true;
+        )) {
+            return true;
+        }
     }
 
     return false;
 }
 
 async function allLeaderboardNames(env, origin) {
-    const listResponse = await env.ASSETS.fetch(
-        new Request(new URL("/data/_list.json", origin))
-    );
-
-    if (!listResponse.ok) {
-        throw new Error("Could not read leaderboard data");
-    }
-
-    const files = await listResponse.json();
-
-    if (!Array.isArray(files)) {
-        throw new Error("Invalid leaderboard list");
-    }
-
+    const files = await readPublishedLevels(env, origin);
     const names = new Map();
 
     for (const file of files) {
         if (
             typeof file !== "string" ||
-            !/^[a-zA-Z0-9_-]+$/.test(file)
+            !/^[a-zA-Z0-9_-]{1,80}$/.test(file)
         ) {
             continue;
         }
 
-        const response = await env.ASSETS.fetch(
-            new Request(
-                new URL(`/data/${encodeURIComponent(file)}.json`, origin)
-            )
-        );
-
-        if (!response.ok) {
-            throw new Error(`Could not read level data: ${file}`);
-        }
-
-        const level = await response.json();
+        const level = await readPublishedLevel(env, origin, file);
 
         if (!Array.isArray(level.records)) continue;
 
@@ -297,12 +254,12 @@ async function allLeaderboardNames(env, origin) {
 
             const name = record.user.trim();
 
-            if (name) {
-                const key = name.toLocaleLowerCase("en");
+            if (!name) continue;
 
-                if (!names.has(key)) {
-                    names.set(key, name);
-                }
+            const key = name.toLocaleLowerCase("en");
+
+            if (!names.has(key)) {
+                names.set(key, name);
             }
         }
     }
@@ -312,70 +269,75 @@ async function allLeaderboardNames(env, origin) {
     );
 }
 
+async function allKnownIdentities(env, origin) {
+    const staticNames = await allLeaderboardNames(env, origin);
+
+    const result = await env.db.prepare(`
+        SELECT leaderboard_name
+        FROM leaderboard_profiles
+    `).all();
+
+    const names = new Map();
+
+    for (const name of staticNames) {
+        names.set(name.toLocaleLowerCase("en"), name);
+    }
+
+    for (const row of result.results || []) {
+        if (typeof row.leaderboard_name !== "string") continue;
+
+        const name = row.leaderboard_name.trim();
+
+        if (!name) continue;
+
+        const key = name.toLocaleLowerCase("en");
+
+        if (!names.has(key)) names.set(key, name);
+    }
+
+    return [...names.values()].sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: "base" })
+    );
+}
+
+function validUsername(username) {
+    return /^[a-zA-Z0-9_]{3,24}$/.test(username);
+}
+
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
+        const path = url.pathname;
 
-        if (url.pathname === "/api/test") {
-            return Response.json({
+        if (path === "/api/test" && request.method === "GET") {
+            return json({
                 success: true,
                 message: "Suberboys backend is running!"
             });
         }
 
-        if (!url.pathname.startsWith("/api/")) {
+        if (!path.startsWith("/api/")) {
             return env.ASSETS.fetch(request);
         }
 
         if (!["GET", "POST"].includes(request.method)) {
-            return json({ error: "Method not allowed" }, 405, {
-                Allow: "GET, POST"
-            });
+            return json(
+                { error: "Method not allowed" },
+                405,
+                { Allow: "GET, POST" }
+            );
         }
 
         if (
             request.method === "POST" &&
             !validOrigin(request)
         ) {
-            return json({ error: "Invalid request origin" }, 403);
+            return json({ error: "Invalid request origin." }, 403);
         }
 
         try {
-            // Get the current user's leaderboard profile.
-            if (
-                url.pathname === "/api/leaderboard/profile" &&
-                request.method === "GET"
-            ) {
-                const user = await currentUser(request, env.db);
-
-                if (!user) {
-                    return json({ error: "Please log in." }, 401, {
-                        "Cache-Control": "no-store"
-                    });
-                }
-
-                const profile = await env.db.prepare(`
-                    SELECT leaderboard_name
-                    FROM leaderboard_profiles
-                    WHERE user_id = ?
-                `).bind(user.id).first();
-
-                return json({ profile: profile || null }, 200, {
-                    "Cache-Control": "no-store"
-                });
-            }
-
-            // Allow a logged-in user to join with a new identity.
-            if (
-                url.pathname === "/api/leaderboard/join" &&
-                request.method === "POST"
-            ) {
-                const user = await currentUser(request, env.db);
-
-                if (!user) {
-                    return json({ error: "Please log in." }, 401);
-                }
-
+            // Register an account.
+            if (path === "/api/auth/register" && request.method === "POST") {
                 let body;
 
                 try {
@@ -384,105 +346,15 @@ export default {
                     return json({ error: "Invalid JSON body." }, 400);
                 }
 
-                const leaderboardName =
-                    typeof body.leaderboardName === "string"
-                        ? body.leaderboardName.trim()
-                        : "";
-
-                if (
-                    leaderboardName.length < 1 ||
-                    leaderboardName.length > 24 ||
-                    /[\u0000-\u001F\u007F]/.test(leaderboardName)
-                ) {
-                    return json({
-                        error: "Leaderboard names must be 1–24 characters."
-                    }, 400);
-                }
-
-                const existingProfile = await env.db.prepare(`
-                    SELECT leaderboard_name
-                    FROM leaderboard_profiles
-                    WHERE user_id = ?
-                `).bind(user.id).first();
-
-                if (existingProfile) {
-                    return json({
-                        error: "Your account already has a leaderboard identity."
-                    }, 409);
-                }
-
-                const reserved = await existingLeaderboardName(
-                    env, url.origin, leaderboardName
-                );
-
-                if (reserved) {
-                    return json({
-                        error: "That name belongs to an existing leaderboard player. Contact an admin to link it."
-                    }, 409);
-                }
-
-                const duplicate = await env.db.prepare(`
-                    SELECT id
-                    FROM leaderboard_profiles
-                    WHERE leaderboard_name = ? COLLATE NOCASE
-                `).bind(leaderboardName).first();
-
-                if (duplicate) {
-                    return json({
-                        error: "That leaderboard name is already taken."
-                    }, 409);
-                }
-
-                try {
-                    await env.db.prepare(`
-                        INSERT INTO leaderboard_profiles
-                            (id, user_id, leaderboard_name)
-                        VALUES (?, ?, ?)
-                    `).bind(
-                        crypto.randomUUID(),
-                        user.id,
-                        leaderboardName
-                    ).run();
-                } catch (error) {
-                    if (/unique constraint/i.test(
-                        String(error?.message || "")
-                    )) {
-                        return json({
-                            error: "That account or leaderboard name is already linked."
-                        }, 409);
-                    }
-
-                    throw error;
-                }
-
-                return json({
-                    success: true,
-                    profile: {
-                        leaderboard_name: leaderboardName
-                    }
-                }, 201, {
-                    "Cache-Control": "no-store"
-                });
-            }
-
-            // Register a normal account.
-            if (
-                url.pathname === "/api/auth/register" &&
-                request.method === "POST"
-            ) {
-                let body;
-
-                try {
-                    body = await request.json();
-                } catch {
-                    return json({ error: "Invalid JSON body." }, 400);
+                if (!body || typeof body !== "object" || Array.isArray(body)) {
+                    return json({ error: "Invalid request body." }, 400);
                 }
 
                 const username = String(body.username || "").trim();
                 const email = String(body.email || "").trim().toLowerCase();
                 const password = String(body.password || "");
 
-                if (!/^[a-zA-Z0-9_]{3,24}$/.test(username)) {
+                if (!validUsername(username)) {
                     return json({
                         error: "Username must be 3–24 letters, numbers or underscores."
                     }, 400);
@@ -492,9 +364,7 @@ export default {
                     email.length > 254 ||
                     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
                 ) {
-                    return json({
-                        error: "Enter a valid email address."
-                    }, 400);
+                    return json({ error: "Enter a valid email address." }, 400);
                 }
 
                 if (password.length < 12 || password.length > 128) {
@@ -526,9 +396,7 @@ export default {
                         VALUES (?, ?, ?, ?)
                     `).bind(id, username, email, passwordHash).run();
                 } catch (error) {
-                    if (/unique constraint/i.test(
-                        String(error?.message || "")
-                    )) {
+                    if (/unique constraint/i.test(String(error?.message || ""))) {
                         return json({
                             error: "That username or email is already registered."
                         }, 409);
@@ -544,10 +412,7 @@ export default {
             }
 
             // Log in.
-            if (
-                url.pathname === "/api/auth/login" &&
-                request.method === "POST"
-            ) {
+            if (path === "/api/auth/login" && request.method === "POST") {
                 let body;
 
                 try {
@@ -556,13 +421,17 @@ export default {
                     return json({ error: "Invalid JSON body." }, 400);
                 }
 
+                if (!body || typeof body !== "object" || Array.isArray(body)) {
+                    return json({ error: "Invalid request body." }, 400);
+                }
+
                 const email = String(body.email || "").trim().toLowerCase();
                 const password = String(body.password || "");
 
                 const user = await env.db.prepare(`
                     SELECT id, username, email, password_hash, is_banned
-FROM users
-WHERE email = ? COLLATE NOCASE
+                    FROM users
+                    WHERE email = ? COLLATE NOCASE
                 `).bind(email).first();
 
                 if (
@@ -573,18 +442,20 @@ WHERE email = ? COLLATE NOCASE
                         error: "Invalid email or password."
                     }, 401);
                 }
-if (user.is_banned === 1) {
-    return json({
-        error: "This account has been banned.",
-        banned: true
-    }, 403, {
-        "Cache-Control": "no-store"
-    });
-}
-                const tokenBytes = crypto.getRandomValues(
-                    new Uint8Array(32)
+
+                if (Number(user.is_banned) === 1) {
+                    return json({
+                        error: "This account has been banned.",
+                        banned: true
+                    }, 403, {
+                        "Cache-Control": "no-store"
+                    });
+                }
+
+                const token = base64url(
+                    crypto.getRandomValues(new Uint8Array(32))
                 );
-                const token = base64url(tokenBytes);
+
                 const tokenHash = await sha256(token);
                 const expiresAt =
                     Math.floor(Date.now() / 1000) + SESSION_SECONDS;
@@ -604,18 +475,9 @@ if (user.is_banned === 1) {
                 });
             }
 
-            // Return the logged-in user.
-            if (
-                url.pathname === "/api/auth/me" &&
-                request.method === "GET"
-            ) {
+            // Current user.
+            if (path === "/api/auth/me" && request.method === "GET") {
                 const user = await currentUser(request, env.db);
-
-                if (!user) {
-                    return json({ user: null }, 200, {
-                        "Cache-Control": "no-store"
-                    });
-                }
 
                 return json({ user }, 200, {
                     "Cache-Control": "no-store"
@@ -623,10 +485,7 @@ if (user.is_banned === 1) {
             }
 
             // Log out.
-            if (
-                url.pathname === "/api/auth/logout" &&
-                request.method === "POST"
-            ) {
+            if (path === "/api/auth/logout" && request.method === "POST") {
                 const token = cookieValue(request, "sb_session");
 
                 if (token) {
@@ -642,48 +501,9 @@ if (user.is_banned === 1) {
                 });
             }
 
-            // List leaderboard identities already linked in D1.
+            // Current leaderboard profile.
             if (
-                url.pathname === "/api/leaderboard/identities" &&
-                request.method === "GET"
-            ) {
-                
-                const staticNames = await allLeaderboardNames(env, url.origin);
-
-                const linkedResult = await env.db.prepare(`
-                    SELECT leaderboard_name
-                    FROM leaderboard_profiles
-                `).all();
-
-                const nameMap = new Map();
-
-                for (const name of staticNames) {
-                    nameMap.set(name.toLocaleLowerCase("en"), name);
-                }
-
-                for (const row of linkedResult.results) {
-                    const name = row.leaderboard_name;
-                    if (name) {
-                        const key = name.toLocaleLowerCase("en");
-                        if (!nameMap.has(key)) nameMap.set(key, name);
-                    }
-                }
-
-                return json({
-                    identities: [...nameMap.values()].sort((a, b) =>
-                        a.localeCompare(b, undefined, {
-                            sensitivity: "base"
-                        })
-                    )
-                }, 200, {
-                    "Cache-Control": "no-store"
-                });
-
-            }
-
-            // Get stats for the logged-in player's leaderboard identity.
-            if (
-                url.pathname === "/api/leaderboard/stats" &&
+                path === "/api/leaderboard/profile" &&
                 request.method === "GET"
             ) {
                 const user = await currentUser(request, env.db);
@@ -700,26 +520,141 @@ if (user.is_banned === 1) {
                     WHERE user_id = ?
                 `).bind(user.id).first();
 
-                if (!profile) {
+                return json({ profile: profile || null }, 200, {
+                    "Cache-Control": "no-store"
+                });
+            }
+
+            // Join the leaderboard.
+            if (
+                path === "/api/leaderboard/join" &&
+                request.method === "POST"
+            ) {
+                const user = await currentUser(request, env.db);
+
+                if (!user) {
+                    return json({ error: "Please log in." }, 401);
+                }
+
+                let body;
+
+                try {
+                    body = await request.json();
+                } catch {
+                    return json({ error: "Invalid JSON body." }, 400);
+                }
+
+                const leaderboardName =
+                    typeof body?.leaderboardName === "string"
+                        ? body.leaderboardName.trim()
+                        : "";
+
+                if (
+                    leaderboardName.length < 1 ||
+                    leaderboardName.length > 24 ||
+                    /[\u0000-\u001F\u007F]/.test(leaderboardName)
+                ) {
+                    return json({
+                        error: "Leaderboard names must be 1–24 characters."
+                    }, 400);
+                }
+
+                const existingProfile = await env.db.prepare(`
+                    SELECT leaderboard_name
+                    FROM leaderboard_profiles
+                    WHERE user_id = ?
+                `).bind(user.id).first();
+
+                if (existingProfile) {
+                    return json({
+                        error: "Your account already has a leaderboard identity."
+                    }, 409);
+                }
+
+                if (await existingLeaderboardName(env, url.origin, leaderboardName)) {
+                    return json({
+                        error: "That name belongs to an existing leaderboard player. Contact an admin to link it."
+                    }, 409);
+                }
+
+                const duplicate = await env.db.prepare(`
+                    SELECT id
+                    FROM leaderboard_profiles
+                    WHERE leaderboard_name = ? COLLATE NOCASE
+                `).bind(leaderboardName).first();
+
+                if (duplicate) {
+                    return json({
+                        error: "That leaderboard name is already taken."
+                    }, 409);
+                }
+
+                try {
+                    await env.db.prepare(`
+                        INSERT INTO leaderboard_profiles
+                            (id, user_id, leaderboard_name)
+                        VALUES (?, ?, ?)
+                    `).bind(
+                        crypto.randomUUID(),
+                        user.id,
+                        leaderboardName
+                    ).run();
+                } catch (error) {
+                    if (/unique constraint/i.test(String(error?.message || ""))) {
+                        return json({
+                            error: "That account or leaderboard name is already linked."
+                        }, 409);
+                    }
+
+                    throw error;
+                }
+
+                return json({
+                    success: true,
+                    profile: { leaderboard_name: leaderboardName }
+                }, 201, {
+                    "Cache-Control": "no-store"
+                });
+            }
+
+            // Public list of known leaderboard identities.
+            if (
+                path === "/api/leaderboard/identities" &&
+                request.method === "GET"
+            ) {
+                const identities = await allKnownIdentities(env, url.origin);
+
+                return json({ identities }, 200, {
+                    "Cache-Control": "no-store"
+                });
+            }
+
+            // Player leaderboard stats.
+            if (
+                path === "/api/leaderboard/stats" &&
+                request.method === "GET"
+            ) {
+                const user = await currentUser(request, env.db);
+
+                if (!user) {
+                    return json({ error: "Please log in." }, 401, {
+                        "Cache-Control": "no-store"
+                    });
+                }
+
+                const profile = await env.db.prepare(`
+                    SELECT leaderboard_name
+                    FROM leaderboard_profiles
+                    WHERE user_id = ?
+                `).bind(user.id).first();
+
+                if (!profile?.leaderboard_name) {
                     return json({
                         error: "Link your leaderboard identity first."
                     }, 400, { "Cache-Control": "no-store" });
                 }
 
-                const listResponse = await env.ASSETS.fetch(
-                    new Request(new URL("/data/_list.json", url.origin))
-                );
-
-                if (!listResponse.ok) {
-                    throw new Error("Could not read leaderboard list.");
-                }
-
-                const files = await listResponse.json();
-
-                if (!Array.isArray(files)) {
-                    throw new Error("Invalid leaderboard list.");
-                }
-
+                const files = await readPublishedLevels(env, url.origin);
                 const playerKey =
                     profile.leaderboard_name.toLocaleLowerCase("en");
 
@@ -738,32 +673,18 @@ if (user.is_banned === 1) {
 
                     if (
                         typeof file !== "string" ||
-                        !/^[a-zA-Z0-9_-]+$/.test(file)
+                        !/^[a-zA-Z0-9_-]{1,80}$/.test(file)
                     ) {
                         continue;
                     }
 
-                    const response = await env.ASSETS.fetch(
-                        new Request(
-                            new URL(
-                                `/data/${encodeURIComponent(file)}.json`,
-                                url.origin
-                            )
-                        )
-                    );
-
-                    if (!response.ok) {
-                        throw new Error(`Could not read level ${file}.`);
-                    }
-
-                    const level = await response.json();
+                    const level = await readPublishedLevel(env, url.origin, file);
                     const rank = index + 1;
                     totalLevels++;
 
                     if (!Array.isArray(level.records)) continue;
 
-                    const requiredPercent =
-                        Number(level.percentToQualify ?? 100);
+                    const requiredPercent = Number(level.percentToQualify ?? 100);
 
                     const record = level.records.find(item =>
                         typeof item.user === "string" &&
@@ -807,9 +728,9 @@ if (user.is_banned === 1) {
                 });
             }
 
-            // Compare accepted completions for the logged-in player's identity.
+            // Compare accepted completions between two players.
             if (
-                url.pathname === "/api/leaderboard/compare" &&
+                path === "/api/leaderboard/compare" &&
                 request.method === "GET"
             ) {
                 const user = await currentUser(request, env.db);
@@ -826,7 +747,7 @@ if (user.is_banned === 1) {
                     WHERE user_id = ?
                 `).bind(user.id).first();
 
-                if (!ownProfile) {
+                if (!ownProfile?.leaderboard_name) {
                     return json({
                         error: "Link your leaderboard identity first."
                     }, 400, { "Cache-Control": "no-store" });
@@ -849,23 +770,10 @@ if (user.is_banned === 1) {
                     }, 400, { "Cache-Control": "no-store" });
                 }
 
-                const listResponse = await env.ASSETS.fetch(
-                    new Request(new URL("/data/_list.json", url.origin))
-                );
-
-                if (!listResponse.ok) {
-                    throw new Error("Could not read leaderboard list.");
-                }
-
-                const files = await listResponse.json();
-
-                if (!Array.isArray(files)) {
-                    throw new Error("Invalid leaderboard list.");
-                }
-
-                const ownName = ownProfile.leaderboard_name;
-                const ownKey = ownName.toLocaleLowerCase("en");
+                const files = await readPublishedLevels(env, url.origin);
+                const ownKey = ownProfile.leaderboard_name.toLocaleLowerCase("en");
                 const opponentKey = opponent.toLocaleLowerCase("en");
+
                 const identities = new Map();
                 const ownLevels = new Map();
                 const opponentLevels = new Map();
@@ -875,25 +783,13 @@ if (user.is_banned === 1) {
 
                     if (
                         typeof file !== "string" ||
-                        !/^[a-zA-Z0-9_-]+$/.test(file)
+                        !/^[a-zA-Z0-9_-]{1,80}$/.test(file)
                     ) {
                         continue;
                     }
 
-                    const levelResponse = await env.ASSETS.fetch(
-                        new Request(
-                            new URL(
-                                `/data/${encodeURIComponent(file)}.json`,
-                                url.origin
-                            )
-                        )
-                    );
+                    const level = await readPublishedLevel(env, url.origin, file);
 
-                    if (!levelResponse.ok) {
-                        throw new Error(`Could not read level ${file}.`);
-                    }
-
-                    const level = await levelResponse.json();
                     if (!Array.isArray(level.records)) continue;
 
                     const requiredPercent = Number(level.percentToQualify ?? 100);
@@ -906,6 +802,7 @@ if (user.is_banned === 1) {
                         if (!name) continue;
 
                         const key = name.toLocaleLowerCase("en");
+
                         if (!identities.has(key)) identities.set(key, name);
 
                         if (
@@ -943,25 +840,11 @@ if (user.is_banned === 1) {
                     }, 404, { "Cache-Control": "no-store" });
                 }
 
-                const own = [...ownLevels.values()].sort(
-                    (a, b) => a.rank - b.rank
-                );
-                const theirs = [...opponentLevels.values()].sort(
-                    (a, b) => a.rank - b.rank
-                );
-
-                const shared = own.filter(level =>
-                    opponentLevels.has(level.file)
-                );
-                const ownUnique = own.filter(level =>
-                    !opponentLevels.has(level.file)
-                );
-                const opponentUnique = theirs.filter(level =>
-                    !ownLevels.has(level.file)
-                );
+                const own = [...ownLevels.values()].sort((a, b) => a.rank - b.rank);
+                const theirs = [...opponentLevels.values()].sort((a, b) => a.rank - b.rank);
 
                 return json({
-                    ownName,
+                    ownName: ownProfile.leaderboard_name,
                     opponentName: canonicalOpponent,
                     identities: [...identities.values()].sort((a, b) =>
                         a.localeCompare(b, undefined, { sensitivity: "base" })
@@ -970,57 +853,32 @@ if (user.is_banned === 1) {
                     opponentCount: theirs.length,
                     ownHardest: own[0] || null,
                     opponentHardest: theirs[0] || null,
-                    shared,
-                    ownUnique,
-                    opponentUnique
+                    shared: own.filter(level => opponentLevels.has(level.file)),
+                    ownUnique: own.filter(level => !opponentLevels.has(level.file)),
+                    opponentUnique: theirs.filter(level => !ownLevels.has(level.file))
                 }, 200, { "Cache-Control": "no-store" });
             }
 
-            // Check admin permissions.
-            if (
-                url.pathname === "/api/admin/me" &&
-                request.method === "GET"
-            ) {
-                const user = await currentUser(request, env.db);
+            // Verify admin access.
+            if (path === "/api/admin/me" && request.method === "GET") {
+                const auth = await requireAdmin(request, env);
 
-                if (!user) {
-                    return json({ error: "Please log in." }, 401, {
-                        "Cache-Control": "no-store"
-                    });
-                }
-
-                if (user.is_admin !== 1) {
-                    return json({ error: "Admin access required." }, 403, {
-                        "Cache-Control": "no-store"
-                    });
-                }
+                if (auth.response) return auth.response;
 
                 return json({
                     admin: true,
-                    username: user.username
-                }, 200, {
-                    "Cache-Control": "no-store"
-                });
+                    username: auth.user.username
+                }, 200, { "Cache-Control": "no-store" });
             }
 
-            // List all accounts and all existing leaderboard identities.
+            // Admin: list accounts and leaderboard identities.
             if (
-                url.pathname === "/api/admin/players" &&
+                path === "/api/admin/players" &&
                 request.method === "GET"
             ) {
-                const admin = await currentUser(request, env.db);
+                const auth = await requireAdmin(request, env);
 
-                if (!admin) {
-                    return json({ error: "Please log in." }, 401, {
-                        "Cache-Control": "no-store"
-                    });
-                }
-
-                if (admin.is_admin !== 1) {
-                    return json({ error: "Admin access required." }, 403, {
-                        "Cache-Control": "no-store"
-                    });
-                }
+                if (auth.response) return auth.response;
 
                 const result = await env.db.prepare(`
                     SELECT
@@ -1029,6 +887,9 @@ if (user.is_banned === 1) {
                         users.email,
                         users.created_at,
                         users.is_admin,
+                        users.is_banned,
+                        users.ban_reason,
+                        users.banned_at,
                         leaderboard_profiles.leaderboard_name
                     FROM users
                     LEFT JOIN leaderboard_profiles
@@ -1036,63 +897,22 @@ if (user.is_banned === 1) {
                     ORDER BY users.username COLLATE NOCASE
                 `).all();
 
-                const staticNames = await allLeaderboardNames(
-                    env, url.origin
-                );
-
-                const dbNames = await env.db.prepare(`
-                    SELECT leaderboard_name
-                    FROM leaderboard_profiles
-                `).all();
-
-                const nameMap = new Map();
-
-                for (const name of staticNames) {
-                    nameMap.set(name.toLocaleLowerCase("en"), name);
-                }
-
-                for (const row of dbNames.results) {
-                    const name = row.leaderboard_name;
-
-                    if (name) {
-                        const key = name.toLocaleLowerCase("en");
-
-                        if (!nameMap.has(key)) {
-                            nameMap.set(key, name);
-                        }
-                    }
-                }
-
-                const identities = [...nameMap.values()].sort((a, b) =>
-                    a.localeCompare(b, undefined, {
-                        sensitivity: "base"
-                    })
-                );
+                const identities = await allKnownIdentities(env, url.origin);
 
                 return json({
                     players: result.results,
                     identities
-                }, 200, {
-                    "Cache-Control": "no-store"
-                });
+                }, 200, { "Cache-Control": "no-store" });
             }
 
-            // Link, change or unlink a player's leaderboard identity.
+            // Admin: link, change or unlink a player's leaderboard identity.
             if (
-                url.pathname === "/api/admin/players/link" &&
+                path === "/api/admin/players/link" &&
                 request.method === "POST"
             ) {
-                const admin = await currentUser(request, env.db);
+                const auth = await requireAdmin(request, env);
 
-                if (!admin) {
-                    return json({ error: "Please log in." }, 401);
-                }
-
-                if (admin.is_admin !== 1) {
-                    return json({
-                        error: "Admin access required."
-                    }, 403);
-                }
+                if (auth.response) return auth.response;
 
                 let body;
 
@@ -1102,18 +922,16 @@ if (user.is_banned === 1) {
                     return json({ error: "Invalid JSON body." }, 400);
                 }
 
-                const userId =
-                    typeof body.userId === "string" ? body.userId : "";
+                const userId = typeof body?.userId === "string"
+                    ? body.userId
+                    : "";
 
-                const requestedName =
-                    typeof body.leaderboardName === "string"
-                        ? body.leaderboardName.trim()
-                        : "";
+                const requestedName = typeof body?.leaderboardName === "string"
+                    ? body.leaderboardName.trim()
+                    : "";
 
                 if (!userId || userId.length > 128) {
-                    return json({
-                        error: "Choose a valid account."
-                    }, 400);
+                    return json({ error: "Choose a valid account." }, 400);
                 }
 
                 if (
@@ -1132,12 +950,9 @@ if (user.is_banned === 1) {
                 `).bind(userId).first();
 
                 if (!targetUser) {
-                    return json({
-                        error: "Account not found."
-                    }, 404);
+                    return json({ error: "Account not found." }, 404);
                 }
 
-                // An empty name unlinks the account.
                 if (!requestedName) {
                     await env.db.prepare(`
                         DELETE FROM leaderboard_profiles
@@ -1147,14 +962,10 @@ if (user.is_banned === 1) {
                     return json({
                         success: true,
                         leaderboardName: null
-                    }, 200, {
-                        "Cache-Control": "no-store"
-                    });
+                    }, 200, { "Cache-Control": "no-store" });
                 }
 
-                const staticNames = await allLeaderboardNames(
-                    env, url.origin
-                );
+                const staticNames = await allLeaderboardNames(env, url.origin);
 
                 const known = staticNames.find(name =>
                     name.toLocaleLowerCase("en") ===
@@ -1217,9 +1028,7 @@ if (user.is_banned === 1) {
                         ).run();
                     }
                 } catch (error) {
-                    if (/unique constraint/i.test(
-                        String(error?.message || "")
-                    )) {
+                    if (/unique constraint/i.test(String(error?.message || ""))) {
                         return json({
                             error: "That account or identity is already linked."
                         }, 409);
@@ -1231,27 +1040,17 @@ if (user.is_banned === 1) {
                 return json({
                     success: true,
                     leaderboardName: canonicalName
-                }, 200, {
-                    "Cache-Control": "no-store"
-                });
+                }, 200, { "Cache-Control": "no-store" });
             }
 
             // Admin: ban or unban an account.
             if (
-                url.pathname === "/api/admin/players/ban" &&
+                path === "/api/admin/players/ban" &&
                 request.method === "POST"
             ) {
-                const admin = await currentUser(request, env.db);
+                const auth = await requireAdmin(request, env);
 
-                if (!admin) {
-                    return json({ error: "Please log in." }, 401);
-                }
-
-                if (admin.is_admin !== 1) {
-                    return json({
-                        error: "Admin access required."
-                    }, 403);
-                }
+                if (auth.response) return auth.response;
 
                 let body;
 
@@ -1261,14 +1060,17 @@ if (user.is_banned === 1) {
                     return json({ error: "Invalid JSON body." }, 400);
                 }
 
-                const userId =
-                    typeof body.userId === "string" ? body.userId : "";
-                const action =
-                    typeof body.action === "string" ? body.action : "";
-                const reason =
-                    typeof body.reason === "string"
-                        ? body.reason.trim()
-                        : "";
+                const userId = typeof body?.userId === "string"
+                    ? body.userId
+                    : "";
+
+                const action = typeof body?.action === "string"
+                    ? body.action
+                    : "";
+
+                const reason = typeof body?.reason === "string"
+                    ? body.reason.trim()
+                    : "";
 
                 if (!userId || userId.length > 128) {
                     return json({ error: "Choose a valid account." }, 400);
@@ -1296,14 +1098,14 @@ if (user.is_banned === 1) {
                     return json({ error: "Account not found." }, 404);
                 }
 
-                if (target.is_admin === 1) {
+                if (Number(target.is_admin) === 1) {
                     return json({
                         error: "Admin accounts cannot be banned through this endpoint."
                     }, 403);
                 }
 
                 if (action === "ban") {
-                    if (target.is_banned === 1) {
+                    if (Number(target.is_banned) === 1) {
                         return json({
                             success: true,
                             message: "Account is already banned."
@@ -1322,7 +1124,6 @@ if (user.is_banned === 1) {
                         userId
                     ).run();
 
-                    // Immediately invalidate all sessions for this account.
                     await env.db.prepare(`
                         DELETE FROM sessions
                         WHERE user_id = ?
@@ -1347,107 +1148,19 @@ if (user.is_banned === 1) {
                     message: `${target.username} has been unbanned.`
                 }, 200, { "Cache-Control": "no-store" });
             }
+
+            // Delegate submission history, review queue, approval and level
+            // difficulty management to submission-routes.js.
             const submissionResponse = await handleSubmissionRoute(
-    request,
-    env,
-    url,
-    { json, currentUser }
-);
-// Admin: list levels and their difficulty assignments.
-if (
-    url.pathname === "/api/admin/levels" &&
-    request.method === "GET"
-) {
-    const auth = await requireAdmin(request, env);
+                request,
+                env,
+                url,
+                { json, currentUser }
+            );
 
-    if (auth.error) return auth.error;
+            if (submissionResponse) return submissionResponse;
 
-    const files = await getLevelList(env, url.origin);
-    const levels = [];
-
-    for (const fileName of files) {
-        const level = await readLevel(env, url.origin, fileName);
-
-        levels.push({
-            fileName,
-            id: level.id ?? null,
-            name: typeof level.name === "string"
-                ? level.name
-                : fileName,
-            difficulty: LEVEL_DIFFICULTIES.includes(level.difficulty)
-                ? level.difficulty
-                : ""
-        });
-    }
-
-    return json({ levels }, 200, {
-        "Cache-Control": "no-store"
-    });
-}
-
-// Admin: update a level's difficulty without changing its records or list position.
-if (
-    url.pathname === "/api/admin/levels/update" &&
-    request.method === "POST"
-) {
-    const auth = await requireAdmin(request, env);
-
-    if (auth.error) return auth.error;
-
-    let body;
-
-    try {
-        body = await request.json();
-    } catch {
-        return json({ error: "Invalid JSON body." }, 400);
-    }
-
-    const fileName =
-        typeof body.fileName === "string"
-            ? body.fileName
-            : "";
-
-    const difficulty =
-        typeof body.difficulty === "string"
-            ? body.difficulty
-            : "";
-
-    if (!LEVEL_FILE_PATTERN.test(fileName)) {
-        return json({ error: "Invalid level filename." }, 400);
-    }
-
-    if (
-        difficulty !== "" &&
-        !LEVEL_DIFFICULTIES.includes(difficulty)
-    ) {
-        return json({ error: "Invalid difficulty." }, 400);
-    }
-
-    // Only allow editing files currently present in data/_list.json.
-    const files = await getLevelList(env, url.origin);
-
-    if (!files.includes(fileName)) {
-        return json({ error: "Level not found." }, 404);
-    }
-
-    const level = await readLevel(env, url.origin, fileName);
-
-    // An empty difficulty means Unassigned.
-    if (difficulty === "") {
-        delete level.difficulty;
-    } else {
-        level.difficulty = difficulty;
-    }
-
-    // This endpoint needs repository-write support to persist changes.
-    // See the setup note below.
-    return json({
-        error: "Repository write support has not been configured."
-    }, 501);
-}
-if (submissionResponse) return submissionResponse;
-
-return json({ error: "Not found" }, 404);
+            return json({ error: "Not found." }, 404);
         } catch (error) {
             console.error(
                 "Account API error:",
@@ -1457,7 +1170,9 @@ return json({ error: "Not found" }, 404);
             return json({
                 error: "Server error. Please try again.",
                 requestId: crypto.randomUUID()
-            }, 500);
+            }, 500, {
+                "Cache-Control": "no-store"
+            });
         }
     }
 };
