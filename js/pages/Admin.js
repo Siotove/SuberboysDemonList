@@ -86,14 +86,15 @@ export default {
                             </select>
 
                             <p v-if="!levelSearch.trim()">
-                                Search by level name, filename or ID to display
-                                levels.
+                                Search by level name, filename or ID to
+                                display levels.
                             </p>
 
                             <template v-else>
                                 <p>
                                     Showing {{ visibleLevels.length }}
-                                    of {{ filteredLevels.length }} matching levels.
+                                    of {{ filteredLevels.length }}
+                                    matching levels.
                                 </p>
 
                                 <p v-if="filteredLevels.length === 0">
@@ -127,14 +128,18 @@ export default {
                                         {{ level.difficulty || 'Unassigned' }}
                                     </p>
 
-                                    <label :for="'difficulty-' + level.fileName">
+                                    <label
+                                        :for="'difficulty-' + level.fileName"
+                                    >
                                         Set difficulty
                                     </label>
 
                                     <select
                                         :id="'difficulty-' + level.fileName"
                                         v-model="levelEdits[level.fileName]"
-                                        :disabled="savingLevel === level.fileName"
+                                        :disabled="
+                                            savingLevel === level.fileName
+                                        "
                                     >
                                         <option value="">Unassigned</option>
                                         <option
@@ -171,7 +176,10 @@ export default {
                                 </article>
 
                                 <button
-                                    v-if="visibleLevels.length < filteredLevels.length"
+                                    v-if="
+                                        visibleLevels.length <
+                                        filteredLevels.length
+                                    "
                                     type="button"
                                     @click="levelLimit += 50"
                                 >
@@ -185,7 +193,11 @@ export default {
                             @click="loadLevels"
                             :disabled="levelsLoading"
                         >
-                            {{ levelsLoading ? 'Refreshing...' : 'Refresh levels' }}
+                            {{
+                                levelsLoading
+                                    ? 'Refreshing...'
+                                    : 'Refresh levels'
+                            }}
                         </button>
                     </details>
                 </section>
@@ -204,7 +216,10 @@ export default {
                             link does not change scores.
                         </p>
 
-                        <p v-if="playersLoading">Loading player accounts...</p>
+                        <p v-if="playersLoading">
+                            Loading player accounts...
+                        </p>
+
                         <p v-else-if="playersError" role="alert">
                             {{ playersError }}
                         </p>
@@ -219,7 +234,10 @@ export default {
                             >
 
                             <label for="player-filter">Account status</label>
-                            <select id="player-filter" v-model="playerFilter">
+                            <select
+                                id="player-filter"
+                                v-model="playerFilter"
+                            >
                                 <option value="all">All accounts</option>
                                 <option value="linked">Linked</option>
                                 <option value="unlinked">Not linked</option>
@@ -229,7 +247,8 @@ export default {
 
                             <p>
                                 Showing {{ visiblePlayers.length }}
-                                of {{ filteredPlayers.length }} matching accounts.
+                                of {{ filteredPlayers.length }}
+                                matching accounts.
                             </p>
 
                             <p v-if="filteredPlayers.length === 0">
@@ -243,7 +262,9 @@ export default {
                             >
                                 <h3>
                                     {{ player.username }}
-                                    <span v-if="player.is_admin === 1">(admin)</span>
+                                    <span v-if="player.is_admin === 1">
+                                        (admin)
+                                    </span>
                                     <span v-if="player.is_banned === 1">
                                         — BANNED
                                     </span>
@@ -254,7 +275,10 @@ export default {
                                 <p>
                                     Current identity:
                                     <strong>
-                                        {{ player.leaderboard_name || 'Not linked' }}
+                                        {{
+                                            player.leaderboard_name ||
+                                            'Not linked'
+                                        }}
                                     </strong>
                                 </p>
 
@@ -368,7 +392,10 @@ export default {
                             </div>
 
                             <button
-                                v-if="visiblePlayers.length < filteredPlayers.length"
+                                v-if="
+                                    visiblePlayers.length <
+                                    filteredPlayers.length
+                                "
                                 type="button"
                                 @click="playerLimit += 50"
                             >
@@ -394,7 +421,9 @@ export default {
                         Review completion records and new level verifications.
                     </p>
 
-                    <p v-if="submissionsLoading">Loading submissions...</p>
+                    <p v-if="submissionsLoading">
+                        Loading submissions...
+                    </p>
 
                     <p v-else-if="submissionsError" role="alert">
                         {{ submissionsError }}
@@ -443,9 +472,11 @@ export default {
                             <hr>
 
                             <h3>
-                                {{ submission.type === 'completion'
-                                    ? 'Completion'
-                                    : 'Level verification' }}
+                                {{
+                                    submission.type === 'completion'
+                                        ? 'Completion'
+                                        : 'Level verification'
+                                }}
                             </h3>
 
                             <p>
@@ -579,7 +610,9 @@ export default {
                     <button
                         type="button"
                         @click="loadSubmissions"
-                        :disabled="submissionsLoading || reviewingId !== null"
+                        :disabled="
+                            submissionsLoading || reviewingId !== null
+                        "
                     >
                         Refresh submissions
                     </button>
@@ -647,9 +680,13 @@ export default {
                 );
 
                 const difficulty = level.difficulty || '';
+
                 const matchesDifficulty =
                     this.difficultyFilter === 'all' ||
-                    (this.difficultyFilter === 'unassigned' && !difficulty) ||
+                    (
+                        this.difficultyFilter === 'unassigned' &&
+                        !difficulty
+                    ) ||
                     difficulty === this.difficultyFilter;
 
                 return matchesSearch && matchesDifficulty;
@@ -676,12 +713,22 @@ export default {
 
                 const matchesFilter =
                     this.playerFilter === 'all' ||
-                    (this.playerFilter === 'linked' &&
-                        !!player.leaderboard_name) ||
-                    (this.playerFilter === 'unlinked' &&
-                        !player.leaderboard_name) ||
-                    (this.playerFilter === 'banned' && banned) ||
-                    (this.playerFilter === 'active' && !banned);
+                    (
+                        this.playerFilter === 'linked' &&
+                        !!player.leaderboard_name
+                    ) ||
+                    (
+                        this.playerFilter === 'unlinked' &&
+                        !player.leaderboard_name
+                    ) ||
+                    (
+                        this.playerFilter === 'banned' &&
+                        banned
+                    ) ||
+                    (
+                        this.playerFilter === 'active' &&
+                        !banned
+                    );
 
                 return matchesSearch && matchesFilter;
             });
@@ -692,19 +739,27 @@ export default {
         },
 
         bannedCount() {
-            return this.players.filter(p => p.is_banned === 1).length;
+            return this.players.filter(
+                player => player.is_banned === 1
+            ).length;
         },
 
         pendingCount() {
-            return this.submissions.filter(s => s.status === 'pending').length;
+            return this.submissions.filter(
+                submission => submission.status === 'pending'
+            ).length;
         },
 
         approvedCount() {
-            return this.submissions.filter(s => s.status === 'approved').length;
+            return this.submissions.filter(
+                submission => submission.status === 'approved'
+            ).length;
         },
 
         rejectedCount() {
-            return this.submissions.filter(s => s.status === 'rejected').length;
+            return this.submissions.filter(
+                submission => submission.status === 'rejected'
+            ).length;
         },
 
         filteredSubmissions() {
@@ -716,6 +771,7 @@ export default {
                     submission.status === this.submissionFilter;
 
                 const payload = submission.payload || {};
+
                 const searchable = [
                     submission.id,
                     submission.username,
@@ -741,13 +797,18 @@ export default {
                 cache: 'no-store'
             });
 
-            if (response.status === 401 || response.status === 403) {
+            if (
+                response.status === 401 ||
+                response.status === 403
+            ) {
                 await this.$router.replace('/profile');
                 return;
             }
 
             if (!response.ok) {
-                throw new Error('Could not verify admin permissions.');
+                throw new Error(
+                    'Could not verify admin permissions.'
+                );
             }
 
             const result = await response.json();
@@ -766,7 +827,8 @@ export default {
                 this.loadSubmissions()
             ]);
         } catch {
-            this.error = 'Could not verify admin access. Please try again.';
+            this.error =
+                'Could not verify admin access. Please try again.';
         } finally {
             this.loading = false;
         }
@@ -814,9 +876,13 @@ export default {
         },
 
         async saveDifficulty(level) {
-            const difficulty = this.levelEdits[level.fileName] || '';
+            const difficulty =
+                this.levelEdits[level.fileName] || '';
 
-            if (difficulty && !this.difficulties.includes(difficulty)) {
+            if (
+                difficulty &&
+                !this.difficulties.includes(difficulty)
+            ) {
                 this.levelMessages[level.fileName] =
                     'Please select a valid difficulty.';
                 return;
@@ -826,17 +892,20 @@ export default {
             this.levelMessages[level.fileName] = '';
 
             try {
-                const response = await fetch('/api/admin/levels/update', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        fileName: level.fileName,
-                        difficulty
-                    })
-                });
+                const response = await fetch(
+                    '/api/admin/levels/update',
+                    {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fileName: level.fileName,
+                            difficulty
+                        })
+                    }
+                );
 
                 const result = await response.json();
 
@@ -848,8 +917,10 @@ export default {
 
                 level.difficulty = difficulty;
                 this.levelEdits[level.fileName] = difficulty;
+
                 this.levelMessages[level.fileName] =
-                    \`Difficulty saved: \${difficulty || 'Unassigned'}.\`;
+                    'Difficulty saved: ' +
+                    (difficulty || 'Unassigned') + '.';
             } catch (error) {
                 this.levelMessages[level.fileName] =
                     error.message || 'Could not save difficulty.';
@@ -859,12 +930,14 @@ export default {
         },
 
         filteredIdentities(player) {
-            const query = (this.identitySearch[player.id] || '')
-                .trim().toLowerCase();
+            const query = (
+                this.identitySearch[player.id] || ''
+            ).trim().toLowerCase();
 
             return this.identities
                 .filter(identity =>
-                    !query || identity.toLowerCase().includes(query)
+                    !query ||
+                    identity.toLowerCase().includes(query)
                 )
                 .slice(0, 100);
         },
@@ -883,7 +956,8 @@ export default {
 
                 if (!response.ok) {
                     throw new Error(
-                        result.error || 'Could not load player accounts.'
+                        result.error ||
+                        'Could not load player accounts.'
                     );
                 }
 
@@ -902,7 +976,8 @@ export default {
                 this.playerLimit = 50;
             } catch (error) {
                 this.playersError =
-                    error.message || 'Could not load player accounts.';
+                    error.message ||
+                    'Could not load player accounts.';
             } finally {
                 this.playersLoading = false;
             }
@@ -913,32 +988,46 @@ export default {
             this.playerMessages[player.id] = '';
 
             try {
-                const response = await fetch('/api/admin/players/link', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: player.id,
-                        leaderboardName: this.selectedProfiles[player.id] || ''
-                    })
-                });
+                const response = await fetch(
+                    '/api/admin/players/link',
+                    {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            userId: player.id,
+                            leaderboardName:
+                                this.selectedProfiles[player.id] || ''
+                        })
+                    }
+                );
 
                 const result = await response.json();
 
                 if (!response.ok) {
                     throw new Error(
-                        result.error || 'Could not update the profile link.'
+                        result.error ||
+                        'Could not update the profile link.'
                     );
                 }
 
-                player.leaderboard_name = result.leaderboardName || null;
-                this.selectedProfiles[player.id] = result.leaderboardName || '';
-                this.playerMessages[player.id] = result.leaderboardName
-                    ? \`Linked to \${result.leaderboardName}.\`
-                    : 'Leaderboard identity unlinked.';
+                player.leaderboard_name =
+                    result.leaderboardName || null;
+
+                this.selectedProfiles[player.id] =
+                    result.leaderboardName || '';
+
+                this.playerMessages[player.id] =
+                    result.leaderboardName
+                        ? 'Linked to ' +
+                          result.leaderboardName + '.'
+                        : 'Leaderboard identity unlinked.';
             } catch (error) {
                 this.playerMessages[player.id] =
-                    error.message || 'Could not update the profile link.';
+                    error.message ||
+                    'Could not update the profile link.';
             } finally {
                 this.savingUser = null;
             }
@@ -946,28 +1035,37 @@ export default {
 
         async banPlayer(player) {
             const reason = window.prompt(
-                \`Why are you banning \${player.username}? (Optional, max 500 characters)\`
+                'Why are you banning ' + player.username +
+                '? (Optional, max 500 characters)'
             );
 
             if (reason === null) return;
 
             if (reason.trim().length > 500) {
-                window.alert('The ban reason must be 500 characters or fewer.');
+                window.alert(
+                    'The ban reason must be 500 characters or fewer.'
+                );
                 return;
             }
 
             if (!window.confirm(
-                \`Are you sure you want to ban \${player.username}?\`
+                'Are you sure you want to ban ' +
+                player.username + '?'
             )) {
                 return;
             }
 
-            await this.setBanStatus(player, 'ban', reason.trim());
+            await this.setBanStatus(
+                player,
+                'ban',
+                reason.trim()
+            );
         },
 
         async unbanPlayer(player) {
             if (!window.confirm(
-                \`Are you sure you want to unban \${player.username}?\`
+                'Are you sure you want to unban ' +
+                player.username + '?'
             )) {
                 return;
             }
@@ -980,32 +1078,44 @@ export default {
             this.banMessages[player.id] = '';
 
             try {
-                const response = await fetch('/api/admin/players/ban', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: player.id,
-                        action,
-                        reason
-                    })
-                });
+                const response = await fetch(
+                    '/api/admin/players/ban',
+                    {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            userId: player.id,
+                            action,
+                            reason
+                        })
+                    }
+                );
 
                 const result = await response.json();
 
                 if (!response.ok) {
                     throw new Error(
-                        result.error || \`Could not \${action} account.\`
+                        result.error ||
+                        'Could not ' + action + ' account.'
                     );
                 }
 
-                this.banMessages[player.id] = result.message ||
-                    \`Account \${action === 'ban' ? 'banned' : 'unbanned'}.\`;
+                this.banMessages[player.id] =
+                    result.message ||
+                    (
+                        'Account ' +
+                        (action === 'ban' ? 'banned' : 'unbanned') +
+                        '.'
+                    );
 
                 await this.loadPlayers();
             } catch (error) {
                 this.banMessages[player.id] =
-                    error.message || \`Could not \${action} account.\`;
+                    error.message ||
+                    'Could not ' + action + ' account.';
             } finally {
                 this.banningUser = null;
             }
@@ -1016,10 +1126,13 @@ export default {
             this.submissionsError = '';
 
             try {
-                const response = await fetch('/api/admin/submissions', {
-                    credentials: 'same-origin',
-                    cache: 'no-store'
-                });
+                const response = await fetch(
+                    '/api/admin/submissions',
+                    {
+                        credentials: 'same-origin',
+                        cache: 'no-store'
+                    }
+                );
 
                 const result = await response.json();
 
@@ -1039,10 +1152,12 @@ export default {
         },
 
         async reviewSubmission(submission, action) {
-            const verb = action === 'approve' ? 'approve' : 'reject';
+            const verb =
+                action === 'approve' ? 'approve' : 'reject';
 
             if (!window.confirm(
-                \`Are you sure you want to \${verb} this \${submission.type} submission?\`
+                'Are you sure you want to ' + verb +
+                ' this ' + submission.type + ' submission?'
             )) {
                 return;
             }
@@ -1056,7 +1171,9 @@ export default {
                     {
                         method: 'POST',
                         credentials: 'same-origin',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
                         body: JSON.stringify({
                             id: submission.id,
                             action
@@ -1068,17 +1185,20 @@ export default {
 
                 if (!response.ok) {
                     throw new Error(
-                        result.error || \`Could not \${verb} submission.\`
+                        result.error ||
+                        'Could not ' + verb + ' submission.'
                     );
                 }
 
                 this.submissionMessages[submission.id] =
-                    \`Submission \${result.status}.\`;
+                    'Submission ' + result.status + '.';
 
                 await this.loadSubmissions();
             } catch (error) {
                 this.submissionMessages[submission.id] =
-                    error.message || \`Could not \${verb} submission.\`;
+                    error.message ||
+                    'Could not ' + verb + ' submission.';
+
                 await this.loadSubmissions();
             } finally {
                 this.reviewingId = null;
