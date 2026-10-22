@@ -106,6 +106,105 @@ export default {
                     </form>
                 </div>
 
+            <section
+                v-if="!loading && user && leaderboardProfile"
+                class="profile-panel"
+            >
+                <p class="profile-eyebrow">PLAYER STATS</p>
+                <h2>Compare Completions</h2>
+                <p class="profile-muted">
+                    Compare accepted list completions with another player.
+                </p>
+
+                <form @submit.prevent="comparePlayer">
+                    <label for="compare-player">Compare against</label>
+                    <select
+                        id="compare-player"
+                        v-model="compareOpponent"
+                        required
+                        :disabled="compareLoading"
+                    >
+                        <option value="" disabled>Select a player</option>
+                        <option
+                            v-for="identity in compareIdentities"
+                            :key="identity"
+                            :value="identity"
+                        >
+                            {{ identity }}
+                        </option>
+                    </select>
+
+                    <button
+                        type="submit"
+                        class="profile-primary-button"
+                        :disabled="compareLoading || !compareOpponent"
+                    >
+                        {{ compareLoading ? 'Comparing...' : 'Compare Players' }}
+                    </button>
+                </form>
+
+                <p
+                    v-if="compareMessage"
+                    role="status"
+                    class="profile-message"
+                >
+                    {{ compareMessage }}
+                </p>
+
+                <template v-if="comparison">
+                    <div class="profile-comparison-stats">
+                        <div>
+                            <p class="profile-muted">{{ comparison.ownName }}</p>
+                            <h3>{{ comparison.ownCount }}</h3>
+                            <p>Accepted completions</p>
+                            <p v-if="comparison.ownHardest">
+                                Hardest: #{{ comparison.ownHardest.rank }}
+                                — {{ comparison.ownHardest.name }}
+                            </p>
+                        </div>
+
+                        <div>
+                            <p class="profile-muted">
+                                {{ comparison.opponentName }}
+                            </p>
+                            <h3>{{ comparison.opponentCount }}</h3>
+                            <p>Accepted completions</p>
+                            <p v-if="comparison.opponentHardest">
+                                Hardest: #{{ comparison.opponentHardest.rank }}
+                                — {{ comparison.opponentHardest.name }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <h3>Shared completions ({{ comparison.shared.length }})</h3>
+                    <ul>
+                        <li v-for="level in comparison.shared" :key="level.file">
+                            #{{ level.rank }} — {{ level.name }}
+                        </li>
+                    </ul>
+
+                    <h3>Your unique completions ({{ comparison.ownUnique.length }})</h3>
+                    <ul>
+                        <li v-for="level in comparison.ownUnique" :key="level.file">
+                            #{{ level.rank }} — {{ level.name }}
+                        </li>
+                    </ul>
+
+                    <h3>
+                        {{ comparison.opponentName }}'s unique completions
+                        ({{ comparison.opponentUnique.length }})
+                    </h3>
+                    <ul>
+                        <li
+                            v-for="level in comparison.opponentUnique"
+                            :key="level.file"
+                        >
+                            #{{ level.rank }} — {{ level.name }}
+                        </li>
+                    </ul>
+                </template>
+            </section>
+
                 <p v-if="leaderboardMessage" role="status" class="profile-message">
                     {{ leaderboardMessage }}
                 </p>
