@@ -839,6 +839,118 @@ if (user.is_banned === 1) {
                 });
             }
 
+            // Admin: ban or unban an account.
+            if (
+                url.pathname === "/api/admin/players/ban" &&
+                request.method === "POST"
+            ) {
+                const admin = await currentUser(request, env.db);
+
+                if (!admin) {
+                    return json({ error: "Please log in." }, 401);
+                }
+
+                if (admin.is_admin !== 1) {
+                    return json({
+                        error: "Admin access required."
+                    }, 403);
+                }
+
+                let body;
+
+                try {
+                    body = await request.json();
+                } catch {
+                    return json({ error: "Invalid JSON body." }, 400);
+                }
+
+                const userId =
+                    typeof body.userId === "string" ? body.userId : "";
+                const action =
+                    typeof body.action === "string" ? body.action : "";
+                const reason =
+                    typeof body.reason === "string"
+                        ? body.reason.trim()
+                        : "";
+
+                if (!userId || userId.length > 128) {
+                    return json({ error: "Choose a valid account." }, 400);
+                }
+
+                if (!["ban", "unban"].includes(action)) {
+                    return json({
+                        error: "Action must be ban or unban."
+                    }, 400);
+                }
+
+                if (reason.length > 500) {
+                    return json({
+                        error: "Ban reason must be 500 characters or fewer."
+                    }, 400);
+                }
+
+                const target = await env.db.prepare(`
+                    SELECT id, username, is_admin, is_banned
+                    FROM users
+                    WHERE id = ?
+                `).bind(userId).first();
+
+                if (!target) {
+                    return json({ error: "Account not found." }, 404);
+                }
+
+                if (target.is_admin === 1) {
+                    return json({
+                        error: "Admin accounts cannot be banned through this endpoint."
+                    }, 403);
+                }
+
+                if (action === "ban") {
+                    if (target.is_banned === 1) {
+                        return json({
+                            success: true,
+                            message: "Account is already banned."
+                        });
+                    }
+
+                    await env.db.prepare(`
+                        UPDATE users
+                        SET is_banned = 1,
+                            ban_reason = ?,
+                            banned_at = ?
+                        WHERE id = ?
+                    `).bind(
+                        reason || "No reason provided",
+                        Math.floor(Date.now() / 1000),
+                        userId
+                    ).run();
+
+                    // Immediately invalidate all sessions for this account.
+                    await env.db.prepare(`
+                        DELETE FROM sessions
+                        WHERE user_id = ?
+                    `).bind(userId).run();
+
+                    return json({
+                        success: true,
+                        message: `${target.username} has been banned.`
+                    }, 200, { "Cache-Control": "no-store" });
+                }
+
+                await env.db.prepare(`
+                    UPDATE users
+                    SET is_banned = 0,
+                        ban_reason = NULL,
+                        banned_at = NULL
+                    WHERE id = ?
+                `).bind(userId).run();
+
+                return json({
+                    success: true,
+                    message: `${target.username} has been unbanned.`
+                }, 200, { "Cache-Control": "no-store" });
+            }
+
             const submissionResponse = await handleSubmissionRoute(
     request,
     env,
