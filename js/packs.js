@@ -51,10 +51,10 @@ export const PACK_DEFINITIONS = [
     },
     {
         id: 'dfsd',
-        name: 'Top 1 Pack 2 (unused)',
+        name: 'Top 1 Pack 2',
         category: 'Gold',
         bonus: 100,
-        levelPaths: ['NGWave'],
+        levelPaths: ['Challenger','IceCarbonZustgame','Bang'],
     },
     {
         id: 'milred',
