@@ -40926,5 +40926,28 @@
         "to": 2
       }
     ]
+  },
+  {
+    "date": "2026-10-23T16:31:57.000Z",
+    "commit": "667d37aa38757c90f35d63047a0330b32233c792",
+    "added": [],
+    "removed": [],
+    "moved": [
+      {
+        "level": "Challenger",
+        "from": 4,
+        "to": 2
+      },
+      {
+        "level": "NGWave",
+        "from": 2,
+        "to": 3
+      },
+      {
+        "level": "SocietyButNo3",
+        "from": 3,
+        "to": 4
+      }
+    ]
   }
 ]
