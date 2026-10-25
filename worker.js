@@ -746,6 +746,41 @@ export default {
                 });
             }
 
+            // Public avatar and equipped-frame data for leaderboard players.
+            if (
+                path === "/api/leaderboard/avatar-frames" &&
+                request.method === "GET"
+            ) {
+                const result = await env.db.prepare(`
+                    SELECT
+                        leaderboard_profiles.leaderboard_name,
+                        profile_settings.equipped_frame
+                    FROM leaderboard_profiles
+                    LEFT JOIN profile_settings
+                        ON profile_settings.user_id = leaderboard_profiles.user_id
+                `).all();
+
+                const profiles = (result.results || []).map(profile => {
+                    const frameId = profile.equipped_frame || null;
+                    const frame = FRAME_DEFINITIONS.find(
+                        item => item.id === frameId
+                    );
+
+                    return {
+                        leaderboard_name: profile.leaderboard_name,
+                        avatar_url: "/assets/profile/No%20PFP.png",
+                        equipped_frame: frame ? frame.id : null,
+                        frame_url: frame ? frame.image : null
+                    };
+                });
+
+                return json(
+                    { profiles },
+                    200,
+                    { "Cache-Control": "no-cache" }
+                );
+            }
+
             // Public list of known leaderboard identities.
             if (
                 path === "/api/leaderboard/identities" &&
