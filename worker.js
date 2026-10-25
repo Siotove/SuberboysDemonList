@@ -630,6 +630,125 @@ export default {
                 });
             }
 
+            // Avatar frame data for the current account.
+            if (
+                path === "/api/profile/frames" &&
+                request.method === "GET"
+            ) {
+                const user = await currentUser(request, env.db);
+
+                if (!user) {
+                    return json({ error: "Please log in." }, 401, {
+                        "Cache-Control": "no-store"
+                    });
+                }
+
+                const profile = await env.db.prepare(`
+                    SELECT leaderboard_name
+                    FROM leaderboard_profiles
+                    WHERE user_id = ?
+                `).bind(user.id).first();
+
+                const saved = await env.db.prepare(`
+                    SELECT equipped_frame
+                    FROM profile_preferences
+                    WHERE user_id = ?
+                `).bind(user.id).first();
+
+                let frames = PROFILE_FRAMES.map(frame => ({
+                    ...frame,
+                    unlocked: PROFILE_FREE_FRAMES.has(frame.id)
+                }));
+
+                if (profile?.leaderboard_name) {
+                    const playerData = await getProfilePlayerData(
+                        env,
+                        url.origin,
+                        profile.leaderboard_name
+                    );
+                    frames = calculateProfileFrames(playerData);
+                }
+
+                const savedId = saved?.equipped_frame || null;
+                const savedFrame = frames.find(frame =>
+                    frame.id === savedId && frame.unlocked
+                );
+
+                return json({
+                    frames,
+                    equippedFrame: savedFrame ? savedFrame.id : null
+                }, 200, { "Cache-Control": "no-store" });
+            }
+
+            // Equip an unlocked avatar frame.
+            if (
+                path === "/api/profile/frames" &&
+                request.method === "POST"
+            ) {
+                const user = await currentUser(request, env.db);
+
+                if (!user) {
+                    return json({ error: "Please log in." }, 401, {
+                        "Cache-Control": "no-store"
+                    });
+                }
+
+                let body;
+                try {
+                    body = await request.json();
+                } catch {
+                    return json({ error: "Invalid JSON body." }, 400);
+                }
+
+                const frameId = body?.frameId;
+                if (
+                    typeof frameId !== "string" ||
+                    !PROFILE_FRAMES.some(frame => frame.id === frameId)
+                ) {
+                    return json({ error: "Invalid frame." }, 400);
+                }
+
+                const profile = await env.db.prepare(`
+                    SELECT leaderboard_name
+                    FROM leaderboard_profiles
+                    WHERE user_id = ?
+                `).bind(user.id).first();
+
+                let frames = PROFILE_FRAMES.map(frame => ({
+                    ...frame,
+                    unlocked: PROFILE_FREE_FRAMES.has(frame.id)
+                }));
+
+                if (profile?.leaderboard_name) {
+                    const playerData = await getProfilePlayerData(
+                        env,
+                        url.origin,
+                        profile.leaderboard_name
+                    );
+                    frames = calculateProfileFrames(playerData);
+                }
+
+                const frame = frames.find(item => item.id === frameId);
+                if (!frame?.unlocked) {
+                    return json({
+                        error: "You haven't unlocked that frame yet."
+                    }, 403, { "Cache-Control": "no-store" });
+                }
+
+                await env.db.prepare(`
+                    INSERT INTO profile_preferences (user_id, equipped_frame)
+                    VALUES (?, ?)
+                    ON CONFLICT(user_id) DO UPDATE SET
+                        equipped_frame = excluded.equipped_frame,
+                        updated_at = datetime('now')
+                `).bind(user.id, frameId).run();
+
+                return json({
+                    success: true,
+                    equippedFrame: frameId
+                }, 200, { "Cache-Control": "no-store" });
+            }
+
             // Current leaderboard profile.
             if (
                 path === "/api/leaderboard/profile" &&
