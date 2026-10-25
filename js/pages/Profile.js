@@ -3,7 +3,7 @@ export default {
     template: `
         <main class="account-page profile-page">
             <section class="profile-hero">
-               
+            
 <div class="profile-avatar">
   <img
     src="/assets/profile/No%20PFP.png"
