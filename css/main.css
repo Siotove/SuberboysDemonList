@@ -1595,3 +1595,53 @@ body.halloween-theme a:hover {
     z-index: 2;
     pointer-events: none;
 }
+```css
+/* Avatar frame gallery */
+.profile-frames-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.profile-frame-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 12px;
+}
+
+.profile-frame-preview-wrap {
+    flex: 0 0 100px;
+    width: 100px;
+    height: 100px;
+}
+
+.profile-frame-preview {
+    display: block;
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+}
+
+.profile-frame-info {
+    min-width: 0;
+}
+
+.profile-frame-info h3 {
+    margin: 0 0 6px;
+}
+
+.profile-frame-info p {
+    margin: 4px 0;
+}
+
+@media (max-width: 480px) {
+    .profile-frames-grid {
+        grid-template-columns: 1fr;
+    }
+}
+```
