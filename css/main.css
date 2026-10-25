@@ -1339,3 +1339,115 @@ main.admin-page {
         font-size: 21px;
     }
 }
+
+/* ========================================
+   SUBERBOYS HALLOWEEN THEME
+   Active only when body has halloween-theme
+   ======================================== */
+
+body.halloween-theme {
+    color-scheme: dark;
+    background-color: #100d18;
+    color: #f2eafa;
+    accent-color: #ff8c2a;
+
+    --halloween-bg: #100d18;
+    --halloween-surface: #1b1426;
+    --halloween-surface-raised: #261a35;
+    --halloween-orange: #ff8c2a;
+    --halloween-purple: #a66bdf;
+    --halloween-text: #f2eafa;
+    --halloween-muted: #c0b1d0;
+    --halloween-border: #49315e;
+}
+
+body.halloween-theme #app {
+    min-height: 100vh;
+    background-color: var(--halloween-bg);
+    color: var(--halloween-text);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.halloween-theme h1,
+body.halloween-theme h2,
+body.halloween-theme h3,
+body.halloween-theme h4,
+body.halloween-theme h5,
+body.halloween-theme h6 {
+    color: var(--halloween-orange);
+    text-shadow: 0 0 14px rgb(255 140 42 / 18%);
+}
+
+body.halloween-theme p,
+body.halloween-theme label,
+body.halloween-theme li {
+    color: var(--halloween-text);
+}
+
+body.halloween-theme a {
+    color: var(--halloween-orange);
+}
+
+body.halloween-theme a:hover {
+    color: #ffc078;
+}
+
+body.halloween-theme button,
+body.halloween-theme input,
+body.halloween-theme select,
+body.halloween-theme textarea {
+    color: var(--halloween-text);
+    background-color: var(--halloween-surface);
+    border-color: var(--halloween-border);
+}
+
+body.halloween-theme button {
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+body.halloween-theme button:hover {
+    border-color: var(--halloween-orange);
+}
+
+body.halloween-theme article,
+body.halloween-theme .pack-card,
+body.halloween-theme .pack-victors,
+body.halloween-theme .packs-filter,
+body.halloween-theme .packs-loading,
+body.halloween-theme .packs-error {
+    background-color: var(--halloween-surface);
+    color: var(--halloween-text);
+    border-color: var(--halloween-border);
+}
+
+body.halloween-theme .pack-card {
+    border: 1px solid var(--halloween-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgb(0 0 0 / 25%);
+}
+
+body.halloween-theme .pack-bonus {
+    color: var(--halloween-orange);
+}
+
+body.halloween-theme .pack-category {
+    color: var(--halloween-purple);
+}
+
+body.halloween-theme hr {
+    border-color: var(--halloween-border);
+}
+
+body.halloween-theme ::selection {
+    color: #100d18;
+    background-color: var(--halloween-orange);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.halloween-theme *,
+    body.halloween-theme *::before,
+    body.halloween-theme *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
