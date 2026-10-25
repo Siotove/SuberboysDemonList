@@ -3,25 +3,26 @@ export default {
     template: `
         <main class="account-page profile-page">
             <section class="profile-hero">
-            
-<div class="profile-avatar">
-  <img
-    src="/assets/profile/No%20PFP.png"
-    alt="Profile picture"
-    width="100"
-    height="100"
-  >
-</div>
+                <div class="profile-avatar">
+                    <img
+                        class="profile-avatar-image"
+                        src="/assets/profile/No%20PFP.png"
+                        alt="Profile picture"
+                        width="100"
+                        height="100"
+                    >
 
+                    <img
+                        v-if="equippedFrame === 'fire'"
+                        class="profile-avatar-frame"
+                        src="/assets/profile/Fire%20Frame.png"
+                        alt=""
+                        width="100"
+                        height="100"
+                    >
+                </div>
 
                 <p class="profile-eyebrow">SUBERBOYS DEMON LIST</p>
-                <div style="width:100px;height:100px;background:magenta;border:3px solid red;margin-bottom:16px;">
-  <img
-    src="/assets/profile/No%20PFP.png"
-    alt="Profile picture"
-    style="width:100px;height:100px;display:block;object-fit:contain;"
-  >
-</div>
                 <h1>Player Profile</h1>
 
                 <p v-if="loading" class="profile-muted">
@@ -161,6 +162,63 @@ export default {
                     </p>
                 </section>
 
+                <!-- Avatar frames -->
+                <section class="profile-panel">
+                    <p class="profile-eyebrow">CUSTOMIZATION</p>
+                    <h2>Avatar Frames</h2>
+
+                    <p class="profile-muted">
+                        Earn achievements to unlock frames for your profile.
+                    </p>
+
+                    <div class="profile-frame-item">
+                        <img
+                            class="profile-frame-preview"
+                            src="/assets/profile/Fire%20Frame.png"
+                            alt="Fire Frame preview"
+                            width="100"
+                            height="100"
+                        >
+
+                        <div class="profile-frame-info">
+                            <h3>Fire Frame</h3>
+
+                            <p>
+                                Unlock by earning the “I Got This” achievement.
+                            </p>
+
+                            <p
+                                v-if="!hasFireFrame"
+                                class="profile-muted"
+                            >
+                                Locked — earn “I Got This” to unlock this frame.
+                            </p>
+
+                            <button
+                                v-else
+                                type="button"
+                                class="profile-primary-button"
+                                @click="toggleFireFrame"
+                            >
+                                {{
+                                    equippedFrame === 'fire'
+                                        ? 'Unequip Frame'
+                                        : 'Equip Frame'
+                                }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <p
+                        v-if="frameMessage"
+                        class="profile-message"
+                        role="status"
+                    >
+                        {{ frameMessage }}
+                    </p>
+                </section>
+
+                <!-- Player comparison -->
                 <section
                     v-if="leaderboardProfile"
                     class="profile-panel"
@@ -284,6 +342,7 @@ export default {
                     </template>
                 </section>
 
+                <!-- Quick access -->
                 <section class="profile-panel">
                     <p class="profile-eyebrow">QUICK ACCESS</p>
                     <h2>What do you want to do?</h2>
@@ -319,6 +378,7 @@ export default {
                     </div>
                 </section>
 
+                <!-- Account -->
                 <section class="profile-panel profile-account-panel">
                     <div>
                         <h2>Account</h2>
@@ -365,7 +425,12 @@ export default {
             compareOpponent: '',
             compareLoading: false,
             compareMessage: '',
-            comparison: null
+            comparison: null,
+
+            // Temporary frame state; connect this to the API next.
+            hasFireFrame: false,
+            equippedFrame: null,
+            frameMessage: ''
         };
     },
 
@@ -535,6 +600,21 @@ export default {
             } finally {
                 this.joining = false;
             }
+        },
+
+        toggleFireFrame() {
+            if (!this.hasFireFrame) {
+                this.frameMessage =
+                    'Earn the “I Got This” achievement to unlock this frame.';
+                return;
+            }
+
+            this.equippedFrame =
+                this.equippedFrame === 'fire' ? null : 'fire';
+
+            this.frameMessage = this.equippedFrame === 'fire'
+                ? 'Fire Frame equipped.'
+                : 'Fire Frame unequipped.';
         },
 
         async logout() {
