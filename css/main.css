@@ -1196,11 +1196,30 @@ main.admin-page {
     background: var(--card-background, #171923);
 }
 
+
 .profile-page .profile-avatar {
-    width: 56px;
-    height: 56px;
+    display: block;
+    position: relative;
+    width: 100px;
+    height: 100px;
+    min-width: 100px;
+    min-height: 100px;
     margin: 0 0 16px;
-    font-size: 24px;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 50%;
+    font-size: 0;
+    line-height: 0;
+}
+
+.profile-page .profile-avatar img {
+    display: block;
+    width: 100px;
+    height: 100px;
+    min-width: 100px;
+    min-height: 100px;
+    object-fit: contain;
+    border-radius: 50%;
 }
 
 .profile-page .profile-hero h1 {
