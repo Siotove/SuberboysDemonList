@@ -325,6 +325,7 @@ const FRAME_DEFINITIONS = [
     { id: "victory", name: "Victory", image: "/assets/profile/Victory.png", requirement: "Be #1 on the leaderboard." },
     { id: "wjat", name: "Wjat", image: "/assets/profile/Wjat.png", requirement: "Beat Acheron Easy." },
     { id: "gartyen", name: "Gartyen", image: "/assets/profile/gartyen.png", requirement: "Beat Milestone II." }
+    
 ];
 
 const FREE_FRAMES = new Set(["angy", "appi", "hidrog", "polish"]);
