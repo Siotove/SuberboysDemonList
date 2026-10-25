@@ -219,17 +219,25 @@ export default {
                                 <p>{{ frame.requirement }}</p>
 
                                 <button
-                                    type="button"
-                                    class="profile-primary-button"
-                                    :disabled="equippedFrame === frame.id"
-                                    @click="equipFrame(frame)"
-                                >
-                                    {{
-                                        equippedFrame === frame.id
-                                            ? 'Selected'
-                                            : 'Preview Frame'
-                                    }}
-                                </button>
+    type="button"
+    class="profile-primary-button"
+    :disabled="
+        frame.saving ||
+        !frame.unlocked ||
+        equippedFrame === frame.id
+    "
+    @click="equipFrame(frame)"
+>
+    {{
+        frame.saving
+            ? 'Saving...'
+            : !frame.unlocked
+                ? 'Locked'
+                : equippedFrame === frame.id
+                    ? 'Equipped'
+                    : 'Equip Frame'
+    }}
+</button>
                             </div>
                         </article>
                     </div>
