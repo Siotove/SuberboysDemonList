@@ -206,13 +206,14 @@ export default {
     },
 },
 
+
 async mounted() {
-    const [leaderboard, err] = await fetchLeaderboard();
-
-    this.leaderboard = leaderboard;
-    this.err = err;
-
     try {
+        const [leaderboard, err] = await fetchLeaderboard();
+
+        this.leaderboard = leaderboard;
+        this.err = err;
+
         const response = await fetch(
             '/api/leaderboard/avatar-frames',
             {
@@ -226,41 +227,50 @@ async mounted() {
             this.avatarProfiles = result.profiles || [];
         }
     } catch (error) {
-        console.error('Could not load leaderboard avatars:', error);
+        console.error('Could not load leaderboard:', error);
+    } finally {
+        this.loading = false;
     }
-
-    this.loading = false;
 },
 
-    const frames = {
-        angy: '/assets/profile/Angy.png',
-        appi: '/assets/profile/Appi.png',
-        borgir: '/assets/profile/Borgir.png',
-        bronze: '/assets/profile/Bronze.png',
-        cool: '/assets/profile/Cool.png',
-        diamond: '/assets/profile/Diamond.png',
-        fire: '/assets/profile/Fire%20Frame.png',
-        furter: '/assets/profile/Furter.png',
-        gold: '/assets/profile/Gold.png',
-        hidrog: '/assets/profile/Hidrog.png',
-        honeycomb: '/assets/profile/Honeycomb.png',
-        legendary: '/assets/profile/Legendary.png',
-        platinum: '/assets/profile/Platinum.png',
-        polish: '/assets/profile/Polish.png',
-        punpkin: '/assets/profile/Punpkin.png',
-        ssjjasaiah: '/assets/profile/SSJJasaiah.png',
-        silver: '/assets/profile/Silver.png',
-        victory: '/assets/profile/Victory.png',
-        wjat: '/assets/profile/Wjat.png',
-        gartyen: '/assets/profile/gartyen.png',
-    };
-
-    return {
-        pfp: profile?.avatar_url || '/assets/profile/No%20PFP.png',
-        frame: frames[profile?.equipped_frame] || null,
-    };
-},
+methods: {
     localize,
+
+    avatarFor(player) {
+        const profile = this.avatarProfiles.find(
+            item =>
+                item.leaderboard_name?.toLocaleLowerCase('en') ===
+                player.user?.toLocaleLowerCase('en')
+        );
+
+        const frames = {
+            angy: '/assets/profile/Angy.png',
+            appi: '/assets/profile/Appi.png',
+            borgir: '/assets/profile/Borgir.png',
+            bronze: '/assets/profile/Bronze.png',
+            cool: '/assets/profile/Cool.png',
+            diamond: '/assets/profile/Diamond.png',
+            fire: '/assets/profile/Fire%20Frame.png',
+            furter: '/assets/profile/Furter.png',
+            gold: '/assets/profile/Gold.png',
+            hidrog: '/assets/profile/Hidrog.png',
+            honeycomb: '/assets/profile/Honeycomb.png',
+            legendary: '/assets/profile/Legendary.png',
+            platinum: '/assets/profile/Platinum.png',
+            polish: '/assets/profile/Polish.png',
+            punpkin: '/assets/profile/Punpkin.png',
+            ssjjasaiah: '/assets/profile/SSJJasaiah.png',
+            silver: '/assets/profile/Silver.png',
+            victory: '/assets/profile/Victory.png',
+            wjat: '/assets/profile/Wjat.png',
+            gartyen: '/assets/profile/gartyen.png',
+        };
+
+        return {
+            pfp: profile?.avatar_url || '/assets/profile/No%20PFP.png',
+            frame: frames[profile?.equipped_frame] || null,
+        };
+    },
 
     achievementCount(player) {
         return getAchievements(player).filter(
@@ -282,7 +292,6 @@ async mounted() {
                 )
             ).length;
 
-            // An achievement held by fewer players contributes more.
             return score + (1 / Math.max(holders, 1));
         }, 0);
     },
@@ -306,4 +315,3 @@ async mounted() {
         }
     },
 },
-};
