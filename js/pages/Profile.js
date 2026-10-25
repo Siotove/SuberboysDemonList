@@ -627,6 +627,7 @@ export default {
 
             if (this.user) {
                 await this.loadLeaderboardProfile();
+                await this.loadAvatarFrames();
 
                 if (this.leaderboardProfile) {
                     await this.loadComparisonIdentities();
@@ -641,15 +642,41 @@ export default {
     },
 
     methods: {
-        equipFrame(frame) {
-            this.equippedFrame = frame.id;
-            this.frameMessage = `${frame.name} selected for preview.`;
-        },
+        async equipFrame(frame) {
+    if (!frame.unlocked || frame.saving) return;
 
-        unequipFrame() {
-            this.equippedFrame = null;
-            this.frameMessage = 'Frame removed from preview.';
-        },
+    frame.saving = true;
+    this.frameMessage = '';
+
+    try {
+        const response = await fetch('/api/profile/frames', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                frameId: frame.id
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.error || 'Could not equip this frame.'
+            );
+        }
+
+        this.equippedFrame = result.equippedFrame;
+        this.frameMessage = `${frame.name} equipped successfully!`;
+    } catch (error) {
+        this.frameMessage =
+            error.message || 'Could not save your frame. Please try again.';
+    } finally {
+        frame.saving = false;
+    }
+},
 async loadAvatarFrames() {
     try {
         const response = await fetch('/api/profile/frames', {
