@@ -560,7 +560,7 @@ export default {
                     requirement: 'Beat Halloween Panic.'
                 },
                 {
-                    id: 'ssjjas aiah',
+                    id: 'ssjjasaiah',
                     name: 'SSJJasaiah',
                     image: '/assets/profile/SSJJasaiah.png',
                     requirement: 'Beat Society but No 3.'
@@ -650,7 +650,43 @@ export default {
             this.equippedFrame = null;
             this.frameMessage = 'Frame removed from preview.';
         },
+async loadAvatarFrames() {
+    try {
+        const response = await fetch('/api/profile/frames', {
+            credentials: 'same-origin',
+            cache: 'no-store'
+        });
 
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.error || 'Could not load avatar frames.'
+            );
+        }
+
+        this.equippedFrame = result.equippedFrame || null;
+
+        const serverFrames = new Map(
+            (result.frames || []).map(frame => [frame.id, frame])
+        );
+
+        this.availableFrames = this.availableFrames.map(frame => {
+            const serverFrame = serverFrames.get(frame.id);
+
+            return {
+                ...frame,
+                unlocked: serverFrame
+                    ? Boolean(serverFrame.unlocked)
+                    : false,
+                saving: false
+            };
+        });
+    } catch (error) {
+        this.frameMessage =
+            error.message || 'Could not load your saved frame.';
+    }
+},
         async loadComparisonIdentities() {
             try {
                 const response = await fetch(
