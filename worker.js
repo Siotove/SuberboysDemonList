@@ -300,9 +300,6 @@ async function allKnownIdentities(env, origin) {
     );
 }
 
-function validUsername(username) {
-    return /^[a-zA-Z0-9_]{3,24}$/.test(username);
-}
 
 const FRAME_DEFINITIONS = [
     { id: "angy", name: "Angy", image: "/assets/profile/Angy.png", requirement: "Available by default." },
@@ -325,113 +322,85 @@ const FRAME_DEFINITIONS = [
     { id: "victory", name: "Victory", image: "/assets/profile/Victory.png", requirement: "Be #1 on the leaderboard." },
     { id: "wjat", name: "Wjat", image: "/assets/profile/Wjat.png", requirement: "Beat Acheron Easy." },
     { id: "gartyen", name: "Gartyen", image: "/assets/profile/gartyen.png", requirement: "Beat Milestone II." }
-    
 ];
-
 const FREE_FRAMES = new Set(["angy", "appi", "hidrog", "polish"]);
-
 const FRAME_LEVEL_PATHS = {
-    borgir: "IceCarbonZustgame",
-    cool: "NGWave",
-    honeycomb: "Casher",
-    punpkin: "HalloweenPanic",
-    ssjjasaiah: "SocietyButNo3",
-    wjat: "Acheroneasy",
-    gartyen: "MilestoneII"
+    borgir: "IceCarbonZustgame", cool: "NGWave", honeycomb: "Casher",
+    punpkin: "HalloweenPanic", ssjjasaiah: "SocietyButNo3",
+    wjat: "Acheroneasy", gartyen: "MilestoneII"
 };
-
-const ACHIEVEMENT_DEFINITIONS = [
-    ["complete-1", "Bronze", 1],
-    ["complete-5", "Silver", 5],
-    ["complete-10", "Silver", 10],
-    ["complete-25", "Gold", 25],
-    ["complete-75", "Diamond", 75],
-    ["complete-150", "Platinum", 150],
-    ["pack-1", "Silver", 1],
-    ["pack-5", "Gold", 5],
-    ["pack-10", "Diamond", 10],
-    ["gold-pack", "Gold", 0],
-    ["diamond-pack", "Diamond", 0],
-    ["platinum-pack", "Platinum", 0],
-    ["platinum-packs-5", "Legendary", 5],
-    ["verify-1", "Silver", 1],
-    ["verify-10", "Gold", 10],
-    ["verify-25", "Diamond", 25],
-    ["verify-100", "Platinum", 100],
-    ["progress-1", "Bronze", 1],
-    ["progress-10", "Silver", 10],
-    ["progress-50", "Gold", 50]
+const FRAME_PACKS = [
+    { id: "milestone-pack", category: "Bronze", paths: ["MilestoneI", "MilestoneII", "MilestoneIII"] },
+    { id: "aina-pack", category: "Bronze", paths: ["AinaPoni", "AinaPoniII"] },
+    { id: "polychromatical-pack", category: "Silver", paths: ["Polychromatical", "PolychromaticalII"] },
+    { id: "sadaclysm-pack", category: "Silver", paths: ["Sadaclysm", "USadaclysm"] },
+    { id: "top-pack", category: "Gold", paths: ["SocietyButNo3", "Polychromatical", "MilestoneIII", "NGWave"] },
+    { id: "milee-pack", category: "Bronze", paths: ["Khrome", "cu", "AinaPoniII"] },
+    { id: "dfsd", category: "Gold", paths: ["Challenger", "IceCarbonZustgame", "Bang"] },
+    { id: "milred", category: "Gold", paths: ["Challenger", "Shadow", "Ultramarine", "Hypermarine"] },
+    { id: "spooky", category: "Silver", paths: ["Spookweiner", "SSS", "Trytohide", "HalloweenPanic"] }
 ];
 
-function calculateUnlockedFrames({
-    completedPaths,
-    verifiedCount,
-    progressedCount,
-    packsBeaten,
-    isFirst
-}) {
-    const completedCount = completedPaths.size;
-    const packCategories = new Set(packsBeaten.map(pack => pack.category));
-    const platinumPacks = packsBeaten.filter(pack => pack.category === "Platinum").length;
+async function getProfilePlayerData(env, origin, leaderboardName) {
+    const files = await readPublishedLevels(env, origin);
+    const playerKey = leaderboardName.toLocaleLowerCase("en");
+    const completedPaths = new Set();
+    const progressedPaths = new Set();
+    const verifiedPaths = new Set();
+    const allPlayerCompletions = new Map();
 
-    const unlockedAchievements = ACHIEVEMENT_DEFINITIONS.filter(
-        ([id, tier, amount]) => {
-            switch (id) {
-                case "complete-1": return completedCount >= 1;
-                case "complete-5": return completedCount >= 5;
-                case "complete-10": return completedCount >= 10;
-                case "complete-25": return completedCount >= 25;
-                case "complete-75": return completedCount >= 75;
-                case "complete-150": return completedCount >= 150;
-                case "pack-1": return packsBeaten.length >= 1;
-                case "pack-5": return packsBeaten.length >= 5;
-                case "pack-10": return packsBeaten.length >= 10;
-                case "gold-pack": return packCategories.has("Gold");
-                case "diamond-pack": return packCategories.has("Diamond");
-                case "platinum-pack": return packCategories.has("Platinum");
-                case "platinum-packs-5": return platinumPacks >= 5;
-                case "verify-1": return verifiedCount >= 1;
-                case "verify-10": return verifiedCount >= 10;
-                case "verify-25": return verifiedCount >= 25;
-                case "verify-100": return verifiedCount >= 100;
-                case "progress-1": return progressedCount >= 1;
-                case "progress-10": return progressedCount >= 10;
-                case "progress-50": return progressedCount >= 50;
-                default: return false;
-            }
+    for (const file of files) {
+        if (typeof file !== "string" || !/^[a-zA-Z0-9_-]{1,80}$/.test(file)) continue;
+        const level = await readPublishedLevel(env, origin, file);
+        if (!Array.isArray(level.records)) continue;
+        const required = Number(level.percentToQualify ?? 100);
+        const playerRecords = level.records.filter(r => typeof r.user === "string" && r.user.trim().toLocaleLowerCase("en") === playerKey);
+        const qualifying = playerRecords.find(r => Number.isFinite(Number(r.percent)) && Number(r.percent) >= required);
+        if (qualifying) {
+            completedPaths.add(file);
+            if (qualifying.verified === true || qualifying.verified === 1 || qualifying.verified === "true") verifiedPaths.add(file);
         }
-    );
+        if (playerRecords.some(r => Number.isFinite(Number(r.percent)) && Number(r.percent) > 0)) progressedPaths.add(file);
 
-    if (unlockedAchievements.length >= 10) {
-        unlockedAchievements.push(["achievements-10", "Gold", 10]);
+        // Count each player's qualifying completions to determine the actual leaderboard leader.
+        for (const record of level.records) {
+            if (typeof record.user !== "string" || !Number.isFinite(Number(record.percent)) || Number(record.percent) < required) continue;
+            const key = record.user.trim().toLocaleLowerCase("en");
+            if (!key) continue;
+            if (!allPlayerCompletions.has(key)) allPlayerCompletions.set(key, 0);
+            allPlayerCompletions.set(key, allPlayerCompletions.get(key) + 1);
+        }
     }
 
-    const tiers = new Set(unlockedAchievements.map(([, tier]) => tier));
+    const packsBeaten = FRAME_PACKS.filter(pack => pack.paths.every(path => completedPaths.has(path)));
+    const completedCount = completedPaths.size;
+    const achievementTiers = new Set();
+    if (completedCount >= 1 || progressedPaths.size >= 1) achievementTiers.add("Bronze");
+    if (completedCount >= 5 || verifiedPaths.size >= 1 || packsBeaten.length >= 1 || progressedPaths.size >= 10) achievementTiers.add("Silver");
+    if (completedCount >= 25 || verifiedPaths.size >= 10 || packsBeaten.some(p => p.category === "Gold") || progressedPaths.size >= 50) achievementTiers.add("Gold");
+    if (completedCount >= 75 || verifiedPaths.size >= 25 || packsBeaten.length >= 10) achievementTiers.add("Diamond");
+    if (completedCount >= 150 || verifiedPaths.size >= 100) achievementTiers.add("Platinum");
+    if (packsBeaten.filter(p => p.category === "Platinum").length >= 5) achievementTiers.add("Legendary");
+
+    const topScore = Math.max(0, ...allPlayerCompletions.values());
+    const isFirst = completedCount > 0 && completedCount === topScore;
+    return { completedPaths, progressedCount: progressedPaths.size, verifiedCount: verifiedPaths.size, packsBeaten, achievementTiers, isFirst };
+}
+
+function calculateUnlockedFrames(playerData) {
     const unlocked = new Set(FREE_FRAMES);
-
-    for (const tier of ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Legendary"]) {
-        if (tiers.has(tier)) unlocked.add(tier.toLowerCase());
+    for (const tier of playerData.achievementTiers) unlocked.add(tier.toLowerCase());
+    if (playerData.completedPaths.size >= 5) unlocked.add("fire");
+    for (const [frameId, path] of Object.entries(FRAME_LEVEL_PATHS)) {
+        if (playerData.completedPaths.has(path)) unlocked.add(frameId);
     }
+    if (["Spookweiner", "SSS", "Trytohide", "HalloweenPanic"].every(path => playerData.completedPaths.has(path))) unlocked.add("furter");
+    if (playerData.isFirst) unlocked.add("victory");
+    return FRAME_DEFINITIONS.map(frame => ({ ...frame, unlocked: unlocked.has(frame.id) }));
+}
 
-    if (unlockedAchievements.some(([id]) => id === "complete-5")) {
-        unlocked.add("fire");
-    }
-
-    for (const [frameId, levelPath] of Object.entries(FRAME_LEVEL_PATHS)) {
-        if (completedPaths.has(levelPath)) unlocked.add(frameId);
-    }
-
-    const halloweenPaths = ["Spookweiner", "SSS", "Trytohide", "HalloweenPanic"];
-    if (halloweenPaths.every(path => completedPaths.has(path))) {
-        unlocked.add("furter");
-    }
-
-    if (isFirst) unlocked.add("victory");
-
-    return FRAME_DEFINITIONS.map(frame => ({
-        ...frame,
-        unlocked: unlocked.has(frame.id)
-    }));
+function validUsername(username) {
+    return /^[a-zA-Z0-9_]{3,24}$/.test(username);
 }
 
 export default {
@@ -631,123 +600,34 @@ export default {
                 });
             }
 
-            // Avatar frame data for the current account.
-            if (
-                path === "/api/profile/frames" &&
-                request.method === "GET"
-            ) {
+            // Avatar frames: list unlocked frames and the currently equipped frame.
+            if (path === "/api/profile/frames" && request.method === "GET") {
                 const user = await currentUser(request, env.db);
-
-                if (!user) {
-                    return json({ error: "Please log in." }, 401, {
-                        "Cache-Control": "no-store"
-                    });
-                }
-
-                const profile = await env.db.prepare(`
-                    SELECT leaderboard_name
-                    FROM leaderboard_profiles
-                    WHERE user_id = ?
-                `).bind(user.id).first();
-
-                const saved = await env.db.prepare(`
-                    SELECT equipped_frame
-                    FROM profile_preferences
-                    WHERE user_id = ?
-                `).bind(user.id).first();
-
-                let frames = PROFILE_FRAMES.map(frame => ({
-                    ...frame,
-                    unlocked: PROFILE_FREE_FRAMES.has(frame.id)
-                }));
-
-                if (profile?.leaderboard_name) {
-                    const playerData = await getProfilePlayerData(
-                        env,
-                        url.origin,
-                        profile.leaderboard_name
-                    );
-                    frames = calculateProfileFrames(playerData);
-                }
-
+                if (!user) return json({ error: "Please log in." }, 401, { "Cache-Control": "no-store" });
+                const profile = await env.db.prepare(`SELECT leaderboard_name FROM leaderboard_profiles WHERE user_id = ?`).bind(user.id).first();
+                const saved = await env.db.prepare(`SELECT equipped_frame FROM profile_settings WHERE user_id = ?`).bind(user.id).first();
+                const playerData = profile?.leaderboard_name ? await getProfilePlayerData(env, url.origin, profile.leaderboard_name) : null;
+                const frames = playerData ? calculateUnlockedFrames(playerData) : FRAME_DEFINITIONS.map(frame => ({ ...frame, unlocked: FREE_FRAMES.has(frame.id) }));
                 const savedId = saved?.equipped_frame || null;
-                const savedFrame = frames.find(frame =>
-                    frame.id === savedId && frame.unlocked
-                );
-
-                return json({
-                    frames,
-                    equippedFrame: savedFrame ? savedFrame.id : null
-                }, 200, { "Cache-Control": "no-store" });
+                const equipped = frames.find(frame => frame.id === savedId && frame.unlocked);
+                return json({ frames, equippedFrame: equipped ? equipped.id : null }, 200, { "Cache-Control": "no-store" });
             }
 
             // Equip an unlocked avatar frame.
-            if (
-                path === "/api/profile/frames" &&
-                request.method === "POST"
-            ) {
+            if (path === "/api/profile/frames" && request.method === "POST") {
                 const user = await currentUser(request, env.db);
-
-                if (!user) {
-                    return json({ error: "Please log in." }, 401, {
-                        "Cache-Control": "no-store"
-                    });
-                }
-
+                if (!user) return json({ error: "Please log in." }, 401, { "Cache-Control": "no-store" });
                 let body;
-                try {
-                    body = await request.json();
-                } catch {
-                    return json({ error: "Invalid JSON body." }, 400);
-                }
-
-                const frameId = body?.frameId;
-                if (
-                    typeof frameId !== "string" ||
-                    !PROFILE_FRAMES.some(frame => frame.id === frameId)
-                ) {
-                    return json({ error: "Invalid frame." }, 400);
-                }
-
-                const profile = await env.db.prepare(`
-                    SELECT leaderboard_name
-                    FROM leaderboard_profiles
-                    WHERE user_id = ?
-                `).bind(user.id).first();
-
-                let frames = PROFILE_FRAMES.map(frame => ({
-                    ...frame,
-                    unlocked: PROFILE_FREE_FRAMES.has(frame.id)
-                }));
-
-                if (profile?.leaderboard_name) {
-                    const playerData = await getProfilePlayerData(
-                        env,
-                        url.origin,
-                        profile.leaderboard_name
-                    );
-                    frames = calculateProfileFrames(playerData);
-                }
-
+                try { body = await request.json(); } catch { return json({ error: "Invalid JSON body." }, 400); }
+                const frameId = body && typeof body.frameId === "string" ? body.frameId : "";
+                if (!FRAME_DEFINITIONS.some(frame => frame.id === frameId)) return json({ error: "Invalid frame." }, 400);
+                const profile = await env.db.prepare(`SELECT leaderboard_name FROM leaderboard_profiles WHERE user_id = ?`).bind(user.id).first();
+                const playerData = profile?.leaderboard_name ? await getProfilePlayerData(env, url.origin, profile.leaderboard_name) : null;
+                const frames = playerData ? calculateUnlockedFrames(playerData) : FRAME_DEFINITIONS.map(frame => ({ ...frame, unlocked: FREE_FRAMES.has(frame.id) }));
                 const frame = frames.find(item => item.id === frameId);
-                if (!frame?.unlocked) {
-                    return json({
-                        error: "You haven't unlocked that frame yet."
-                    }, 403, { "Cache-Control": "no-store" });
-                }
-
-                await env.db.prepare(`
-                    INSERT INTO profile_preferences (user_id, equipped_frame)
-                    VALUES (?, ?)
-                    ON CONFLICT(user_id) DO UPDATE SET
-                        equipped_frame = excluded.equipped_frame,
-                        updated_at = datetime('now')
-                `).bind(user.id, frameId).run();
-
-                return json({
-                    success: true,
-                    equippedFrame: frameId
-                }, 200, { "Cache-Control": "no-store" });
+                if (!frame?.unlocked) return json({ error: "You haven't unlocked that frame yet." }, 403, { "Cache-Control": "no-store" });
+                await env.db.prepare(`INSERT INTO profile_settings (user_id, equipped_frame) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET equipped_frame = excluded.equipped_frame`).bind(user.id, frameId).run();
+                return json({ success: true, equippedFrame: frameId }, 200, { "Cache-Control": "no-store" });
             }
 
             // Current leaderboard profile.
