@@ -1,5 +1,7 @@
+
 import { fetchList, fetchLeaderboard } from '../content.js';
 import { PACK_DEFINITIONS, PACK_CATEGORIES } from '../packs.js';
+import { isHalloweenEventActive } from '../event-schedule.js';
 import Spinner from '../components/Spinner.js';
 
 export default {
@@ -42,38 +44,41 @@ export default {
                         class="pack-card"
                     >
                         <h2>{{ pack.name }}</h2>
-                        
-<p
-    class="pack-category"
-    :class="'category-' + (pack.category || 'uncategorized').toLowerCase()"
->
-    {{ pack.category || 'Uncategorized' }}
-</p>
+
+                        <p
+                            class="pack-category"
+                            :class="'category-' + (pack.category || 'uncategorized').toLowerCase()"
+                        >
+                            {{ pack.category || 'Uncategorized' }}
+                        </p>
+
                         <p class="pack-bonus">
                             Bonus: {{ pack.bonus }} points
                         </p>
-<button
-    class="pack-beaten-count"
-    @click="toggleVictors(pack.id)"
->
-    {{ pack.beatenCount }} victors
-</button>
 
-<div
-    v-if="expandedPack === pack.id"
-    class="pack-victors"
->
-    <p
-        v-for="name in pack.victorNames"
-        :key="name"
-    >
-        {{ name }}
-    </p>
+                        <button
+                            class="pack-beaten-count"
+                            @click="toggleVictors(pack.id)"
+                        >
+                            {{ pack.beatenCount }} victors
+                        </button>
 
-    <p v-if="pack.victorNames.length === 0">
-        No victors yet!
-    </p>
-</div>
+                        <div
+                            v-if="expandedPack === pack.id"
+                            class="pack-victors"
+                        >
+                            <p
+                                v-for="name in pack.victorNames"
+                                :key="name"
+                            >
+                                {{ name }}
+                            </p>
+
+                            <p v-if="pack.victorNames.length === 0">
+                                No victors yet!
+                            </p>
+                        </div>
+
                         <p v-if="pack.levels.length === 0">
                             No levels have been added to this pack yet.
                         </p>
@@ -97,45 +102,54 @@ export default {
         </main>
     `,
 
-   data() {
-    return {
-        loading: true,
-        error: false,
-        packs: [],
-        selectedCategory: 'All',
-        expandedPack: null,
-    };
-},
+    data() {
+        return {
+            loading: true,
+            error: false,
+            packs: [],
+            selectedCategory: 'All',
+            expandedPack: null,
+            halloweenEventActive: isHalloweenEventActive(),
+        };
+    },
 
-    
     computed: {
         categories() {
             return PACK_CATEGORIES;
         },
 
         filteredPacks() {
-            if (this.selectedCategory === 'All') {
-                return this.packs;
+            let packs = this.packs.filter(pack =>
+                pack.id !== 'spooky' || this.halloweenEventActive
+            );
+
+            if (this.selectedCategory !== 'All') {
+                packs = packs.filter(
+                    pack =>
+                        (pack.category || 'Uncategorized') ===
+                        this.selectedCategory
+                );
             }
 
-            return this.packs.filter(
-                pack =>
-                    (pack.category || 'Uncategorized') === this.selectedCategory
-            );
+            return packs;
         },
     },
-methods: {
-    toggleVictors(packId) {
-        this.expandedPack =
-            this.expandedPack === packId ? null : packId;
+
+    methods: {
+        toggleVictors(packId) {
+            this.expandedPack =
+                this.expandedPack === packId ? null : packId;
+        },
     },
-},
+
     async mounted() {
         try {
             const result = await fetchList();
 
             if (!result) {
-                throw new Error('The level list could not be loaded nyeheheh.');
+                throw new Error(
+                    'The level list could not be loaded.'
+                );
             }
 
             const levels = result
@@ -145,27 +159,30 @@ methods: {
                     rank: index + 1,
                 }));
 
+            const [leaderboard] = await fetchLeaderboard();
 
-const [leaderboard] = await fetchLeaderboard();
+            this.packs = PACK_DEFINITIONS.map(pack => {
+                const victorNames = leaderboard
+                    .filter(player =>
+                        player.packsBeaten.some(
+                            beaten => beaten.id === pack.id
+                        )
+                    )
+                    .map(player => player.user);
 
-this.packs = PACK_DEFINITIONS.map(pack => {
-    const victorNames = leaderboard
-        .filter(player =>
-            player.packsBeaten.some(beaten => beaten.id === pack.id)
-        )
-        .map(player => player.user);
-
-    return {
-        ...pack,
-        levels: pack.levelPaths
-            .map(path => levels.find(level => level.path === path))
-            .filter(Boolean),
-        victorNames,
-        beatenCount: victorNames.length,
-    };
-});
+                return {
+                    ...pack,
+                    levels: pack.levelPaths
+                        .map(path =>
+                            levels.find(level => level.path === path)
+                        )
+                        .filter(Boolean),
+                    victorNames,
+                    beatenCount: victorNames.length,
+                };
+            });
         } catch (error) {
-            console.error('Failed to load pakks:', error);
+            console.error('Failed to load packs:', error);
             this.error = true;
         } finally {
             this.loading = false;
