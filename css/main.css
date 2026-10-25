@@ -1539,3 +1539,32 @@ body.halloween-theme a:hover {
     height: 100%;
     object-fit: cover;
 }
+
+/* Avatar frame customization */
+.profile-frame-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.profile-frame-preview {
+    display: block;
+    width: 100px;
+    height: 100px;
+    flex: 0 0 100px;
+    object-fit: contain;
+}
+
+.profile-frame-info {
+    flex: 1;
+    min-width: 180px;
+}
+
+.profile-frame-info h3 {
+    margin-top: 0;
+}
+
+.profile-frame-info p {
+    overflow-wrap: anywhere;
+}
