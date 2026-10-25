@@ -11,7 +11,7 @@ export default {
                         width="100"
                         height="100"
                     >
-
+ 
                     <img
                         v-if="equippedFrame === 'fire'"
                         class="profile-avatar-frame"
