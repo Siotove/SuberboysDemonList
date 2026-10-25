@@ -10,6 +10,7 @@ export default {
     data: () => ({
     leaderboard: [],
     loading: true,
+    avatarProfiles: [],
     selected: 0,
     sortBy: 'points',
     err: [],
@@ -53,10 +54,31 @@ export default {
             <p class="type-label-lg">{{ rankingValue(ientry) }}</p>
         </td>
         <td class="user" :class="{ active: selected === i }">
-            <button @click="selected = i">
-                <span class="type-label-lg">{{ ientry.user }}</span>
-            </button>
-        </td>
+    <button
+        class="leaderboard-player-button"
+        @click="selected = i"
+    >
+        <span class="leaderboard-avatar">
+            <img
+                class="leaderboard-avatar-pfp"
+                :src="avatarFor(ientry).pfp"
+                alt=""
+                width="48"
+                height="48"
+            >
+            <img
+                v-if="avatarFor(ientry).frame"
+                class="leaderboard-avatar-frame"
+                :src="avatarFor(ientry).frame"
+                alt=""
+                width="48"
+                height="48"
+            >
+        </span>
+
+        <span class="type-label-lg">{{ ientry.user }}</span>
+    </button>
+</td>
     </tr>
 </table>
                 </div>
@@ -185,13 +207,59 @@ export default {
 },
 
 async mounted() {
-        const [leaderboard, err] = await fetchLeaderboard();
-        this.leaderboard = leaderboard;
-        this.err = err;
-        // Hide loading spinner
-        this.loading = false;
-    },
-    methods: {
+    const [leaderboard, err] = await fetchLeaderboard();
+
+    this.leaderboard = leaderboard;
+    this.err = err;
+
+    try {
+        const response = await fetch(
+            '/api/leaderboard/avatar-frames',
+            {
+                credentials: 'same-origin',
+                cache: 'no-store',
+            }
+        );
+
+        if (response.ok) {
+            const result = await response.json();
+            this.avatarProfiles = result.profiles || [];
+        }
+    } catch (error) {
+        console.error('Could not load leaderboard avatars:', error);
+    }
+
+    this.loading = false;
+},
+
+    const frames = {
+        angy: '/assets/profile/Angy.png',
+        appi: '/assets/profile/Appi.png',
+        borgir: '/assets/profile/Borgir.png',
+        bronze: '/assets/profile/Bronze.png',
+        cool: '/assets/profile/Cool.png',
+        diamond: '/assets/profile/Diamond.png',
+        fire: '/assets/profile/Fire%20Frame.png',
+        furter: '/assets/profile/Furter.png',
+        gold: '/assets/profile/Gold.png',
+        hidrog: '/assets/profile/Hidrog.png',
+        honeycomb: '/assets/profile/Honeycomb.png',
+        legendary: '/assets/profile/Legendary.png',
+        platinum: '/assets/profile/Platinum.png',
+        polish: '/assets/profile/Polish.png',
+        punpkin: '/assets/profile/Punpkin.png',
+        ssjjasaiah: '/assets/profile/SSJJasaiah.png',
+        silver: '/assets/profile/Silver.png',
+        victory: '/assets/profile/Victory.png',
+        wjat: '/assets/profile/Wjat.png',
+        gartyen: '/assets/profile/gartyen.png',
+    };
+
+    return {
+        pfp: profile?.avatar_url || '/assets/profile/No%20PFP.png',
+        frame: frames[profile?.equipped_frame] || null,
+    };
+},
     localize,
 
     achievementCount(player) {
