@@ -91,3 +91,42 @@
 .page-leaderboard .player .table a:hover {
     text-decoration: underline;
 }
+.leaderboard-player-button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 6px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.leaderboard-avatar {
+    position: relative;
+    display: inline-block;
+    flex: 0 0 48px;
+    width: 48px;
+    height: 48px;
+}
+
+.leaderboard-avatar-pfp,
+.leaderboard-avatar-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.leaderboard-avatar-pfp {
+    z-index: 1;
+    border-radius: 50%;
+}
+
+.leaderboard-avatar-frame {
+    z-index: 2;
+    pointer-events: none;
+}
