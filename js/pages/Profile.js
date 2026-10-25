@@ -4,25 +4,25 @@ export default {
         <main class="account-page profile-page">
             <section class="profile-hero">
                 <div class="profile-avatar">
-                    <img
-                        class="profile-avatar-image"
-                        src="/assets/profile/No%20PFP.png"
-                        alt="Profile picture"
-                        width="100"
-                        height="100"
-                    >
- 
-                    <img
-                        v-if="equippedFrame === 'fire'"
-                        class="profile-avatar-frame"
-                        src="/assets/profile/Fire%20Frame.png"
-                        alt=""
-                        width="100"
-                        height="100"
-                    >
-                </div>
+    <img
+        class="profile-avatar-image"
+        src="/assets/profile/No%20PFP.png"
+        alt="Profile picture"
+        width="100"
+        height="100"
+    >
 
-                <p class="profile-eyebrow">SUBERBOYS DEMON LIST</p>
+    <img
+        v-if="equippedFrame === 'fire'"
+        class="profile-avatar-frame"
+        src="/assets/profile/Fire%20Frame.png"
+        alt=""
+        width="100"
+        height="100"
+    >
+</div>
+
+<p class="profile-eyebrow">SUBERBOYS DEMON LIST</p>
                 <h1>Player Profile</h1>
 
                 <p v-if="loading" class="profile-muted">
