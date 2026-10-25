@@ -1451,3 +1451,36 @@ body.halloween-theme ::selection {
         animation-duration: 0.01ms !important;
     }
 }
+/* Halloween theme overrides normal and dark mode */
+body.halloween-theme {
+    --color-background: #100d18;
+    --color-on-background: #f2eafa;
+    --color-background-hover: #30213f;
+    --color-on-background-hover: #ffffff;
+    --color-primary: #7b2cbf;
+    --color-on-primary: #ffffff;
+    --color-primary-disabled: #49315e;
+    --color-error: #ff6b6b;
+    --color-on-error: #ffffff;
+    --border-subtle: #49315e;
+    --surface-muted: #1b1426;
+    --surface-raised: #261a35;
+
+    color-scheme: dark;
+    background: var(--color-background);
+    color: var(--color-on-background);
+}
+
+/* Keep the site header spooky too */
+body.halloween-theme > header {
+    background: #29133f;
+    color: #ffffff;
+}
+
+body.halloween-theme a {
+    color: #ff9d3d;
+}
+
+body.halloween-theme a:hover {
+    color: #ffc078;
+}
