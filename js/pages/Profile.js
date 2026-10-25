@@ -3,14 +3,21 @@ export default {
     template: `
         <main class="account-page profile-page">
             <section class="profile-hero">
-                <div class="profile-avatar">
-                    <img
-                        src="/assets/profile/No%20PFP.png"
-                        alt="Profile picture"
-                        width="100"
-                        height="100"
-                    >
-                </div>
+               
+<div
+    class="profile-avatar"
+    style="width:100px;height:100px;background:#ff00ff;border:3px solid red;"
+>
+    <img
+        src="/assets/profile/default-pfp.png"
+        alt="Profile picture"
+        width="100"
+        height="100"
+        style="display:block;width:100%;height:100%;object-fit:contain;"
+        @error="$event.target.style.display='none'"
+    >
+</div>
+
 
                 <p class="profile-eyebrow">SUBERBOYS DEMON LIST</p>
                 <h1>Player Profile</h1>
