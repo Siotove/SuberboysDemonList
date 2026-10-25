@@ -20,6 +20,13 @@ export default {
 
 
                 <p class="profile-eyebrow">SUBERBOYS DEMON LIST</p>
+                <div style="width:100px;height:100px;background:magenta;border:3px solid red;margin-bottom:16px;">
+  <img
+    src="/assets/profile/No%20PFP.png"
+    alt="Profile picture"
+    style="width:100px;height:100px;display:block;object-fit:contain;"
+  >
+</div>
                 <h1>Player Profile</h1>
 
                 <p v-if="loading" class="profile-muted">
