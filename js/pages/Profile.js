@@ -1,28 +1,28 @@
-
 export default {
     template: `
         <main class="account-page profile-page">
+            <!-- Profile header -->
             <section class="profile-hero">
                 <div class="profile-avatar">
-    <img
-        class="profile-avatar-image"
-        src="/assets/profile/No%20PFP.png"
-        alt="Profile picture"
-        width="100"
-        height="100"
-    >
+                    <img
+                        class="profile-avatar-image"
+                        src="/assets/profile/No%20PFP.png"
+                        alt="Profile picture"
+                        width="100"
+                        height="100"
+                    >
 
-    <img
-        v-if="equippedFrame === 'fire'"
-        class="profile-avatar-frame"
-        src="/assets/profile/Fire%20Frame.png"
-        alt=""
-        width="100"
-        height="100"
-    >
-</div>
+                    <img
+                        v-if="equippedFrameImage"
+                        class="profile-avatar-frame"
+                        :src="equippedFrameImage"
+                        :alt="equippedFrameName + ' equipped'"
+                        width="100"
+                        height="100"
+                    >
+                </div>
 
-<p class="profile-eyebrow">SUBERBOYS DEMON LIST</p>
+                <p class="profile-eyebrow">SUBERBOYS DEMON LIST</p>
                 <h1>Player Profile</h1>
 
                 <p v-if="loading" class="profile-muted">
@@ -31,6 +31,7 @@ export default {
 
                 <template v-else-if="user">
                     <h2 class="profile-username">{{ user.username }}</h2>
+
                     <p class="profile-muted">
                         Member of the Demon List community
                     </p>
@@ -76,6 +77,7 @@ export default {
             </section>
 
             <template v-if="!loading && user">
+                <!-- Leaderboard identity -->
                 <section class="profile-panel">
                     <div class="profile-panel-heading">
                         <div>
@@ -163,43 +165,83 @@ export default {
                 </section>
 
                 <!-- Avatar frames -->
-                ```html
-<section class="profile-panel profile-customization-panel">
-    <p class="profile-eyebrow">CUSTOMIZATION</p>
-    <h2>Avatar Frames</h2>
-    <p class="profile-muted">
-        Browse all available frames. Unlock requirements are shown below.
-    </p>
+                <section class="profile-panel profile-customization-panel">
+                    <p class="profile-eyebrow">CUSTOMIZATION</p>
+                    <h2>Avatar Frames</h2>
 
-    <div class="profile-frames-grid">
-        <div
-            v-for="frame in availableFrames"
-            :key="frame.id"
-            class="profile-frame-item"
-        >
-            <div class="profile-frame-preview-wrap">
-                <img
-                    class="profile-frame-preview"
-                    :src="frame.image"
-                    :alt="frame.name + ' preview'"
-                    width="100"
-                    height="100"
-                    loading="lazy"
-                >
-            </div>
+                    <p class="profile-muted">
+                        Browse the available frames and preview them on your
+                        profile picture. Requirements are shown for each frame.
+                    </p>
 
-            <div class="profile-frame-info">
-                <h3>{{ frame.name }}</h3>
-                <p>{{ frame.requirement }}</p>
+                    <div class="profile-frame-current">
+                        <p class="profile-muted">
+                            Currently selected:
+                            <strong>
+                                {{ equippedFrameName || 'No frame' }}
+                            </strong>
+                        </p>
 
-                <p class="profile-muted">
-                    Unlock status will be enabled in the next step.
-                </p>
-            </div>
-        </div>
-    </div>
-</section>
-```
+                        <button
+                            v-if="equippedFrame"
+                            type="button"
+                            class="profile-secondary-button"
+                            @click="unequipFrame"
+                        >
+                            Remove Frame
+                        </button>
+                    </div>
+
+                    <div class="profile-frames-grid">
+                        <article
+                            v-for="frame in availableFrames"
+                            :key="frame.id"
+                            class="profile-frame-item"
+                            :class="{
+                                'profile-frame-selected':
+                                    equippedFrame === frame.id
+                            }"
+                        >
+                            <div class="profile-frame-preview-wrap">
+                                <img
+                                    class="profile-frame-preview"
+                                    :src="frame.image"
+                                    :alt="frame.name + ' preview'"
+                                    width="100"
+                                    height="100"
+                                    loading="lazy"
+                                >
+                            </div>
+
+                            <div class="profile-frame-info">
+                                <h3>{{ frame.name }}</h3>
+
+                                <p>{{ frame.requirement }}</p>
+
+                                <button
+                                    type="button"
+                                    class="profile-primary-button"
+                                    :disabled="equippedFrame === frame.id"
+                                    @click="equipFrame(frame)"
+                                >
+                                    {{
+                                        equippedFrame === frame.id
+                                            ? 'Selected'
+                                            : 'Preview Frame'
+                                    }}
+                                </button>
+                            </div>
+                        </article>
+                    </div>
+
+                    <p
+                        v-if="frameMessage"
+                        role="status"
+                        class="profile-message"
+                    >
+                        {{ frameMessage }}
+                    </p>
+                </section>
 
                 <!-- Player comparison -->
                 <section
@@ -214,7 +256,9 @@ export default {
                     </p>
 
                     <form @submit.prevent="comparePlayer">
-                        <label for="compare-player">Compare against</label>
+                        <label for="compare-player">
+                            Compare against
+                        </label>
 
                         <select
                             id="compare-player"
@@ -288,6 +332,7 @@ export default {
                         <h3>
                             Shared completions ({{ comparison.shared.length }})
                         </h3>
+
                         <ul>
                             <li
                                 v-for="level in comparison.shared"
@@ -301,6 +346,7 @@ export default {
                             Your unique completions
                             ({{ comparison.ownUnique.length }})
                         </h3>
+
                         <ul>
                             <li
                                 v-for="level in comparison.ownUnique"
@@ -314,6 +360,7 @@ export default {
                             {{ comparison.opponentName }}'s unique completions
                             ({{ comparison.opponentUnique.length }})
                         </h3>
+
                         <ul>
                             <li
                                 v-for="level in comparison.opponentUnique"
@@ -410,135 +457,150 @@ export default {
             compareMessage: '',
             comparison: null,
 
-            // Temporary frame state; connect this to the API next.
-            hasFireFrame: false,
             equippedFrame: null,
-            frameMessage: ''
-            ```js
-availableFrames: [
-    {
-        id: 'angy',
-        name: 'Angy',
-        image: '/assets/profile/Angy.png',
-        requirement: 'Available by default.'
-    },
-    {
-        id: 'appi',
-        name: 'Appi',
-        image: '/assets/profile/Appi.png',
-        requirement: 'Available by default.'
-    },
-    {
-        id: 'borgir',
-        name: 'Borgir',
-        image: '/assets/profile/Borgir.png',
-        requirement: 'Beat Ice Carbon Zustgame.'
-    },
-    {
-        id: 'bronze',
-        name: 'Bronze',
-        image: '/assets/profile/Bronze.png',
-        requirement: 'Earn any Bronze achievement.'
-    },
-    {
-        id: 'cool',
-        name: 'Cool',
-        image: '/assets/profile/Cool.png',
-        requirement: 'Beat NG Wave Reborn 3.'
-    },
-    {
-        id: 'diamond',
-        name: 'Diamond',
-        image: '/assets/profile/Diamond.png',
-        requirement: 'Earn any Diamond achievement.'
-    },
-    {
-        id: 'fire',
-        name: 'Fire Frame',
-        image: '/assets/profile/Fire%20Frame.png',
-        requirement: 'Earn the “I Got This” achievement.'
-    },
-    {
-        id: 'furter',
-        name: 'Furter',
-        image: '/assets/profile/Furter.png',
-        requirement: 'Beat the Halloween pack.'
-    },
-    {
-        id: 'gold',
-        name: 'Gold',
-        image: '/assets/profile/Gold.png',
-        requirement: 'Earn any Gold achievement.'
-    },
-    {
-        id: 'hidrog',
-        name: 'Hidrog',
-        image: '/assets/profile/Hidrog.png',
-        requirement: 'Available by default.'
-    },
-    {
-        id: 'honeycomb',
-        name: 'Honeycomb',
-        image: '/assets/profile/Honeycomb.png',
-        requirement: 'Beat Casher.'
-    },
-    {
-        id: 'legendary',
-        name: 'Legendary',
-        image: '/assets/profile/Legendary.png',
-        requirement: 'Earn any Legendary achievement.'
-    },
-    {
-        id: 'platinum',
-        name: 'Platinum',
-        image: '/assets/profile/Platinum.png',
-        requirement: 'Earn any Platinum achievement.'
-    },
-    {
-        id: 'polish',
-        name: 'Polish',
-        image: '/assets/profile/Polish.png',
-        requirement: 'Available by default.'
-    },
-    {
-        id: 'punpkin',
-        name: 'Punpkin',
-        image: '/assets/profile/Punpkin.png',
-        requirement: 'Beat Halloween Panic.'
-    },
-    {
-        id: 'ssjjas aiah',
-        name: 'SSJJasaiah',
-        image: '/assets/profile/SSJJasaiah.png',
-        requirement: 'Beat Society but No 3.'
-    },
-    {
-        id: 'silver',
-        name: 'Silver',
-        image: '/assets/profile/Silver.png',
-        requirement: 'Earn any Silver achievement.'
-    },
-    {
-        id: 'victory',
-        name: 'Victory',
-        image: '/assets/profile/Victory.png',
-        requirement: 'Currently be #1 on the leaderboard.'
-    },
-    {
-        id: 'wjat',
-        name: 'Wjat',
-        image: '/assets/profile/Wjat.png',
-        requirement: 'Beat Acheron Easy.'
-    },
-    {
-        id: 'gartyen',
-        name: 'Gartyen',
-        image: '/assets/profile/gartyen.png',
-        requirement: 'Beat Milestone II.'
-    }
-],
-```
+            frameMessage: '',
+
+            availableFrames: [
+                {
+                    id: 'angy',
+                    name: 'Angy',
+                    image: '/assets/profile/Angy.png',
+                    requirement: 'Available by default.'
+                },
+                {
+                    id: 'appi',
+                    name: 'Appi',
+                    image: '/assets/profile/Appi.png',
+                    requirement: 'Available by default.'
+                },
+                {
+                    id: 'borgir',
+                    name: 'Borgir',
+                    image: '/assets/profile/Borgir.png',
+                    requirement: 'Beat Ice Carbon Zustgame.'
+                },
+                {
+                    id: 'bronze',
+                    name: 'Bronze',
+                    image: '/assets/profile/Bronze.png',
+                    requirement: 'Earn any Bronze achievement.'
+                },
+                {
+                    id: 'cool',
+                    name: 'Cool',
+                    image: '/assets/profile/Cool.png',
+                    requirement: 'Beat NG Wave Reborn 3.'
+                },
+                {
+                    id: 'diamond',
+                    name: 'Diamond',
+                    image: '/assets/profile/Diamond.png',
+                    requirement: 'Earn any Diamond achievement.'
+                },
+                {
+                    id: 'fire',
+                    name: 'Fire Frame',
+                    image: '/assets/profile/Fire%20Frame.png',
+                    requirement: 'Earn the "I Got This" achievement.'
+                },
+                {
+                    id: 'furter',
+                    name: 'Furter',
+                    image: '/assets/profile/Furter.png',
+                    requirement: 'Beat the Halloween pack.'
+                },
+                {
+                    id: 'gold',
+                    name: 'Gold',
+                    image: '/assets/profile/Gold.png',
+                    requirement: 'Earn any Gold achievement.'
+                },
+                {
+                    id: 'hidrog',
+                    name: 'Hidrog',
+                    image: '/assets/profile/Hidrog.png',
+                    requirement: 'Available by default.'
+                },
+                {
+                    id: 'honeycomb',
+                    name: 'Honeycomb',
+                    image: '/assets/profile/Honeycomb.png',
+                    requirement: 'Beat Casher.'
+                },
+                {
+                    id: 'legendary',
+                    name: 'Legendary',
+                    image: '/assets/profile/Legendary.png',
+                    requirement: 'Earn any Legendary achievement.'
+                },
+                {
+                    id: 'platinum',
+                    name: 'Platinum',
+                    image: '/assets/profile/Platinum.png',
+                    requirement: 'Earn any Platinum achievement.'
+                },
+                {
+                    id: 'polish',
+                    name: 'Polish',
+                    image: '/assets/profile/Polish.png',
+                    requirement: 'Available by default.'
+                },
+                {
+                    id: 'punpkin',
+                    name: 'Punpkin',
+                    image: '/assets/profile/Punpkin.png',
+                    requirement: 'Beat Halloween Panic.'
+                },
+                {
+                    id: 'ssjjas aiah',
+                    name: 'SSJJasaiah',
+                    image: '/assets/profile/SSJJasaiah.png',
+                    requirement: 'Beat Society but No 3.'
+                },
+                {
+                    id: 'silver',
+                    name: 'Silver',
+                    image: '/assets/profile/Silver.png',
+                    requirement: 'Earn any Silver achievement.'
+                },
+                {
+                    id: 'victory',
+                    name: 'Victory',
+                    image: '/assets/profile/Victory.png',
+                    requirement: 'Currently be #1 on the leaderboard.'
+                },
+                {
+                    id: 'wjat',
+                    name: 'Wjat',
+                    image: '/assets/profile/Wjat.png',
+                    requirement: 'Beat Acheron Easy.'
+                },
+                {
+                    id: 'gartyen',
+                    name: 'Gartyen',
+                    image: '/assets/profile/gartyen.png',
+                    requirement: 'Beat Milestone II.'
+                }
+            ]
         };
+    },
+
+    computed: {
+        equippedFrameImage() {
+            const frame = this.availableFrames.find(
+                item => item.id === this.equippedFrame
+            );
+
+            return frame ? frame.image : null;
+        },
+
+        equippedFrameName() {
+            const frame = this.availableFrames.find(
+                item => item.id === this.equippedFrame
+            );
+
+            return frame ? frame.name : '';
+        }
     },
 
     async mounted() {
@@ -571,6 +633,16 @@ availableFrames: [
     },
 
     methods: {
+        equipFrame(frame) {
+            this.equippedFrame = frame.id;
+            this.frameMessage = `${frame.name} selected for preview.`;
+        },
+
+        unequipFrame() {
+            this.equippedFrame = null;
+            this.frameMessage = 'Frame removed from preview.';
+        },
+
         async loadComparisonIdentities() {
             try {
                 const response = await fetch(
@@ -707,21 +779,6 @@ availableFrames: [
             } finally {
                 this.joining = false;
             }
-        },
-
-        toggleFireFrame() {
-            if (!this.hasFireFrame) {
-                this.frameMessage =
-                    'Earn the “I Got This” achievement to unlock this frame.';
-                return;
-            }
-
-            this.equippedFrame =
-                this.equippedFrame === 'fire' ? null : 'fire';
-
-            this.frameMessage = this.equippedFrame === 'fire'
-                ? 'Fire Frame equipped.'
-                : 'Fire Frame unequipped.';
         },
 
         async logout() {
