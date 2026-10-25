@@ -163,60 +163,43 @@ export default {
                 </section>
 
                 <!-- Avatar frames -->
-                <section class="profile-panel">
-                    <p class="profile-eyebrow">CUSTOMIZATION</p>
-                    <h2>Avatar Frames</h2>
+                ```html
+<section class="profile-panel profile-customization-panel">
+    <p class="profile-eyebrow">CUSTOMIZATION</p>
+    <h2>Avatar Frames</h2>
+    <p class="profile-muted">
+        Browse all available frames. Unlock requirements are shown below.
+    </p>
 
-                    <p class="profile-muted">
-                        Earn achievements to unlock frames for your profile.
-                    </p>
+    <div class="profile-frames-grid">
+        <div
+            v-for="frame in availableFrames"
+            :key="frame.id"
+            class="profile-frame-item"
+        >
+            <div class="profile-frame-preview-wrap">
+                <img
+                    class="profile-frame-preview"
+                    :src="frame.image"
+                    :alt="frame.name + ' preview'"
+                    width="100"
+                    height="100"
+                    loading="lazy"
+                >
+            </div>
 
-                    <div class="profile-frame-item">
-                        <img
-                            class="profile-frame-preview"
-                            src="/assets/profile/Fire%20Frame.png"
-                            alt="Fire Frame preview"
-                            width="100"
-                            height="100"
-                        >
+            <div class="profile-frame-info">
+                <h3>{{ frame.name }}</h3>
+                <p>{{ frame.requirement }}</p>
 
-                        <div class="profile-frame-info">
-                            <h3>Fire Frame</h3>
-
-                            <p>
-                                Unlock by earning the “I Got This” achievement.
-                            </p>
-
-                            <p
-                                v-if="!hasFireFrame"
-                                class="profile-muted"
-                            >
-                                Locked — earn “I Got This” to unlock this frame.
-                            </p>
-
-                            <button
-                                v-else
-                                type="button"
-                                class="profile-primary-button"
-                                @click="toggleFireFrame"
-                            >
-                                {{
-                                    equippedFrame === 'fire'
-                                        ? 'Unequip Frame'
-                                        : 'Equip Frame'
-                                }}
-                            </button>
-                        </div>
-                    </div>
-
-                    <p
-                        v-if="frameMessage"
-                        class="profile-message"
-                        role="status"
-                    >
-                        {{ frameMessage }}
-                    </p>
-                </section>
+                <p class="profile-muted">
+                    Unlock status will be enabled in the next step.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+```
 
                 <!-- Player comparison -->
                 <section
@@ -431,6 +414,130 @@ export default {
             hasFireFrame: false,
             equippedFrame: null,
             frameMessage: ''
+            ```js
+availableFrames: [
+    {
+        id: 'angy',
+        name: 'Angy',
+        image: '/assets/profile/Angy.png',
+        requirement: 'Available by default.'
+    },
+    {
+        id: 'appi',
+        name: 'Appi',
+        image: '/assets/profile/Appi.png',
+        requirement: 'Available by default.'
+    },
+    {
+        id: 'borgir',
+        name: 'Borgir',
+        image: '/assets/profile/Borgir.png',
+        requirement: 'Beat Ice Carbon Zustgame.'
+    },
+    {
+        id: 'bronze',
+        name: 'Bronze',
+        image: '/assets/profile/Bronze.png',
+        requirement: 'Earn any Bronze achievement.'
+    },
+    {
+        id: 'cool',
+        name: 'Cool',
+        image: '/assets/profile/Cool.png',
+        requirement: 'Beat NG Wave Reborn 3.'
+    },
+    {
+        id: 'diamond',
+        name: 'Diamond',
+        image: '/assets/profile/Diamond.png',
+        requirement: 'Earn any Diamond achievement.'
+    },
+    {
+        id: 'fire',
+        name: 'Fire Frame',
+        image: '/assets/profile/Fire%20Frame.png',
+        requirement: 'Earn the “I Got This” achievement.'
+    },
+    {
+        id: 'furter',
+        name: 'Furter',
+        image: '/assets/profile/Furter.png',
+        requirement: 'Beat the Halloween pack.'
+    },
+    {
+        id: 'gold',
+        name: 'Gold',
+        image: '/assets/profile/Gold.png',
+        requirement: 'Earn any Gold achievement.'
+    },
+    {
+        id: 'hidrog',
+        name: 'Hidrog',
+        image: '/assets/profile/Hidrog.png',
+        requirement: 'Available by default.'
+    },
+    {
+        id: 'honeycomb',
+        name: 'Honeycomb',
+        image: '/assets/profile/Honeycomb.png',
+        requirement: 'Beat Casher.'
+    },
+    {
+        id: 'legendary',
+        name: 'Legendary',
+        image: '/assets/profile/Legendary.png',
+        requirement: 'Earn any Legendary achievement.'
+    },
+    {
+        id: 'platinum',
+        name: 'Platinum',
+        image: '/assets/profile/Platinum.png',
+        requirement: 'Earn any Platinum achievement.'
+    },
+    {
+        id: 'polish',
+        name: 'Polish',
+        image: '/assets/profile/Polish.png',
+        requirement: 'Available by default.'
+    },
+    {
+        id: 'punpkin',
+        name: 'Punpkin',
+        image: '/assets/profile/Punpkin.png',
+        requirement: 'Beat Halloween Panic.'
+    },
+    {
+        id: 'ssjjas aiah',
+        name: 'SSJJasaiah',
+        image: '/assets/profile/SSJJasaiah.png',
+        requirement: 'Beat Society but No 3.'
+    },
+    {
+        id: 'silver',
+        name: 'Silver',
+        image: '/assets/profile/Silver.png',
+        requirement: 'Earn any Silver achievement.'
+    },
+    {
+        id: 'victory',
+        name: 'Victory',
+        image: '/assets/profile/Victory.png',
+        requirement: 'Currently be #1 on the leaderboard.'
+    },
+    {
+        id: 'wjat',
+        name: 'Wjat',
+        image: '/assets/profile/Wjat.png',
+        requirement: 'Beat Acheron Easy.'
+    },
+    {
+        id: 'gartyen',
+        name: 'Gartyen',
+        image: '/assets/profile/gartyen.png',
+        requirement: 'Beat Milestone II.'
+    }
+],
+```
         };
     },
 
