@@ -1568,3 +1568,30 @@ body.halloween-theme a:hover {
 .profile-frame-info p {
     overflow-wrap: anywhere;
 }
+.profile-page .profile-hero .profile-avatar {
+    position: relative;
+    display: block;
+    width: 100px;
+    height: 100px;
+    margin: 0 0 16px;
+    overflow: visible;
+}
+
+.profile-page .profile-avatar-image,
+.profile-page .profile-avatar-frame {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+}
+
+.profile-page .profile-avatar-image {
+    z-index: 1;
+}
+
+.profile-page .profile-avatar-frame {
+    z-index: 2;
+    pointer-events: none;
+}
