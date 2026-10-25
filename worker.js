@@ -304,6 +304,135 @@ function validUsername(username) {
     return /^[a-zA-Z0-9_]{3,24}$/.test(username);
 }
 
+const FRAME_DEFINITIONS = [
+    { id: "angy", name: "Angy", image: "/assets/profile/Angy.png", requirement: "Available by default." },
+    { id: "appi", name: "Appi", image: "/assets/profile/Appi.png", requirement: "Available by default." },
+    { id: "borgir", name: "Borgir", image: "/assets/profile/Borgir.png", requirement: "Beat Ice Carbon Zustgame." },
+    { id: "bronze", name: "Bronze", image: "/assets/profile/Bronze.png", requirement: "Earn a Bronze achievement." },
+    { id: "cool", name: "Cool", image: "/assets/profile/Cool.png", requirement: "Beat NG Wave Reborn 3." },
+    { id: "diamond", name: "Diamond", image: "/assets/profile/Diamond.png", requirement: "Earn a Diamond achievement." },
+    { id: "fire", name: "Fire Frame", image: "/assets/profile/Fire%20Frame.png", requirement: 'Unlock "I Got This".' },
+    { id: "furter", name: "Furter", image: "/assets/profile/Furter.png", requirement: "Complete the Halloween pack." },
+    { id: "gold", name: "Gold", image: "/assets/profile/Gold.png", requirement: "Earn a Gold achievement." },
+    { id: "hidrog", name: "Hidrog", image: "/assets/profile/Hidrog.png", requirement: "Available by default." },
+    { id: "honeycomb", name: "Honeycomb", image: "/assets/profile/Honeycomb.png", requirement: "Beat Casher." },
+    { id: "legendary", name: "Legendary", image: "/assets/profile/Legendary.png", requirement: "Earn a Legendary achievement." },
+    { id: "platinum", name: "Platinum", image: "/assets/profile/Platinum.png", requirement: "Earn a Platinum achievement." },
+    { id: "polish", name: "Polish", image: "/assets/profile/Polish.png", requirement: "Available by default." },
+    { id: "punpkin", name: "Punpkin", image: "/assets/profile/Punpkin.png", requirement: "Beat Halloween Panic." },
+    { id: "ssjjasaiah", name: "SSJJasaiah", image: "/assets/profile/SSJJasaiah.png", requirement: "Beat Society but No 3." },
+    { id: "silver", name: "Silver", image: "/assets/profile/Silver.png", requirement: "Earn a Silver achievement." },
+    { id: "victory", name: "Victory", image: "/assets/profile/Victory.png", requirement: "Be #1 on the leaderboard." },
+    { id: "wjat", name: "Wjat", image: "/assets/profile/Wjat.png", requirement: "Beat Acheron Easy." },
+    { id: "gartyen", name: "Gartyen", image: "/assets/profile/gartyen.png", requirement: "Beat Milestone II." }
+];
+
+const FREE_FRAMES = new Set(["angy", "appi", "hidrog", "polish"]);
+
+const FRAME_LEVEL_PATHS = {
+    borgir: "IceCarbonZustgame",
+    cool: "NGWave",
+    honeycomb: "Casher",
+    punpkin: "HalloweenPanic",
+    ssjjasaiah: "SocietyButNo3",
+    wjat: "Acheroneasy",
+    gartyen: "MilestoneII"
+};
+
+const ACHIEVEMENT_DEFINITIONS = [
+    ["complete-1", "Bronze", 1],
+    ["complete-5", "Silver", 5],
+    ["complete-10", "Silver", 10],
+    ["complete-25", "Gold", 25],
+    ["complete-75", "Diamond", 75],
+    ["complete-150", "Platinum", 150],
+    ["pack-1", "Silver", 1],
+    ["pack-5", "Gold", 5],
+    ["pack-10", "Diamond", 10],
+    ["gold-pack", "Gold", 0],
+    ["diamond-pack", "Diamond", 0],
+    ["platinum-pack", "Platinum", 0],
+    ["platinum-packs-5", "Legendary", 5],
+    ["verify-1", "Silver", 1],
+    ["verify-10", "Gold", 10],
+    ["verify-25", "Diamond", 25],
+    ["verify-100", "Platinum", 100],
+    ["progress-1", "Bronze", 1],
+    ["progress-10", "Silver", 10],
+    ["progress-50", "Gold", 50]
+];
+
+function calculateUnlockedFrames({
+    completedPaths,
+    verifiedCount,
+    progressedCount,
+    packsBeaten,
+    isFirst
+}) {
+    const completedCount = completedPaths.size;
+    const packCategories = new Set(packsBeaten.map(pack => pack.category));
+    const platinumPacks = packsBeaten.filter(pack => pack.category === "Platinum").length;
+
+    const unlockedAchievements = ACHIEVEMENT_DEFINITIONS.filter(
+        ([id, tier, amount]) => {
+            switch (id) {
+                case "complete-1": return completedCount >= 1;
+                case "complete-5": return completedCount >= 5;
+                case "complete-10": return completedCount >= 10;
+                case "complete-25": return completedCount >= 25;
+                case "complete-75": return completedCount >= 75;
+                case "complete-150": return completedCount >= 150;
+                case "pack-1": return packsBeaten.length >= 1;
+                case "pack-5": return packsBeaten.length >= 5;
+                case "pack-10": return packsBeaten.length >= 10;
+                case "gold-pack": return packCategories.has("Gold");
+                case "diamond-pack": return packCategories.has("Diamond");
+                case "platinum-pack": return packCategories.has("Platinum");
+                case "platinum-packs-5": return platinumPacks >= 5;
+                case "verify-1": return verifiedCount >= 1;
+                case "verify-10": return verifiedCount >= 10;
+                case "verify-25": return verifiedCount >= 25;
+                case "verify-100": return verifiedCount >= 100;
+                case "progress-1": return progressedCount >= 1;
+                case "progress-10": return progressedCount >= 10;
+                case "progress-50": return progressedCount >= 50;
+                default: return false;
+            }
+        }
+    );
+
+    if (unlockedAchievements.length >= 10) {
+        unlockedAchievements.push(["achievements-10", "Gold", 10]);
+    }
+
+    const tiers = new Set(unlockedAchievements.map(([, tier]) => tier));
+    const unlocked = new Set(FREE_FRAMES);
+
+    for (const tier of ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Legendary"]) {
+        if (tiers.has(tier)) unlocked.add(tier.toLowerCase());
+    }
+
+    if (unlockedAchievements.some(([id]) => id === "complete-5")) {
+        unlocked.add("fire");
+    }
+
+    for (const [frameId, levelPath] of Object.entries(FRAME_LEVEL_PATHS)) {
+        if (completedPaths.has(levelPath)) unlocked.add(frameId);
+    }
+
+    const halloweenPaths = ["Spookweiner", "SSS", "Trytohide", "HalloweenPanic"];
+    if (halloweenPaths.every(path => completedPaths.has(path))) {
+        unlocked.add("furter");
+    }
+
+    if (isFirst) unlocked.add("victory");
+
+    return FRAME_DEFINITIONS.map(frame => ({
+        ...frame,
+        unlocked: unlocked.has(frame.id)
+    }));
+}
+
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
