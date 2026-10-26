@@ -363,14 +363,29 @@ async function getProfilePlayerData(env, origin, leaderboardName) {
         if (playerRecords.some(r => Number.isFinite(Number(r.percent)) && Number(r.percent) > 0)) progressedPaths.add(file);
 
         // Count each player's qualifying completions to determine the actual leaderboard leader.
-        for (const record of level.records) {
-            if (typeof record.user !== "string" || !Number.isFinite(Number(record.percent)) || Number(record.percent) < required) continue;
-            const key = record.user.trim().toLocaleLowerCase("en");
-            if (!key) continue;
-            if (!allPlayerCompletions.has(key)) allPlayerCompletions.set(key, 0);
-            allPlayerCompletions.set(key, allPlayerCompletions.get(key) + 1);
-        }
+        // Count all qualifying completions for every player.
+// Verified completions are ie.
+for (const record of level.records) {
+    if (
+        typeof record.user !== "string" ||
+        !Number.isFinite(Number(record.percent)) ||
+        Number(record.percent) < required
+    ) {
+        continue;
     }
+
+    const key = record.user.trim().toLocaleLowerCase("en");
+    if (!key) continue;
+
+    if (!allPlayerCompletions.has(key)) {
+        allPlayerCompletions.set(key, 0);
+    }
+
+    allPlayerCompletions.set(
+        key,
+        allPlayerCompletions.get(key) + 1
+    );
+}
 
     const packsBeaten = FRAME_PACKS.filter(pack => pack.paths.every(path => completedPaths.has(path)));
     const completedCount = completedPaths.size;
@@ -383,10 +398,25 @@ async function getProfilePlayerData(env, origin, leaderboardName) {
     if (packsBeaten.filter(p => p.category === "Platinum").length >= 5) achievementTiers.add("Legendary");
 
     const topScore = Math.max(0, ...allPlayerCompletions.values());
-    const isFirst = completedCount > 0 && completedCount === topScore;
-    return { completedPaths, progressedCount: progressedPaths.size, verifiedCount: verifiedPaths.size, packsBeaten, achievementTiers, isFirst };
-}
 
+const isFirst =
+    completedCount > 0 &&
+    completedCount === topScore;
+
+// Victory requires at least one verified completion.
+// Keep the first-place calculation separate from verification.
+const hasVerifiedCompletion = verifiedPaths.size > 0;
+
+return {
+    completedPaths,
+    verifiedPaths,
+    progressedCount: progressedPaths.size,
+    verifiedCount: verifiedPaths.size,
+    packsBeaten,
+    achievementTiers,
+    isFirst,
+    hasVerifiedCompletion
+};
 function calculateUnlockedFrames(playerData) {
     const unlocked = new Set(FREE_FRAMES);
     for (const tier of playerData.achievementTiers) unlocked.add(tier.toLowerCase());
