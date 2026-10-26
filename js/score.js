@@ -42,7 +42,7 @@ export function score(rank, percent, minPercent) {
         (percent - (minPercent - 1)) /
         (100 - (minPercent - 1));
 
-    return Math.max(round(rankPoints * percentMultiplier), 0);
+    return Math.max(round((rankPoints * percentMultiplier) / 4), 0);
 }
 
 export function round(num) {
