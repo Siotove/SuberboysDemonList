@@ -1,9 +1,11 @@
+
 import { handleSubmissionRoute } from "./submission-routes.js";
 
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const PBKDF2_ITERATIONS = 100000;
-const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
- 
+// D1 limits each row to 2,000,000 bytes; leave room for row metadata.
+const MAX_AVATAR_SIZE = 1_500_000;
+
 function json(data, status = 200, headers = {}) {
     return Response.json(data, { status, headers });
 }
@@ -894,7 +896,8 @@ export default {
                     SELECT
                         leaderboard_profiles.leaderboard_name,
                         profile_settings.equipped_frame,
-                        profile_pictures.user_id AS picture_user_id
+                        profile_pictures.user_id AS picture_user_id,
+                        profile_pictures.updated_at AS picture_updated_at
                     FROM leaderboard_profiles
                     LEFT JOIN profile_settings
                         ON profile_settings.user_id = leaderboard_profiles.user_id
@@ -908,7 +911,7 @@ export default {
                     return {
                         leaderboard_name: profile.leaderboard_name,
                         avatar_url: profile.picture_user_id
-                            ? `/api/profile/avatar?name=${encodeURIComponent(profile.leaderboard_name)}`
+                            ? `/api/profile/avatar?name=${encodeURIComponent(profile.leaderboard_name)}&v=${profile.picture_updated_at || 0}`
                             : "/assets/profile/No%20PFP.png",
                         equipped_frame: frame ? frame.id : null,
                         frame_url: frame ? frame.image : null
@@ -1450,14 +1453,16 @@ export default {
                 }, 200, { "Cache-Control": "no-store" });
             }
 
-            // Upload or replace the logged-in user's profile picture.
+            // Upload or replace the logged-in user's profile picture using D1 only.
+            // D1 is already configured for this Worker, so this needs no R2 bucket.
             if (path === "/api/profile/avatar" && request.method === "POST") {
                 const user = await currentUser(request, env.db);
                 if (!user) return json({ error: "Please log in." }, 401, { "Cache-Control": "no-store" });
-                if (!env.PROFILE_IMAGES) return json({ error: "Profile image storage is not configured." }, 503);
 
                 const declaredLength = Number(request.headers.get("Content-Length") || 0);
-                if (declaredLength > MAX_AVATAR_SIZE + 100_000) return json({ error: "Image must be 2 MB or smaller." }, 413);
+                if (declaredLength > MAX_AVATAR_SIZE + 100_000) {
+                    return json({ error: "For database storage, images must be 1.5 MB or smaller." }, 413);
+                }
 
                 let form;
                 try { form = await request.formData(); }
@@ -1466,52 +1471,65 @@ export default {
                 if (!image || typeof image.arrayBuffer !== "function" || typeof image.size !== "number") {
                     return json({ error: "Choose an image to upload." }, 400);
                 }
-                if (image.size < 1 || image.size > MAX_AVATAR_SIZE) return json({ error: "Image must be between 1 byte and 2 MB." }, 413);
+                if (image.size < 1 || image.size > MAX_AVATAR_SIZE) {
+                    return json({ error: "Image must be between 1 byte and 1.5 MB for database storage." }, 413);
+                }
                 const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
                 if (!allowedTypes.includes(image.type)) return json({ error: "Only PNG, JPEG, and WebP images are allowed." }, 400);
                 const bytes = new Uint8Array(await image.arrayBuffer());
                 const detectedType = detectImageType(bytes);
                 if (!detectedType || detectedType !== image.type) return json({ error: "The image file is invalid or its type does not match." }, 400);
 
-                const old = await env.db.prepare(`SELECT object_key FROM profile_pictures WHERE user_id = ?`).bind(user.id).first();
-                const extension = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" }[detectedType];
-                const objectKey = `${user.id}/${crypto.randomUUID()}.${extension}`;
-                await env.PROFILE_IMAGES.put(objectKey, bytes, { httpMetadata: { contentType: detectedType, cacheControl: "public, max-age=3600" } });
-                try {
-                    await env.db.prepare(`
+                const updatedAt = Math.floor(Date.now() / 1000);
+                // profile_pictures is retained as the avatar-presence marker used by the
+                // leaderboard. The actual bytes and media type are stored in D1.
+                await env.db.batch([
+                    env.db.prepare(`
+                        INSERT INTO profile_picture_blobs (user_id, content_type, image_data, updated_at)
+                        VALUES (?, ?, ?, ?)
+                        ON CONFLICT(user_id) DO UPDATE SET
+                            content_type = excluded.content_type,
+                            image_data = excluded.image_data,
+                            updated_at = excluded.updated_at
+                    `).bind(user.id, detectedType, bytes, updatedAt),
+                    env.db.prepare(`
                         INSERT INTO profile_pictures (user_id, object_key, updated_at)
                         VALUES (?, ?, ?)
-                        ON CONFLICT(user_id) DO UPDATE SET object_key = excluded.object_key, updated_at = excluded.updated_at
-                    `).bind(user.id, objectKey, Math.floor(Date.now() / 1000)).run();
-                } catch (error) {
-                    await env.PROFILE_IMAGES.delete(objectKey);
-                    throw error;
-                }
-                if (old?.object_key && old.object_key !== objectKey) await env.PROFILE_IMAGES.delete(old.object_key);
+                        ON CONFLICT(user_id) DO UPDATE SET
+                            object_key = excluded.object_key,
+                            updated_at = excluded.updated_at
+                    `).bind(user.id, `d1:${user.id}`, updatedAt)
+                ]);
+
                 const linked = await env.db.prepare(`SELECT leaderboard_name FROM leaderboard_profiles WHERE user_id = ?`).bind(user.id).first();
-                return json({ success: true, avatarUrl: `/api/profile/avatar?name=${encodeURIComponent(linked?.leaderboard_name || "")}&v=${Date.now()}` }, 200, { "Cache-Control": "no-store" });
+                return json({ success: true, avatarUrl: `/api/profile/avatar?name=${encodeURIComponent(linked?.leaderboard_name || "")}&v=${updatedAt}` }, 200, { "Cache-Control": "no-store" });
             }
 
-            // Publicly serve a player's uploaded avatar.
+            // Publicly serve a player's uploaded avatar directly from D1.
             if (path === "/api/profile/avatar" && request.method === "GET") {
-                if (!env.PROFILE_IMAGES) return new Response("Image storage unavailable.", { status: 503 });
                 const name = (url.searchParams.get("name") || "").trim();
                 if (!name || name.length > 100) return new Response("Not found.", { status: 404 });
                 const profile = await env.db.prepare(`
-                    SELECT profile_pictures.object_key
+                    SELECT profile_picture_blobs.content_type,
+                           profile_picture_blobs.image_data,
+                           profile_picture_blobs.updated_at
                     FROM leaderboard_profiles
-                    JOIN profile_pictures ON profile_pictures.user_id = leaderboard_profiles.user_id
+                    JOIN profile_picture_blobs
+                      ON profile_picture_blobs.user_id = leaderboard_profiles.user_id
                     WHERE leaderboard_profiles.leaderboard_name = ? COLLATE NOCASE
                 `).bind(name).first();
-                if (!profile?.object_key) return env.ASSETS.fetch(new Request(new URL("/assets/profile/No%20PFP.png", url.origin)));
-                const object = await env.PROFILE_IMAGES.get(profile.object_key);
-                if (!object) return new Response("Not found.", { status: 404 });
-                const headers = new Headers();
-                object.writeHttpMetadata(headers);
-                headers.set("ETag", object.httpEtag);
-                headers.set("X-Content-Type-Options", "nosniff");
-                headers.set("Cache-Control", "public, max-age=3600");
-                return new Response(object.body, { headers });
+                if (!profile?.image_data) {
+                    return env.ASSETS.fetch(new Request(new URL("/assets/profile/No%20PFP.png", url.origin)));
+                }
+                const headers = new Headers({
+                    "Content-Type": profile.content_type || "image/png",
+                    "X-Content-Type-Options": "nosniff",
+                    "Cache-Control": "public, max-age=3600",
+                    "ETag": `"avatar-${profile.updated_at}"`
+                });
+                // D1 returns BLOBs as arrays of bytes; rebuild a byte buffer for Response.
+                const avatarBytes = Uint8Array.from(profile.image_data);
+                return new Response(avatarBytes, { headers });
             }
 
             // Delegate submission history, review queue, approval and level
