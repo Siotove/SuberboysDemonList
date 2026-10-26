@@ -1,19 +1,26 @@
-
 {
-    "id": "123457369",
-    "name": "Counting u0",
-    "author": "Suberman2",
-    "creators": ["Suberman2"],
-    "verifier": "Suberman2",
-    "verification": "https://www.youtube.com/watch?v=Dr-K6hBqddRRo",
-    "percentToQualify": 100,
-    "password": "Not Copyable",
-    "records": [
-        {
+  "id": "123457369",
+  "name": "Counting u0",
+  "author": "Suberman2",
+  "creators": [
+    "Suberman2"
+  ],
+  "verifier": "Suberman2",
+  "verification": "https://www.youtube.com/watch?v=Dr-K6hBqddRRo",
+  "percentToQualify": 100,
+  "password": "Not Copyable",
+  "records": [
+    {
       "user": "SimmebGaming",
       "link": "https://youtu.be/_FsZFmc-OJo",
       "percent": 100,
       "hz": 120
+    },
+    {
+      "user": "Mothcloakinnit",
+      "link": "https://medal.tv/games/geometry-dash/clips/nO014EzT7VtNxai5_?invite=cr-MSxmMmYsNjAxODk1MTU4",
+      "percent": 100,
+      "hz": 60
     }
-    ]
+  ]
 }
