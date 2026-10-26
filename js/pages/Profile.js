@@ -490,7 +490,9 @@ export default {
 
             equippedFrame: null,
             frameMessage: '',
-
+selectedAvatar: null,
+uploadingAvatar: false,
+avatarMessage: "",
             availableFrames: [
                 {
                     id: 'angy',
@@ -700,6 +702,65 @@ export default {
         frame.saving = false;
     }
 },
+        
+uploadAvatar(event) {
+    const file = event.target.files?.[0];
+
+    this.avatarMessage = "";
+    this.selectedAvatar = null;
+
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+        this.avatarMessage = "Image must be 2 MB or smaller.";
+        event.target.value = "";
+        return;
+    }
+
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+        this.avatarMessage = "Choose a PNG, JPEG, or WebP image.";
+        event.target.value = "";
+        return;
+    }
+
+    this.selectedAvatar = file;
+},
+
+async saveAvatar() {
+    if (!this.selectedAvatar || this.uploadingAvatar) return;
+
+    this.uploadingAvatar = true;
+    this.avatarMessage = "";
+
+    try {
+        const form = new FormData();
+        form.append("image", this.selectedAvatar);
+
+        const response = await fetch("/api/profile/avatar", {
+            method: "POST",
+            credentials: "same-origin",
+            body: form
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Upload failed.");
+        }
+
+        this.avatarMessage = "Profile picture updated!";
+        this.selectedAvatar = null;
+
+        // Reload the profile image here using data.avatarUrl.
+        // If your profile uses a different image variable, update that variable.
+        this.profilePictureUrl = data.avatarUrl;
+    } catch (error) {
+        this.avatarMessage = error.message || "Could not upload image.";
+    } finally {
+        this.uploadingAvatar = false;
+    }
+}
+
 async loadAvatarFrames() {
     try {
         const response = await fetch('/api/profile/frames', {
