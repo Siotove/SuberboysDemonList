@@ -41126,5 +41126,88 @@
         "to": 38
       }
     ]
+  },
+  {
+    "date": "2026-10-26T16:27:41.000Z",
+    "commit": "f541520f489f7c97517c7eb9ddb0cab96b125273",
+    "added": [],
+    "removed": [],
+    "moved": [
+      {
+        "level": "HalloweenPanic",
+        "from": 3,
+        "to": 2
+      },
+      {
+        "level": "Challenger",
+        "from": 2,
+        "to": 3
+      },
+      {
+        "level": "Sadaclysm",
+        "from": 17,
+        "to": 14
+      },
+      {
+        "level": "MilestoneII",
+        "from": 18,
+        "to": 17
+      },
+      {
+        "level": "Thermo",
+        "from": 19,
+        "to": 18
+      },
+      {
+        "level": "Acheroneasy",
+        "from": 14,
+        "to": 19
+      },
+      {
+        "level": "Trytohide",
+        "from": 28,
+        "to": 22
+      },
+      {
+        "level": "TungTung",
+        "from": 22,
+        "to": 23
+      },
+      {
+        "level": "AinaPoniII",
+        "from": 27,
+        "to": 24
+      },
+      {
+        "level": "Fates",
+        "from": 23,
+        "to": 25
+      },
+      {
+        "level": "Dashgs",
+        "from": 24,
+        "to": 26
+      },
+      {
+        "level": "Application",
+        "from": 25,
+        "to": 27
+      },
+      {
+        "level": "Gaopownpunches",
+        "from": 29,
+        "to": 28
+      },
+      {
+        "level": "Ninefiveone",
+        "from": 31,
+        "to": 29
+      },
+      {
+        "level": "SSS",
+        "from": 26,
+        "to": 31
+      }
+    ]
   }
 ]
