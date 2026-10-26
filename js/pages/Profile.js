@@ -759,7 +759,7 @@ async saveAvatar() {
     } finally {
         this.uploadingAvatar = false;
     }
-}
+},
 
 async loadAvatarFrames() {
     try {
