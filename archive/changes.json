@@ -41234,5 +41234,23 @@
         "to": 2
       }
     ]
+  },
+  {
+    "date": "2026-10-26T19:35:41.000Z",
+    "commit": "e660ac4b5a42a07e49476053ab759720f3f3c473",
+    "added": [],
+    "removed": [],
+    "moved": [
+      {
+        "level": "HalloweenPanic",
+        "from": 1,
+        "to": 0
+      },
+      {
+        "level": "IceCarbonZustgame",
+        "from": 0,
+        "to": 1
+      }
+    ]
   }
 ]
