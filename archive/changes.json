@@ -41216,5 +41216,23 @@
     "added": [],
     "removed": [],
     "moved": []
+  },
+  {
+    "date": "2026-10-26T17:26:00.000Z",
+    "commit": "8ad1d82c272280471020e53f08748dc87cb2172a",
+    "added": [],
+    "removed": [],
+    "moved": [
+      {
+        "level": "HalloweenPanic",
+        "from": 2,
+        "to": 1
+      },
+      {
+        "level": "Bang",
+        "from": 1,
+        "to": 2
+      }
+    ]
   }
 ]
