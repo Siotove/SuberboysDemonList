@@ -1644,4 +1644,34 @@ body.halloween-theme a:hover {
         grid-template-columns: 1fr;
     }
 }
-```
+/* Shared circular profile picture */
+.pfp-circle {
+    position: relative;
+    width: var(--pfp-size, 48px);
+    aspect-ratio: 1 / 1;
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+
+/* Force every uploaded picture into the circle */
+.pfp-circle__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50% !important;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* Keep the equipped frame layered over the picture */
+.pfp-circle__frame {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+}
