@@ -255,8 +255,6 @@ function validUsername(username) {
 }
 
 
-const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
-
 function detectImageType(bytes) {
     // PNG
     if (
