@@ -403,6 +403,40 @@ function validUsername(username) {
     return /^[a-zA-Z0-9_]{3,24}$/.test(username);
 }
 
+const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
+
+function detectImageType(bytes) {
+    // PNG
+    if (
+        bytes.length >= 8 &&
+        bytes[0] === 0x89 &&
+        bytes[1] === 0x50 &&
+        bytes[2] === 0x4e &&
+        bytes[3] === 0x47 &&
+        bytes[4] === 0x0d &&
+        bytes[5] === 0x0a &&
+        bytes[6] === 0x1a &&
+        bytes[7] === 0x0a
+    ) return "image/png";
+
+    // JPEG
+    if (
+        bytes.length >= 3 &&
+        bytes[0] === 0xff &&
+        bytes[1] === 0xd8 &&
+        bytes[2] === 0xff
+    ) return "image/jpeg";
+
+    // WebP
+    if (
+        bytes.length >= 12 &&
+        String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" &&
+        String.fromCharCode(...bytes.slice(8, 12)) === "WEBP"
+    ) return "image/webp";
+
+    return null;
+}
+
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
@@ -751,14 +785,19 @@ export default {
                 path === "/api/leaderboard/avatar-frames" &&
                 request.method === "GET"
             ) {
-                const result = await env.db.prepare(`
-                    SELECT
-                        leaderboard_profiles.leaderboard_name,
-                        profile_settings.equipped_frame
-                    FROM leaderboard_profiles
-                    LEFT JOIN profile_settings
-                        ON profile_settings.user_id = leaderboard_profiles.user_id
-                `).all();
+                
+const result = await env.db.prepare(`
+    SELECT
+        leaderboard_profiles.leaderboard_name,
+        profile_settings.equipped_frame,
+        profile_pictures.user_id AS picture_user_id
+    FROM leaderboard_profiles
+    LEFT JOIN profile_settings
+        ON profile_settings.user_id = leaderboard_profiles.user_id
+    LEFT JOIN profile_pictures
+        ON profile_pictures.user_id = leaderboard_profiles.user_id
+`).all();
+
 
                 const profiles = (result.results || []).map(profile => {
                     const frameId = profile.equipped_frame || null;
@@ -768,7 +807,11 @@ export default {
 
                     return {
                         leaderboard_name: profile.leaderboard_name,
-                        avatar_url: "/assets/profile/No%20PFP.png",
+                        
+avatar_url: profile.picture_user_id
+    ? `/api/profile/avatar?name=${encodeURIComponent(profile.leaderboard_name)}`
+    : "/assets/profile/No%20PFP.png",
+
                         equipped_frame: frame ? frame.id : null,
                         frame_url: frame ? frame.image : null
                     };
@@ -1311,6 +1354,194 @@ export default {
                     success: true,
                     message: `${target.username} has been unbanned.`
                 }, 200, { "Cache-Control": "no-store" });
+            }
+
+            // Upload or replace the logged-in user's profile picture.
+            if (
+                path === "/api/profile/avatar" &&
+                request.method === "POST"
+            ) {
+                const user = await currentUser(request, env.db);
+
+                if (!user) {
+                    return json({ error: "Please log in." }, 401, {
+                        "Cache-Control": "no-store"
+                    });
+                }
+
+                if (!env.PROFILE_IMAGES) {
+                    return json({
+                        error: "Profile image storage is not configured."
+                    }, 503);
+                }
+
+                const declaredLength = Number(
+                    request.headers.get("Content-Length") || 0
+                );
+
+                if (declaredLength > MAX_AVATAR_SIZE + 100_000) {
+                    return json({
+                        error: "Image must be 2 MB or smaller."
+                    }, 413);
+                }
+
+                let form;
+                try {
+                    form = await request.formData();
+                } catch {
+                    return json({ error: "Invalid upload." }, 400);
+                }
+
+                const image = form.get("image");
+
+                if (
+                    !image ||
+                    typeof image.arrayBuffer !== "function" ||
+                    typeof image.size !== "number"
+                ) {
+                    return json({
+                        error: "Choose an image to upload."
+                    }, 400);
+                }
+
+                if (image.size < 1 || image.size > MAX_AVATAR_SIZE) {
+                    return json({
+                        error: "Image must be between 1 byte and 2 MB."
+                    }, 413);
+                }
+
+                const allowedTypes = [
+                    "image/png",
+                    "image/jpeg",
+                    "image/webp"
+                ];
+
+                if (!allowedTypes.includes(image.type)) {
+                    return json({
+                        error: "Only PNG, JPEG, and WebP images are allowed."
+                    }, 400);
+                }
+
+                const bytes = new Uint8Array(
+                    await image.arrayBuffer()
+                );
+
+                const detectedType = detectImageType(bytes);
+
+                if (!detectedType || detectedType !== image.type) {
+                    return json({
+                        error: "The image file is invalid or its type does not match."
+                    }, 400);
+                }
+
+                const old = await env.db.prepare(`
+                    SELECT object_key
+                    FROM profile_pictures
+                    WHERE user_id = ?
+                `).bind(user.id).first();
+
+                const extension = {
+                    "image/png": "png",
+                    "image/jpeg": "jpg",
+                    "image/webp": "webp"
+                }[detectedType];
+
+                const objectKey =
+                    `${user.id}/${crypto.randomUUID()}.${extension}`;
+
+                await env.PROFILE_IMAGES.put(objectKey, bytes, {
+                    httpMetadata: {
+                        contentType: detectedType,
+                        cacheControl: "public, max-age=3600"
+                    }
+                });
+
+                try {
+                    await env.db.prepare(`
+                        INSERT INTO profile_pictures
+                            (user_id, object_key, updated_at)
+                        VALUES (?, ?, ?)
+                        ON CONFLICT(user_id) DO UPDATE SET
+                            object_key = excluded.object_key,
+                            updated_at = excluded.updated_at
+                    `).bind(
+                        user.id,
+                        objectKey,
+                        Math.floor(Date.now() / 1000)
+                    ).run();
+                } catch (error) {
+                    await env.PROFILE_IMAGES.delete(objectKey);
+                    throw error;
+                }
+
+                if (old?.object_key && old.object_key !== objectKey) {
+                    await env.PROFILE_IMAGES.delete(old.object_key);
+                }
+
+                return json({
+                    success: true,
+                    avatarUrl: `/api/profile/avatar?name=${encodeURIComponent(
+                        (await env.db.prepare(`
+                            SELECT leaderboard_name
+                            FROM leaderboard_profiles
+                            WHERE user_id = ?
+                        `).bind(user.id).first())?.leaderboard_name || ""
+                    )}&v=${Date.now()}`
+                }, 200, { "Cache-Control": "no-store" });
+            }
+
+            // Publicly serve a player's uploaded avatar.
+            if (
+                path === "/api/profile/avatar" &&
+                request.method === "GET"
+            ) {
+                if (!env.PROFILE_IMAGES) {
+                    return new Response("Image storage unavailable.", {
+                        status: 503
+                    });
+                }
+
+                const name = (
+                    url.searchParams.get("name") || ""
+                ).trim();
+
+                if (!name || name.length > 100) {
+                    return new Response("Not found.", { status: 404 });
+                }
+
+                const profile = await env.db.prepare(`
+                    SELECT profile_pictures.object_key
+                    FROM leaderboard_profiles
+                    JOIN profile_pictures
+                        ON profile_pictures.user_id =
+                           leaderboard_profiles.user_id
+                    WHERE leaderboard_profiles.leaderboard_name = ?
+                      COLLATE NOCASE
+                `).bind(name).first();
+
+                if (!profile?.object_key) {
+                    return env.ASSETS.fetch(
+                        new Request(
+                            new URL("/assets/profile/No%20PFP.png", url.origin)
+                        )
+                    );
+                }
+
+                const object = await env.PROFILE_IMAGES.get(
+                    profile.object_key
+                );
+
+                if (!object) {
+                    return new Response("Not found.", { status: 404 });
+                }
+
+                const headers = new Headers();
+                object.writeHttpMetadata(headers);
+                headers.set("ETag", object.httpEtag);
+                headers.set("X-Content-Type-Options", "nosniff");
+                headers.set("Cache-Control", "public, max-age=3600");
+
+                return new Response(object.body, { headers });
             }
 
             // Delegate submission history, review queue, approval and level
