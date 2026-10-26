@@ -76,6 +76,29 @@ export default {
                 </template>
             </section>
 
+<div class="avatar-upload">
+    <label for="profile-avatar-file">Custom profile picture</label>
+
+    <input
+        id="profile-avatar-file"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        @change="uploadAvatar"
+    />
+
+    <p>PNG, JPEG or WebP · Maximum 2 MB</p>
+
+    <button
+        type="button"
+        @click="saveAvatar"
+        :disabled="!selectedAvatar || uploadingAvatar"
+    >
+        {{ uploadingAvatar ? "Uploading..." : "Upload picture" }}
+    </button>
+
+    <p v-if="avatarMessage">{{ avatarMessage }}</p>
+</div>
+
             <template v-if="!loading && user">
                 <!-- Leaderboard identity -->
                 <section class="profile-panel">
