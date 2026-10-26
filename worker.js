@@ -3,61 +3,7 @@ import { handleSubmissionRoute } from "./submission-routes.js";
 
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const PBKDF2_ITERATIONS = 100000;
-const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
-const FREE_FRAMES = new Set([
-    "angy",
-    "appi",
-    "hidrog",
-    "polish"
-]);
-import { getAchievements } from "./js/achievements.js";
 
-const FRAME_DEFINITIONS = [
-    { id: "angy", requirement: "free" },
-    { id: "appi", requirement: "free" },
-    { id: "hidrog", requirement: "free" },
-    { id: "polish", requirement: "free" },
-
-    { id: "bronze", requirement: "tier", tier: "Bronze" },
-    { id: "silver", requirement: "tier", tier: "Silver" },
-    { id: "gold", requirement: "tier", tier: "Gold" },
-    { id: "diamond", requirement: "tier", tier: "Diamond" },
-    { id: "platinum", requirement: "tier", tier: "Platinum" },
-    { id: "legendary", requirement: "tier", tier: "Legendary" },
-
-    { id: "fire", requirement: "achievement", achievementId: "complete-5" }
-];
-
-function calculateUnlockedFrames(player) {
-    const achievements = getAchievements({
-        completed: player.completed || [],
-        verified: player.verified || [],
-        progressed: player.progressed || [],
-        packsBeaten: player.packsBeaten || []
-    });
-
-    const unlockedTiers = new Set(
-        achievements
-            .filter(achievement => achievement.unlocked)
-            .map(achievement => achievement.tier)
-    );
-
-    const unlockedAchievementIds = new Set(
-        achievements
-            .filter(achievement => achievement.unlocked)
-            .map(achievement => achievement.id)
-    );
-
-    return FRAME_DEFINITIONS.map(frame => ({
-        ...frame,
-        unlocked:
-            frame.requirement === "free" ||
-            (frame.requirement === "tier" &&
-                unlockedTiers.has(frame.tier)) ||
-            (frame.requirement === "achievement" &&
-                unlockedAchievementIds.has(frame.achievementId))
-    }));
-}
 function json(data, status = 200, headers = {}) {
     return Response.json(data, { status, headers });
 }
@@ -65,11 +11,9 @@ function json(data, status = 200, headers = {}) {
 function cookieValue(request, name) {
     const cookies = request.headers.get("Cookie") || "";
     const prefix = `${name}=`;
-
-    const item = cookies
-        .split(";")
-        .map(value => value.trim())
-        .find(value => value.startsWith(prefix));
+    const item = cookies.split(";")
+        .map(v => v.trim())
+        .find(v => v.startsWith(prefix));
 
     return item ? item.slice(prefix.length) : null;
 }
@@ -109,16 +53,12 @@ async function hashPassword(password, salt) {
         ["deriveBits"]
     );
 
-    const bits = await crypto.subtle.deriveBits(
-        {
-            name: "PBKDF2",
-            hash: "SHA-256",
-            salt,
-            iterations: PBKDF2_ITERATIONS
-        },
-        key,
-        256
-    );
+    const bits = await crypto.subtle.deriveBits({
+        name: "PBKDF2",
+        hash: "SHA-256",
+        salt,
+        iterations: PBKDF2_ITERATIONS
+    }, key, 256);
 
     return base64url(new Uint8Array(bits));
 }
@@ -143,7 +83,7 @@ async function verifyPassword(password, stored) {
 
         const salt = Uint8Array.from(
             saltString,
-            character => character.charCodeAt(0)
+            c => c.charCodeAt(0)
         );
 
         const actual = await hashPassword(password, salt);
@@ -153,8 +93,7 @@ async function verifyPassword(password, stored) {
         let difference = 0;
 
         for (let i = 0; i < actual.length; i++) {
-            difference |=
-                actual.charCodeAt(i) ^ expected.charCodeAt(i);
+            difference |= actual.charCodeAt(i) ^ expected.charCodeAt(i);
         }
 
         return difference === 0;
@@ -268,76 +207,200 @@ async function readPublishedLevel(env, origin, file) {
     return response.json();
 }
 
-// These match the rounding and scoring functions in score.js.
-function leaderboardRound(num) {
-    const scale = 3;
+async function existingLeaderboardName(env, origin, name) {
+    const files = await readPublishedLevels(env, origin);
 
-    if (!String(num).includes("e")) {
-        return +(
-            Math.round(num + "e+" + scale) +
-            "e-" + scale
-        );
+    for (const file of files) {
+        if (
+            typeof file !== "string" ||
+            !/^[a-zA-Z0-9_-]{1,80}$/.test(file)
+        ) {
+            continue;
+        }
+
+        const level = await readPublishedLevel(env, origin, file);
+
+        if (!Array.isArray(level.records)) continue;
+
+        if (level.records.some(record =>
+            typeof record.user === "string" &&
+            record.user.trim().toLowerCase() === name.toLowerCase()
+        )) {
+            return true;
+        }
     }
 
-    const parts = String(num).split("e");
-    const exponent = Number(parts[1]) + scale;
-    const sign = exponent > 0 ? "+" : "";
+    return false;
+}
 
-    return +(
-        Math.round(Number(parts[0]) + "e" + sign + exponent) +
-        "e-" + scale
+async function allLeaderboardNames(env, origin) {
+    const files = await readPublishedLevels(env, origin);
+    const names = new Map();
+
+    for (const file of files) {
+        if (
+            typeof file !== "string" ||
+            !/^[a-zA-Z0-9_-]{1,80}$/.test(file)
+        ) {
+            continue;
+        }
+
+        const level = await readPublishedLevel(env, origin, file);
+
+        if (!Array.isArray(level.records)) continue;
+
+        for (const record of level.records) {
+            if (typeof record.user !== "string") continue;
+
+            const name = record.user.trim();
+
+            if (!name) continue;
+
+            const key = name.toLocaleLowerCase("en");
+
+            if (!names.has(key)) {
+                names.set(key, name);
+            }
+        }
+    }
+
+    return [...names.values()].sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: "base" })
     );
 }
 
-function leaderboardScore(rank, percent, minPercent) {
-    if (rank > 150) return 0;
-    if (rank > 75 && percent < 100) return 0;
+async function allKnownIdentities(env, origin) {
+    const staticNames = await allLeaderboardNames(env, origin);
 
-    const points =
-        (500 - 400 * Math.pow((rank - 1) / 24, 0.4)) *
-        (
-            (percent - (minPercent - 1)) /
-            (100 - (minPercent - 1))
-        );
+    const result = await env.db.prepare(`
+        SELECT leaderboard_name
+        FROM leaderboard_profiles
+    `).all();
 
-    return Math.max(leaderboardRound(points), 0);
+    const names = new Map();
+
+    for (const name of staticNames) {
+        names.set(name.toLocaleLowerCase("en"), name);
+    }
+
+    for (const row of result.results || []) {
+        if (typeof row.leaderboard_name !== "string") continue;
+
+        const name = row.leaderboard_name.trim();
+
+        if (!name) continue;
+
+        const key = name.toLocaleLowerCase("en");
+
+        if (!names.has(key)) names.set(key, name);
+    }
+
+    return [...names.values()].sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: "base" })
+    );
+}
+
+
+const FRAME_DEFINITIONS = [
+    { id: "angy", name: "Angy", image: "/assets/profile/Angy.png", requirement: "Available by default." },
+    { id: "appi", name: "Appi", image: "/assets/profile/Appi.png", requirement: "Available by default." },
+    { id: "borgir", name: "Borgir", image: "/assets/profile/Borgir.png", requirement: "Beat Ice Carbon Zustgame." },
+    { id: "bronze", name: "Bronze", image: "/assets/profile/Bronze.png", requirement: "Earn a Bronze achievement." },
+    { id: "cool", name: "Cool", image: "/assets/profile/Cool.png", requirement: "Beat NG Wave Reborn 3." },
+    { id: "diamond", name: "Diamond", image: "/assets/profile/Diamond.png", requirement: "Earn a Diamond achievement." },
+    { id: "fire", name: "Fire Frame", image: "/assets/profile/Fire%20Frame.png", requirement: 'Unlock "I Got This".' },
+    { id: "furter", name: "Furter", image: "/assets/profile/Furter.png", requirement: "Complete the Halloween pack." },
+    { id: "gold", name: "Gold", image: "/assets/profile/Gold.png", requirement: "Earn a Gold achievement." },
+    { id: "hidrog", name: "Hidrog", image: "/assets/profile/Hidrog.png", requirement: "Available by default." },
+    { id: "honeycomb", name: "Honeycomb", image: "/assets/profile/Honeycomb.png", requirement: "Beat Casher." },
+    { id: "legendary", name: "Legendary", image: "/assets/profile/Legendary.png", requirement: "Earn a Legendary achievement." },
+    { id: "platinum", name: "Platinum", image: "/assets/profile/Platinum.png", requirement: "Earn a Platinum achievement." },
+    { id: "polish", name: "Polish", image: "/assets/profile/Polish.png", requirement: "Available by default." },
+    { id: "punpkin", name: "Punpkin", image: "/assets/profile/Punpkin.png", requirement: "Beat Halloween Panic." },
+    { id: "ssjjasaiah", name: "SSJJasaiah", image: "/assets/profile/SSJJasaiah.png", requirement: "Beat Society but No 3." },
+    { id: "silver", name: "Silver", image: "/assets/profile/Silver.png", requirement: "Earn a Silver achievement." },
+    { id: "victory", name: "Victory", image: "/assets/profile/Victory.png", requirement: "Be #1 on the leaderboard." },
+    { id: "wjat", name: "Wjat", image: "/assets/profile/Wjat.png", requirement: "Beat Acheron Easy." },
+    { id: "gartyen", name: "Gartyen", image: "/assets/profile/gartyen.png", requirement: "Beat Milestone II." }
+];
+const FREE_FRAMES = new Set(["angy", "appi", "hidrog", "polish"]);
+const FRAME_LEVEL_PATHS = {
+    borgir: "IceCarbonZustgame", cool: "NGWave", honeycomb: "Casher",
+    punpkin: "HalloweenPanic", ssjjasaiah: "SocietyButNo3",
+    wjat: "Acheroneasy", gartyen: "MilestoneII"
+};
+const FRAME_PACKS = [
+    { id: "milestone-pack", category: "Bronze", paths: ["MilestoneI", "MilestoneII", "MilestoneIII"] },
+    { id: "aina-pack", category: "Bronze", paths: ["AinaPoni", "AinaPoniII"] },
+    { id: "polychromatical-pack", category: "Silver", paths: ["Polychromatical", "PolychromaticalII"] },
+    { id: "sadaclysm-pack", category: "Silver", paths: ["Sadaclysm", "USadaclysm"] },
+    { id: "top-pack", category: "Gold", paths: ["SocietyButNo3", "Polychromatical", "MilestoneIII", "NGWave"] },
+    { id: "milee-pack", category: "Bronze", paths: ["Khrome", "cu", "AinaPoniII"] },
+    { id: "dfsd", category: "Gold", paths: ["Challenger", "IceCarbonZustgame", "Bang"] },
+    { id: "milred", category: "Gold", paths: ["Challenger", "Shadow", "Ultramarine", "Hypermarine"] },
+    { id: "spooky", category: "Silver", paths: ["Spookweiner", "SSS", "Trytohide", "HalloweenPanic"] }
+];
+
+async function getProfilePlayerData(env, origin, leaderboardName) {
+    const files = await readPublishedLevels(env, origin);
+    const playerKey = leaderboardName.toLocaleLowerCase("en");
+    const completedPaths = new Set();
+    const progressedPaths = new Set();
+    const verifiedPaths = new Set();
+    const allPlayerCompletions = new Map();
+
+    for (const file of files) {
+        if (typeof file !== "string" || !/^[a-zA-Z0-9_-]{1,80}$/.test(file)) continue;
+        const level = await readPublishedLevel(env, origin, file);
+        if (!Array.isArray(level.records)) continue;
+        const required = Number(level.percentToQualify ?? 100);
+        const playerRecords = level.records.filter(r => typeof r.user === "string" && r.user.trim().toLocaleLowerCase("en") === playerKey);
+        const qualifying = playerRecords.find(r => Number.isFinite(Number(r.percent)) && Number(r.percent) >= required);
+        if (qualifying) {
+            completedPaths.add(file);
+            if (qualifying.verified === true || qualifying.verified === 1 || qualifying.verified === "true") verifiedPaths.add(file);
+        }
+        if (playerRecords.some(r => Number.isFinite(Number(r.percent)) && Number(r.percent) > 0)) progressedPaths.add(file);
+
+        // Count each player's qualifying completions to determine the actual leaderboard leader.
+        for (const record of level.records) {
+            if (typeof record.user !== "string" || !Number.isFinite(Number(record.percent)) || Number(record.percent) < required) continue;
+            const key = record.user.trim().toLocaleLowerCase("en");
+            if (!key) continue;
+            if (!allPlayerCompletions.has(key)) allPlayerCompletions.set(key, 0);
+            allPlayerCompletions.set(key, allPlayerCompletions.get(key) + 1);
+        }
+    }
+
+    const packsBeaten = FRAME_PACKS.filter(pack => pack.paths.every(path => completedPaths.has(path)));
+    const completedCount = completedPaths.size;
+    const achievementTiers = new Set();
+    if (completedCount >= 1 || progressedPaths.size >= 1) achievementTiers.add("Bronze");
+    if (completedCount >= 5 || verifiedPaths.size >= 1 || packsBeaten.length >= 1 || progressedPaths.size >= 10) achievementTiers.add("Silver");
+    if (completedCount >= 25 || verifiedPaths.size >= 10 || packsBeaten.some(p => p.category === "Gold") || progressedPaths.size >= 50) achievementTiers.add("Gold");
+    if (completedCount >= 75 || verifiedPaths.size >= 25 || packsBeaten.length >= 10) achievementTiers.add("Diamond");
+    if (completedCount >= 150 || verifiedPaths.size >= 100) achievementTiers.add("Platinum");
+    if (packsBeaten.filter(p => p.category === "Platinum").length >= 5) achievementTiers.add("Legendary");
+
+    const topScore = Math.max(0, ...allPlayerCompletions.values());
+    const isFirst = completedCount > 0 && completedCount === topScore;
+    return { completedPaths, progressedCount: progressedPaths.size, verifiedCount: verifiedPaths.size, packsBeaten, achievementTiers, isFirst };
+}
+
+function calculateUnlockedFrames(playerData) {
+    const unlocked = new Set(FREE_FRAMES);
+    for (const tier of playerData.achievementTiers) unlocked.add(tier.toLowerCase());
+    if (playerData.completedPaths.size >= 5) unlocked.add("fire");
+    for (const [frameId, path] of Object.entries(FRAME_LEVEL_PATHS)) {
+        if (playerData.completedPaths.has(path)) unlocked.add(frameId);
+    }
+    if (["Spookweiner", "SSS", "Trytohide", "HalloweenPanic"].every(path => playerData.completedPaths.has(path))) unlocked.add("furter");
+    if (playerData.isFirst) unlocked.add("victory");
+    return FRAME_DEFINITIONS.map(frame => ({ ...frame, unlocked: unlocked.has(frame.id) }));
 }
 
 function validUsername(username) {
     return /^[a-zA-Z0-9_]{3,24}$/.test(username);
-}
-
-
-function detectImageType(bytes) {
-    // PNG
-    if (
-        bytes.length >= 8 &&
-        bytes[0] === 0x89 &&
-        bytes[1] === 0x50 &&
-        bytes[2] === 0x4e &&
-        bytes[3] === 0x47 &&
-        bytes[4] === 0x0d &&
-        bytes[5] === 0x0a &&
-        bytes[6] === 0x1a &&
-        bytes[7] === 0x0a
-    ) return "image/png";
-
-    // JPEG
-    if (
-        bytes.length >= 3 &&
-        bytes[0] === 0xff &&
-        bytes[1] === 0xd8 &&
-        bytes[2] === 0xff
-    ) return "image/jpeg";
-
-    // WebP
-    if (
-        bytes.length >= 12 &&
-        String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" &&
-        String.fromCharCode(...bytes.slice(8, 12)) === "WEBP"
-    ) return "image/webp";
-
-    return null;
 }
 
 export default {
@@ -681,50 +744,6 @@ export default {
                 }, 201, {
                     "Cache-Control": "no-store"
                 });
-            }
-
-            // Public avatar and equipped-frame data for leaderboard players.
-            if (
-                path === "/api/leaderboard/avatar-frames" &&
-                request.method === "GET"
-            ) {
-                
-const result = await env.db.prepare(`
-    SELECT
-        leaderboard_profiles.leaderboard_name,
-        profile_settings.equipped_frame,
-        profile_pictures.user_id AS picture_user_id
-    FROM leaderboard_profiles
-    LEFT JOIN profile_settings
-        ON profile_settings.user_id = leaderboard_profiles.user_id
-    LEFT JOIN profile_pictures
-        ON profile_pictures.user_id = leaderboard_profiles.user_id
-`).all();
-
-
-                const profiles = (result.results || []).map(profile => {
-                    const frameId = profile.equipped_frame || null;
-                    const frame = FRAME_DEFINITIONS.find(
-                        item => item.id === frameId
-                    );
-
-                    return {
-                        leaderboard_name: profile.leaderboard_name,
-                        
-avatar_url: profile.picture_user_id
-    ? `/api/profile/avatar?name=${encodeURIComponent(profile.leaderboard_name)}`
-    : "/assets/profile/No%20PFP.png",
-
-                        equipped_frame: frame ? frame.id : null,
-                        frame_url: frame ? frame.image : null
-                    };
-                });
-
-                return json(
-                    { profiles },
-                    200,
-                    { "Cache-Control": "no-cache" }
-                );
             }
 
             // Public list of known leaderboard identities.
@@ -1257,194 +1276,6 @@ avatar_url: profile.picture_user_id
                     success: true,
                     message: `${target.username} has been unbanned.`
                 }, 200, { "Cache-Control": "no-store" });
-            }
-
-            // Upload or replace the logged-in user's profile picture.
-            if (
-                path === "/api/profile/avatar" &&
-                request.method === "POST"
-            ) {
-                const user = await currentUser(request, env.db);
-
-                if (!user) {
-                    return json({ error: "Please log in." }, 401, {
-                        "Cache-Control": "no-store"
-                    });
-                }
-
-                if (!env.PROFILE_IMAGES) {
-                    return json({
-                        error: "Profile image storage is not configured."
-                    }, 503);
-                }
-
-                const declaredLength = Number(
-                    request.headers.get("Content-Length") || 0
-                );
-
-                if (declaredLength > MAX_AVATAR_SIZE + 100_000) {
-                    return json({
-                        error: "Image must be 2 MB or smaller."
-                    }, 413);
-                }
-
-                let form;
-                try {
-                    form = await request.formData();
-                } catch {
-                    return json({ error: "Invalid upload." }, 400);
-                }
-
-                const image = form.get("image");
-
-                if (
-                    !image ||
-                    typeof image.arrayBuffer !== "function" ||
-                    typeof image.size !== "number"
-                ) {
-                    return json({
-                        error: "Choose an image to upload."
-                    }, 400);
-                }
-
-                if (image.size < 1 || image.size > MAX_AVATAR_SIZE) {
-                    return json({
-                        error: "Image must be between 1 byte and 2 MB."
-                    }, 413);
-                }
-
-                const allowedTypes = [
-                    "image/png",
-                    "image/jpeg",
-                    "image/webp"
-                ];
-
-                if (!allowedTypes.includes(image.type)) {
-                    return json({
-                        error: "Only PNG, JPEG, and WebP images are allowed."
-                    }, 400);
-                }
-
-                const bytes = new Uint8Array(
-                    await image.arrayBuffer()
-                );
-
-                const detectedType = detectImageType(bytes);
-
-                if (!detectedType || detectedType !== image.type) {
-                    return json({
-                        error: "The image file is invalid or its type does not match."
-                    }, 400);
-                }
-
-                const old = await env.db.prepare(`
-                    SELECT object_key
-                    FROM profile_pictures
-                    WHERE user_id = ?
-                `).bind(user.id).first();
-
-                const extension = {
-                    "image/png": "png",
-                    "image/jpeg": "jpg",
-                    "image/webp": "webp"
-                }[detectedType];
-
-                const objectKey =
-                    `${user.id}/${crypto.randomUUID()}.${extension}`;
-
-                await env.PROFILE_IMAGES.put(objectKey, bytes, {
-                    httpMetadata: {
-                        contentType: detectedType,
-                        cacheControl: "public, max-age=3600"
-                    }
-                });
-
-                try {
-                    await env.db.prepare(`
-                        INSERT INTO profile_pictures
-                            (user_id, object_key, updated_at)
-                        VALUES (?, ?, ?)
-                        ON CONFLICT(user_id) DO UPDATE SET
-                            object_key = excluded.object_key,
-                            updated_at = excluded.updated_at
-                    `).bind(
-                        user.id,
-                        objectKey,
-                        Math.floor(Date.now() / 1000)
-                    ).run();
-                } catch (error) {
-                    await env.PROFILE_IMAGES.delete(objectKey);
-                    throw error;
-                }
-
-                if (old?.object_key && old.object_key !== objectKey) {
-                    await env.PROFILE_IMAGES.delete(old.object_key);
-                }
-
-                return json({
-                    success: true,
-                    avatarUrl: `/api/profile/avatar?name=${encodeURIComponent(
-                        (await env.db.prepare(`
-                            SELECT leaderboard_name
-                            FROM leaderboard_profiles
-                            WHERE user_id = ?
-                        `).bind(user.id).first())?.leaderboard_name || ""
-                    )}&v=${Date.now()}`
-                }, 200, { "Cache-Control": "no-store" });
-            }
-
-            // Publicly serve a player's uploaded avatar.
-            if (
-                path === "/api/profile/avatar" &&
-                request.method === "GET"
-            ) {
-                if (!env.PROFILE_IMAGES) {
-                    return new Response("Image storage unavailable.", {
-                        status: 503
-                    });
-                }
-
-                const name = (
-                    url.searchParams.get("name") || ""
-                ).trim();
-
-                if (!name || name.length > 100) {
-                    return new Response("Not found.", { status: 404 });
-                }
-
-                const profile = await env.db.prepare(`
-                    SELECT profile_pictures.object_key
-                    FROM leaderboard_profiles
-                    JOIN profile_pictures
-                        ON profile_pictures.user_id =
-                           leaderboard_profiles.user_id
-                    WHERE leaderboard_profiles.leaderboard_name = ?
-                      COLLATE NOCASE
-                `).bind(name).first();
-
-                if (!profile?.object_key) {
-                    return env.ASSETS.fetch(
-                        new Request(
-                            new URL("/assets/profile/No%20PFP.png", url.origin)
-                        )
-                    );
-                }
-
-                const object = await env.PROFILE_IMAGES.get(
-                    profile.object_key
-                );
-
-                if (!object) {
-                    return new Response("Not found.", { status: 404 });
-                }
-
-                const headers = new Headers();
-                object.writeHttpMetadata(headers);
-                headers.set("ETag", object.httpEtag);
-                headers.set("X-Content-Type-Options", "nosniff");
-                headers.set("Cache-Control", "public, max-age=3600");
-
-                return new Response(object.body, { headers });
             }
 
             // Delegate submission history, review queue, approval and level
