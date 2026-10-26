@@ -12,13 +12,6 @@ const FREE_FRAMES = new Set([
 ]);
 import { getAchievements } from "./js/achievements.js";
 
-const FREE_FRAMES = new Set([
-    "angy",
-    "appi",
-    "hidrog",
-    "polish"
-]);
-
 const FRAME_DEFINITIONS = [
     { id: "angy", requirement: "free" },
     { id: "appi", requirement: "free" },
