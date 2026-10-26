@@ -481,6 +481,7 @@ export default {
             leaderboardLoading: true,
             joining: false,
             leaderboardMessage: '',
+            profilePictureUrl: "/assets/profile/No%20PFP.png",
 
             compareIdentities: [],
             compareOpponent: '',
@@ -607,6 +608,7 @@ avatarMessage: "",
                     name: 'Wjat',
                     image: '/assets/profile/Wjat.png',
                     requirement: 'Beat Acheron Easy.'
+                    
                 },
                 {
                     id: 'gartyen',
