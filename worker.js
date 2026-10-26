@@ -10,6 +10,61 @@ const FREE_FRAMES = new Set([
     "hidrog",
     "polish"
 ]);
+import { getAchievements } from "./js/achievements.js";
+
+const FREE_FRAMES = new Set([
+    "angy",
+    "appi",
+    "hidrog",
+    "polish"
+]);
+
+const FRAME_DEFINITIONS = [
+    { id: "angy", requirement: "free" },
+    { id: "appi", requirement: "free" },
+    { id: "hidrog", requirement: "free" },
+    { id: "polish", requirement: "free" },
+
+    { id: "bronze", requirement: "tier", tier: "Bronze" },
+    { id: "silver", requirement: "tier", tier: "Silver" },
+    { id: "gold", requirement: "tier", tier: "Gold" },
+    { id: "diamond", requirement: "tier", tier: "Diamond" },
+    { id: "platinum", requirement: "tier", tier: "Platinum" },
+    { id: "legendary", requirement: "tier", tier: "Legendary" },
+
+    { id: "fire", requirement: "achievement", achievementId: "complete-5" }
+];
+
+function calculateUnlockedFrames(player) {
+    const achievements = getAchievements({
+        completed: player.completed || [],
+        verified: player.verified || [],
+        progressed: player.progressed || [],
+        packsBeaten: player.packsBeaten || []
+    });
+
+    const unlockedTiers = new Set(
+        achievements
+            .filter(achievement => achievement.unlocked)
+            .map(achievement => achievement.tier)
+    );
+
+    const unlockedAchievementIds = new Set(
+        achievements
+            .filter(achievement => achievement.unlocked)
+            .map(achievement => achievement.id)
+    );
+
+    return FRAME_DEFINITIONS.map(frame => ({
+        ...frame,
+        unlocked:
+            frame.requirement === "free" ||
+            (frame.requirement === "tier" &&
+                unlockedTiers.has(frame.tier)) ||
+            (frame.requirement === "achievement" &&
+                unlockedAchievementIds.has(frame.achievementId))
+    }));
+}
 function json(data, status = 200, headers = {}) {
     return Response.json(data, { status, headers });
 }
