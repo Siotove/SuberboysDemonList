@@ -66,8 +66,8 @@ export const PACK_DEFINITIONS = [
     {
         id: 'spooky',
         name: 'Halloween Event',
-        category: 'Silver',
-        bonus: 200,
+        category: 'Gold',
+        bonus: 500,
         levelPaths: ['Spookweiner', 'SSS', 'Trytohide', 'HalloweenPanic'],
     },
 ];
