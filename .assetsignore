@@ -1,0 +1,14 @@
+.git/
+.github/
+.wrangler/
+worker.js
+worker.js.map
+submission-routes.js
+submissions.js
+wrangler.jsonc
+migrations/
+.assetsignore
+.gitignore
+.editorconfig
+README.md
+SECURITY.md
