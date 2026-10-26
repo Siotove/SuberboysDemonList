@@ -15,12 +15,6 @@
       "database_id": "9b7197a0-0966-4795-b0b8-c262f3ae5dcd"
     }
   ],
-  "r2_buckets": [
-    {
-      "binding": "PROFILE_IMAGES",
-      "bucket_name": "suberboysdemonlist-profile-images"
-    }
-  ],
   "observability": {
     "logs": {
       "enabled": true,
