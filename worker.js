@@ -3,7 +3,7 @@ import { handleSubmissionRoute } from "./submission-routes.js";
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const PBKDF2_ITERATIONS = 100000;
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
-
+ 
 function json(data, status = 200, headers = {}) {
     return Response.json(data, { status, headers });
 }
