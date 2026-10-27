@@ -26,11 +26,19 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Require confirmation
+            - name: Require confirmation
         env:
           CONFIRM_INSTALL: ${{ inputs.confirm_install }}
-        run: test "$CONFIRM_INSTALL" = "yes"
-
+        run: |
+          case "$CONFIRM_INSTALL" in
+            yes|true)
+              echo "Installation confirmed."
+              ;;
+            *)
+              echo "Please confirm installation." >&2
+              exit 1
+              ;;
+          esac
       - name: Unpack upgrade package safely
         run: |
           python - <<'PY'
