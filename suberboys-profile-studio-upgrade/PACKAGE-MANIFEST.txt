@@ -1,0 +1,17 @@
+PACKAGE CONTENTS
+
+README.md
+README.txt
+PROFILE_CUSTOMIZATION_FEATURES.txt
+PACKAGE-MANIFEST.txt
+apply_profile_customization.py
+
+New frontend files:
+  js/profile-customization-options.js
+  js/pages/PlayerShowcase.js
+  css/pages/player-showcase.css
+
+D1 schema:
+  migrations/0003_player_customizations.sql
+
+The integration script patches the existing worker.js, Profile.js, Leaderboard.js, routes.js, index.html, profile.css, and leaderboard.css in-place after checking the expected anchors. No full replacement of the Worker is included.

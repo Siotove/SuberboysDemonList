@@ -1,0 +1,29 @@
+PROFILE CUSTOMIZATION OPTIONS
+
+IDENTITY
+- Optional display name override
+- Optional nationality / country with flag (249 country choices)
+- Clan/team name
+- Clan tag (up to 8 letters/numbers/underscores)
+- Clan role: Leader, Co-leader, Officer, Member, Recruit
+- Public profile title
+- One-line tagline
+- Current status
+- 240-character bio
+- Main gamemode
+- Favourite level
+- HTTPS website/public link
+
+APPEARANCE
+- 14 curated accent colours
+- 8 banner styles: Aurora, Nebula, Ocean, Sunset, Forest, Cyber Grid, Prism, Monochrome
+- 5 themes: Midnight, Obsidian, Arcade, Dawn, Deep Sea
+- 5 borders: Accent Glow, Soft, Solid, Double, Dashed
+- Live preview using the existing avatar and equipped frame
+
+PRIVACY
+Individually show/hide nationality, clan, title, tagline, status, bio, gamemode, favourite level, and website. Nationality and website are hidden publicly by default.
+
+PUBLIC DISPLAY
+- On the leaderboard: optional flag/country, clan/tag/role, and profile title.
+- On /players/<leaderboard-name>: customised banner, theme, border, avatar/frame, clan, title, bio, record highlights, stats and achievements.
