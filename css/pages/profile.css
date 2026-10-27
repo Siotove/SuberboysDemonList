@@ -417,3 +417,64 @@ body#app {
 .pc-save-row { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: .75rem; }
 .pc-save-row > div { display: flex; flex-wrap: wrap; gap: .6rem; }
 @media (max-width: 650px) { .pc-form-grid { grid-template-columns: 1fr; } .pc-field-full { grid-column: auto; } .pc-visibility-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pc-preview-body { align-items: flex-start; } .pc-preview-avatar { width: 64px; height: 64px; flex-basis: 64px; } }
+
+/* Profile Studio: Suberboys native styling v2 */
+/* Keep the editor consistent with the site's flat sections, primary colour and form controls. */
+.profile-page .pc-customizer { --pc-control-accent: var(--color-primary); }
+.profile-page .pc-customizer > .profile-eyebrow { margin-bottom: .45rem; color: var(--color-primary); }
+.profile-page .pc-customizer > h2 { margin: 0 0 .5rem; color: var(--color-on-background); font-size: 1.5rem; line-height: 1.4; letter-spacing: -.025em; text-transform: none; }
+.profile-page .pc-customizer > .profile-muted { max-width: 72ch; line-height: 1.65; }
+
+/* The preview still reflects the user's selected theme, banner and border. */
+.profile-page .pc-customizer .pc-preview { margin: 1rem 0 1.5rem; border-radius: .55rem; box-shadow: none; }
+.profile-page .pc-customizer .pc-preview-banner { min-height: 58px; align-items: center; padding: .85rem 1rem; letter-spacing: .1em; }
+.profile-page .pc-customizer .pc-preview-chip { border-radius: .35rem; font-weight: 700; }
+.profile-page .pc-customizer .pc-preview-body { gap: 1rem; padding: 1rem; }
+.profile-page .pc-customizer .pc-preview-avatar { width: 72px; height: 72px; flex-basis: 72px; outline-width: 2px; outline-offset: 2px; }
+.profile-page .pc-customizer .pc-preview-identity h3 { margin: .2rem 0; font-family: var(--font-main, "Lexend Deca", sans-serif); font-size: 1.15rem; font-weight: 700; line-height: 1.4; letter-spacing: 0; text-transform: none; }
+.profile-page .pc-customizer .pc-preview-topline span { border-radius: .35rem; }
+.profile-page .pc-customizer .pc-preview-bio { margin-right: 1rem; margin-left: 1rem; line-height: 1.6; }
+.profile-page .pc-customizer .pc-preview-facts { padding-right: 1rem; padding-left: 1rem; }
+
+/* Form sections use the same plain divider pattern as the rest of Profile. */
+.profile-page .pc-customizer .pc-form { display: flex; flex-direction: column; gap: 1.35rem; margin-top: .25rem; }
+.profile-page .pc-customizer .pc-form-heading { align-items: center; justify-content: space-between; margin-top: .2rem; padding-bottom: .65rem; border-bottom: 1px solid var(--color-background-hover); }
+.profile-page .pc-customizer .pc-form-heading h3 { margin: 0; color: var(--color-on-background); font-size: 1.1rem; font-weight: 700; line-height: 1.5; letter-spacing: 0; text-transform: none; }
+.profile-page .pc-customizer .pc-form-heading > span { color: var(--color-on-background); font-size: .8rem; opacity: .7; }
+.profile-page .pc-customizer .pc-form-grid { gap: 1rem 1.15rem; }
+.profile-page .pc-customizer .pc-field { gap: .45rem; color: var(--color-on-background); font-family: var(--font-main, "Lexend Deca", sans-serif); font-size: .9rem; font-weight: 600; line-height: 1.45; }
+.profile-page .pc-customizer .pc-field > input,
+.profile-page .pc-customizer .pc-field > select,
+.profile-page .pc-customizer .pc-field > textarea { width: 100%; min-width: 0; min-height: 42px; padding: .65rem .75rem; border: 1px solid var(--color-background-hover); border-radius: .45rem; background: var(--color-background); color: var(--color-on-background); font-family: var(--font-main, "Lexend Deca", sans-serif); font-size: .9rem; font-weight: 400; line-height: 1.45; box-shadow: none; transition: border-color 120ms ease; }
+.profile-page .pc-customizer .pc-field > textarea { min-height: 6rem; resize: vertical; }
+.profile-page .pc-customizer .pc-field > input::placeholder,
+.profile-page .pc-customizer .pc-field > textarea::placeholder { color: var(--color-on-background); opacity: .55; }
+.profile-page .pc-customizer .pc-field > input:focus-visible,
+.profile-page .pc-customizer .pc-field > select:focus-visible,
+.profile-page .pc-customizer .pc-field > textarea:focus-visible { border-color: var(--color-primary); outline: 2px solid var(--color-primary); outline-offset: 1px; }
+.profile-page .pc-customizer .pc-field small { color: var(--color-on-background); font-size: .75rem; font-weight: 400; opacity: .7; }
+
+/* Visibility settings are simple rows, not a separate grid of cards. */
+.profile-page .pc-customizer .pc-visibility-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 1.25rem; }
+.profile-page .pc-customizer .pc-visibility-grid label { display: flex; align-items: center; gap: .6rem; min-width: 0; min-height: 44px; padding: .65rem 0; border: 0; border-bottom: 1px solid var(--color-background-hover); border-radius: 0; background: transparent; color: var(--color-on-background); font-size: .85rem; line-height: 1.45; cursor: pointer; }
+.profile-page .pc-customizer .pc-visibility-grid label:hover { background: transparent; }
+.profile-page .pc-customizer .pc-visibility-grid input { flex: 0 0 auto; width: 1.1rem; height: 1.1rem; accent-color: var(--color-primary); }
+.profile-page .pc-customizer .pc-save-row { align-items: center; margin-top: .2rem; padding-top: 1rem; border-top: 1px solid var(--color-background-hover); }
+.profile-page .pc-customizer .pc-save-row > div { display: flex; flex-wrap: wrap; gap: .65rem; }
+.profile-page .pc-customizer .pc-save-row .profile-message { max-width: 100%; }
+.profile-page .pc-customizer .profile-primary-button,
+.profile-page .pc-customizer .profile-secondary-button { min-height: 42px; border-radius: .45rem; font-family: var(--font-main, "Lexend Deca", sans-serif); }
+
+@media (max-width: 700px) {
+  .profile-page .pc-customizer .pc-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .profile-page .pc-customizer .pc-field-full { grid-column: auto; }
+  .profile-page .pc-customizer .pc-visibility-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 .9rem; }
+  .profile-page .pc-customizer .pc-preview-body { align-items: center; }
+  .profile-page .pc-customizer .pc-preview-avatar { width: 64px; height: 64px; flex-basis: 64px; }
+}
+@media (max-width: 420px) {
+  .profile-page .pc-customizer .pc-form-heading { align-items: flex-start; flex-direction: column; gap: .25rem; }
+  .profile-page .pc-customizer .pc-visibility-grid { grid-template-columns: minmax(0, 1fr); }
+  .profile-page .pc-customizer .pc-save-row > div { width: 100%; }
+  .profile-page .pc-customizer .pc-save-row > div button { flex: 1 1 auto; }
+}
