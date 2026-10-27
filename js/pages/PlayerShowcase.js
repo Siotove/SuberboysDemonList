@@ -13,7 +13,10 @@ export default {
             playerProfiles: [],
             player: null,
             profile: null,
-            loadErrors: []
+            loadErrors: [],
+            selectedAchievementTier: 'All',
+            achievementSearch: '',
+            showAllAchievements: false
         };
     },
     template: `
@@ -75,14 +78,35 @@ export default {
                     </div>
                 </section>
 
-                <section class="ps-section" v-if="unlockedAchievements.length">
-                    <div class="ps-section-heading"><div><p class="ps-eyebrow">MILESTONES</p><h2>Achievements</h2></div><span>{{ unlockedAchievements.length }} unlocked</span></div>
-                    <div class="ps-achievements">
-                        <article v-for="achievement in unlockedAchievements.slice(0, 12)" :key="achievement.id" class="ps-achievement">
-                            <span class="ps-achievement-gem">✦</span>
-                            <div><strong>{{ achievement.name }}</strong><small>{{ achievement.tier }}</small></div>
+                <section class="ps-section" v-if="allAchievements.length">
+                    <div class="ps-section-heading">
+                        <div><p class="ps-eyebrow">MILESTONES</p><h2>Achievements</h2></div>
+                        <span>{{ unlockedAchievements.length }} / {{ allAchievements.length }} unlocked</span>
+                    </div>
+                    <div class="ps-achievement-progress-wrap">
+                        <div class="ps-achievement-progress" role="progressbar" aria-label="Achievement completion" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="achievementProgressPercent">
+                            <span class="ps-achievement-progress-fill" :style="{ width: achievementProgressPercent + '%' }"></span>
+                        </div>
+                        <span class="ps-achievement-progress-label">{{ achievementProgressPercent }}% complete</span>
+                    </div>
+                    <div class="ps-achievement-tools" v-if="unlockedAchievements.length">
+                        <label class="ps-achievement-search">
+                            <span class="ps-sr-only">Search unlocked achievements</span>
+                            <input v-model="achievementSearch" type="search" placeholder="Search achievements…" autocomplete="off">
+                        </label>
+                        <div class="ps-tier-filters" role="group" aria-label="Filter achievements by tier">
+                            <button type="button" class="ps-tier-filter" :class="{ 'is-active': selectedAchievementTier === 'All' }" :aria-pressed="selectedAchievementTier === 'All'" @click="selectedAchievementTier = 'All'">All <span>{{ unlockedAchievements.length }}</span></button>
+                            <button v-for="tier in achievementTierFilters" :key="tier.name" type="button" :class="['ps-tier-filter', 'ps-filter-' + tierSlug(tier.name), { 'is-active': selectedAchievementTier === tier.name }]" :aria-pressed="selectedAchievementTier === tier.name" @click="selectedAchievementTier = tier.name">{{ tier.name }} <span>{{ tier.count }}</span></button>
+                        </div>
+                    </div>
+                    <div v-if="displayedAchievements.length" class="ps-achievements">
+                        <article v-for="achievement in displayedAchievements" :key="achievement.id" :class="['ps-achievement', 'ps-tier-' + tierSlug(achievement.tier)]">
+                            <span class="ps-achievement-gem" aria-hidden="true">✦</span>
+                            <div class="ps-achievement-copy"><strong>{{ achievement.name }}</strong><small class="ps-achievement-tier">{{ achievement.tier }}</small></div>
                         </article>
                     </div>
+                    <p v-else class="ps-achievement-empty">No unlocked achievements match that search or tier.</p>
+                    <button v-if="filteredAchievements.length > 12" type="button" class="ps-achievement-expand" @click="showAllAchievements = !showAllAchievements">{{ showAllAchievements ? 'Show fewer' : 'Show all ' + filteredAchievements.length + ' achievements' }}</button>
                 </section>
 
                 <section class="ps-section ps-bottom-actions">
@@ -109,8 +133,34 @@ export default {
             const sorted = [...this.players].sort((a, b) => (Number(b.total) || 0) - (Number(a.total) || 0));
             return Math.max(1, sorted.findIndex(item => item.user?.toLocaleLowerCase('en') === this.player?.user?.toLocaleLowerCase('en')) + 1);
         },
+        allAchievements() {
+            return this.player ? getAchievements(this.player) : [];
+        },
         unlockedAchievements() {
-            return this.player ? getAchievements(this.player).filter(item => item.unlocked) : [];
+            return this.allAchievements.filter(item => item.unlocked);
+        },
+        achievementProgressPercent() {
+            return this.allAchievements.length
+                ? Math.round((this.unlockedAchievements.length / this.allAchievements.length) * 100)
+                : 0;
+        },
+        achievementTierFilters() {
+            const order = ['Bronze', 'Silver', 'Gold', 'Diamond', 'Platinum', 'Legendary'];
+            return order.map(name => ({
+                name,
+                count: this.unlockedAchievements.filter(item => String(item.tier || '').toLowerCase() === name.toLowerCase()).length
+            })).filter(item => item.count > 0);
+        },
+        filteredAchievements() {
+            const query = this.achievementSearch.trim().toLocaleLowerCase('en');
+            return this.unlockedAchievements.filter(item => {
+                const tierMatches = this.selectedAchievementTier === 'All' || String(item.tier || '').toLowerCase() === this.selectedAchievementTier.toLowerCase();
+                const searchMatches = !query || String(item.name || '').toLocaleLowerCase('en').includes(query) || String(item.tier || '').toLocaleLowerCase('en').includes(query);
+                return tierMatches && searchMatches;
+            });
+        },
+        displayedAchievements() {
+            return this.showAllAchievements ? this.filteredAchievements : this.filteredAchievements.slice(0, 12);
         },
         topRecords() {
             if (!this.player) return [];
@@ -135,11 +185,17 @@ export default {
         localize(value) {
             return Number(value || 0).toLocaleString('en-GB', { maximumFractionDigits: 3 });
         },
+        tierSlug(value) {
+            return String(value || 'default').toLocaleLowerCase('en').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'default';
+        },
         async loadPlayer() {
             this.loading = true;
             this.error = '';
             this.player = null;
             this.profile = null;
+            this.selectedAchievementTier = 'All';
+            this.achievementSearch = '';
+            this.showAllAchievements = false;
             const requestedName = String(this.$route.params.name || '');
             try {
                 const [players, errors] = await (async () => {
