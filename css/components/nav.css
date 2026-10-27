@@ -55,6 +55,7 @@
     border-color: var(--color-on-primary);
 }
 
+/* Keep the action buttons on the header background: no purple slab or shadow. */
 .nav .nav__actions {
     display: flex;
     flex: 0 0 auto;
@@ -63,12 +64,7 @@
     gap: 0.25rem;
     min-width: max-content;
     flex-shrink: 0;
-    position: relative;
-    z-index: 2;
     margin-left: 0.5rem;
-    padding-left: 0.5rem;
-    background-color: var(--color-primary);
-    box-shadow: -8px 0 10px var(--color-primary);
 }
 
 .nav .nav__actions .nav__icon {
@@ -137,7 +133,6 @@ body > #app > header .logo {
     .nav .nav__actions {
         gap: 0;
         margin-left: 0.25rem;
-        padding-left: 0.25rem;
     }
 
     .nav .nav__actions .nav__icon {
