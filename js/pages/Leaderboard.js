@@ -1,6 +1,7 @@
 import { fetchLeaderboard } from '../content.js';
 import { localize } from '../util.js';
 import { getAchievements } from '../achievements.js';
+import { countryFlag, countryName } from '../profile-customization-options.js';
 import Spinner from '../components/Spinner.js';
 
 export default {
@@ -76,8 +77,16 @@ export default {
             >
         </span>
 
-        <span class="type-label-lg">{{ ientry.user }}</span>
+        <span class="leaderboard-player-details">
+            <span class="type-label-lg">{{ avatarFor(ientry).displayName || ientry.user }}</span>
+            <span v-if="avatarFor(ientry).profileTitle" class="leaderboard-player-title" :style="{ color: avatarFor(ientry).accentColor }">{{ avatarFor(ientry).profileTitle }}</span>
+            <span class="leaderboard-player-meta">
+                <span v-if="avatarFor(ientry).countryCode">{{ countryFlag(avatarFor(ientry).countryCode) }} {{ countryName(avatarFor(ientry).countryCode) }}</span>
+                <span v-if="avatarFor(ientry).clanName">{{ avatarFor(ientry).clanTag ? '[' + avatarFor(ientry).clanTag + '] ' : '' }}{{ avatarFor(ientry).clanName }}{{ avatarFor(ientry).clanRole ? ' · ' + avatarFor(ientry).clanRole : '' }}</span>
+            </span>
+        </span>
     </button>
+    <router-link class="leaderboard-profile-shortcut" :to="playerProfileRoute(ientry.user)" @click.stop>Profile ↗</router-link>
 </td>
     </tr>
 </table>
@@ -234,7 +243,12 @@ async mounted() {
 },
 
 methods: {
-    localize,
+     countryFlag,
+     countryName,
+     playerProfileRoute(playerName) {
+         return '/players/' + encodeURIComponent(String(playerName || ''));
+     },
+     localize,
 
     avatarFor(player) {
         const profile = this.avatarProfiles.find(
@@ -268,7 +282,13 @@ methods: {
 
         return {
             pfp: profile?.avatar_url || '/assets/profile/No%20PFP.png',
-            frame: frames[profile?.equipped_frame] || null,
+            frame: profile?.frame_url || frames[profile?.equipped_frame] || null,
+            displayName: profile?.display_name || '',
+            countryCode: profile?.country_code || '',
+            clanName: profile?.clan_name || '',
+            clanTag: profile?.clan_tag || '',
+            profileTitle: profile?.profile_title || '',
+            accentColor: profile?.accent_color || '#a855f7',
         };
     },
 

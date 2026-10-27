@@ -1,3 +1,4 @@
+import { PROFILE_CUSTOMIZATION_DEFAULTS, COUNTRY_OPTIONS, ACCENT_OPTIONS, BANNER_OPTIONS, THEME_OPTIONS, BORDER_OPTIONS, GAMEMODE_OPTIONS, CLAN_ROLE_OPTIONS } from '../profile-customization-options.js';
 export default {
     template: `
         <main class="account-page profile-page">
@@ -6,7 +7,7 @@ export default {
                 <div class="profile-avatar">
                     <img
                         class="profile-avatar-image"
-                        src="/assets/profile/No%20PFP.png"
+                        :src="profilePictureUrl"
                         alt="Profile picture"
                         width="100"
                         height="100"
@@ -100,6 +101,68 @@ export default {
 </div>
 
             <template v-if="!loading && user">
+                <!-- Expanded profile customisation -->
+                <section class="profile-panel profile-customization-panel pc-customizer" :style="{ '--pc-accent': customization.accent_color }">
+                    <p class="profile-eyebrow">MAKE IT YOURS</p>
+                    <h2>Profile Studio</h2>
+                    <p class="profile-muted">Your nationality is optional. Clan details are self-declared display information, not verified clan membership. Use the visibility switches to control what appears publicly.</p>
+
+                    <div class="pc-preview" :class="['pc-theme-' + customization.profile_theme, 'pc-banner-' + customization.banner_style, 'pc-border-' + customization.border_style]" :style="{ '--pc-accent': customization.accent_color }">
+                        <div class="pc-preview-banner"><span>SUBERBOYS DEMON LIST</span><span class="pc-preview-chip">LIVE PREVIEW</span></div>
+                        <div class="pc-preview-body">
+                            <div class="pc-preview-avatar"><img :src="profilePictureUrl" alt=""><img v-if="equippedFrameImage" :src="equippedFrameImage" alt="" class="pc-preview-frame"></div>
+                            <div class="pc-preview-identity">
+                                <p class="pc-preview-topline"><span v-if="customization.show_nationality && customization.country_code">{{ countryFlag(customization.country_code) }} {{ countryLabel(customization.country_code) }}</span><span v-if="customization.show_clan && customization.clan_name">{{ customization.clan_tag ? '[' + customization.clan_tag + '] ' : '' }}{{ customization.clan_name }}<small v-if="customization.clan_role"> · {{ customization.clan_role }}</small></span></p>
+                                <h3>{{ customization.display_name || leaderboardProfile?.leaderboard_name || user?.username || 'Your display name' }}</h3>
+                                <p v-if="customization.show_title && customization.profile_title" class="pc-preview-title">{{ customization.profile_title }}</p>
+                                <p v-if="customization.show_tagline && customization.tagline" class="pc-preview-tagline">{{ customization.tagline }}</p>
+                                <p v-if="customization.show_status && customization.status" class="pc-preview-status">● {{ customization.status }}</p>
+                            </div>
+                        </div>
+                        <p v-if="customization.show_bio && customization.bio" class="pc-preview-bio">{{ customization.bio }}</p>
+                        <div class="pc-preview-facts"><span v-if="customization.show_gamemode && customization.main_gamemode !== 'All-around'">Main: {{ customization.main_gamemode }}</span><span v-if="customization.show_favorite_level && customization.favorite_level">Favourite: {{ customization.favorite_level }}</span><span v-if="customization.show_website && customization.website_url">Website link set ↗</span></div>
+                    </div>
+
+                    <form class="pc-form" @submit.prevent="saveCustomization">
+                        <div class="pc-form-heading"><h3>Identity</h3><span>Optional public details</span></div>
+                        <div class="pc-form-grid">
+                            <label class="pc-field"><span>Display name</span><input v-model.trim="customization.display_name" maxlength="24" placeholder="Use your leaderboard name"></label>
+                            <label class="pc-field"><span>Nationality / country</span><select v-model="customization.country_code"><option v-for="country in customizationCountries" :key="country.value" :value="country.value">{{ country.value ? countryFlag(country.value) + ' ' : '' }}{{ country.label }}</option></select></label>
+                            <label class="pc-field"><span>Clan / team name</span><input v-model.trim="customization.clan_name" maxlength="32" placeholder="e.g. Suberboys"></label>
+                            <label class="pc-field"><span>Clan tag (8 characters max)</span><input v-model.trim="customization.clan_tag" maxlength="8" placeholder="SBDL"></label>
+                            <label class="pc-field"><span>Clan role</span><select v-model="customization.clan_role"><option v-for="role in customizationClanRoles" :key="role.value" :value="role.value">{{ role.label }}</option></select></label>
+                            <label class="pc-field"><span>Profile title</span><input v-model.trim="customization.profile_title" maxlength="32" placeholder="Wave grinder, verifier…"></label>
+                            <label class="pc-field"><span>Tagline</span><input v-model.trim="customization.tagline" maxlength="64" placeholder="One line about your playstyle"></label>
+                            <label class="pc-field"><span>Status</span><input v-model.trim="customization.status" maxlength="40" placeholder="Grinding top 20"></label>
+                            <label class="pc-field"><span>Main gamemode</span><select v-model="customization.main_gamemode"><option v-for="mode in customizationGamemodes" :key="mode.value" :value="mode.value">{{ mode.label }}</option></select></label>
+                            <label class="pc-field"><span>Favourite level</span><input v-model.trim="customization.favorite_level" maxlength="80" placeholder="Your favourite level"></label>
+                            <label class="pc-field pc-field-full"><span>Bio</span><textarea v-model.trim="customization.bio" maxlength="240" rows="3" placeholder="Tell the community a little about your Geometry Dash journey…"></textarea><small>{{ customization.bio.length }}/240 characters</small></label>
+                            <label class="pc-field pc-field-full"><span>Website or public link (HTTPS)</span><input v-model.trim="customization.website_url" type="url" maxlength="240" placeholder="https://example.com"></label>
+                        </div>
+
+                        <div class="pc-form-heading"><h3>Appearance</h3><span>Mix and match your style</span></div>
+                        <div class="pc-form-grid">
+                            <label class="pc-field"><span>Accent colour</span><select v-model="customization.accent_color"><option v-for="colour in customizationAccents" :key="colour.value" :value="colour.value">{{ colour.label }}</option></select></label>
+                            <label class="pc-field"><span>Banner style</span><select v-model="customization.banner_style"><option v-for="banner in customizationBanners" :key="banner.value" :value="banner.value">{{ banner.label }}</option></select></label>
+                            <label class="pc-field"><span>Card theme</span><select v-model="customization.profile_theme"><option v-for="theme in customizationThemes" :key="theme.value" :value="theme.value">{{ theme.label }}</option></select></label>
+                            <label class="pc-field"><span>Card border</span><select v-model="customization.border_style"><option v-for="border in customizationBorders" :key="border.value" :value="border.value">{{ border.label }}</option></select></label>
+                        </div>
+
+                        <div class="pc-form-heading"><h3>Privacy and visibility</h3><span>Change what other players can see</span></div>
+                        <div class="pc-visibility-grid">
+                            <label><input type="checkbox" v-model="customization.show_nationality"><span>Show nationality</span></label>
+                            <label><input type="checkbox" v-model="customization.show_clan"><span>Show clan</span></label>
+                            <label><input type="checkbox" v-model="customization.show_title"><span>Show title</span></label>
+                            <label><input type="checkbox" v-model="customization.show_tagline"><span>Show tagline</span></label>
+                            <label><input type="checkbox" v-model="customization.show_status"><span>Show status</span></label>
+                            <label><input type="checkbox" v-model="customization.show_bio"><span>Show bio</span></label>
+                            <label><input type="checkbox" v-model="customization.show_gamemode"><span>Show main gamemode</span></label>
+                            <label><input type="checkbox" v-model="customization.show_favorite_level"><span>Show favourite level</span></label>
+                            <label><input type="checkbox" v-model="customization.show_website"><span>Show public link</span></label>
+                        </div>
+                        <div class="pc-save-row"><p v-if="customizationMessage" role="status" class="profile-message">{{ customizationMessage }}</p><div><button type="button" class="profile-secondary-button" @click="resetCustomization" :disabled="customizationSaving">Reset defaults</button><button type="submit" class="profile-primary-button" :disabled="customizationSaving || customizationLoading">{{ customizationSaving ? 'Saving…' : 'Save profile style' }}</button></div></div>
+                    </form>
+                </section>
                 <!-- Leaderboard identity -->
                 <section class="profile-panel">
                     <div class="profile-panel-heading">
@@ -494,6 +557,17 @@ export default {
 selectedAvatar: null,
 uploadingAvatar: false,
 avatarMessage: "",
+            customization: { ...PROFILE_CUSTOMIZATION_DEFAULTS },
+            customizationLoading: false,
+            customizationSaving: false,
+            customizationMessage: '',
+            customizationCountries: COUNTRY_OPTIONS,
+            customizationAccents: ACCENT_OPTIONS,
+            customizationBanners: BANNER_OPTIONS,
+            customizationThemes: THEME_OPTIONS,
+            customizationBorders: BORDER_OPTIONS,
+            customizationGamemodes: GAMEMODE_OPTIONS,
+            customizationClanRoles: CLAN_ROLE_OPTIONS,
             availableFrames: [
                 {
                     id: 'angy',
@@ -653,6 +727,7 @@ avatarMessage: "",
             this.user = result.user;
 
             if (this.user) {
+                await this.loadCustomization();
                 await this.loadLeaderboardProfile();
                 await this.loadAvatarFrames();
 
@@ -669,6 +744,55 @@ avatarMessage: "",
     },
 
     methods: {
+        countryFlag(code) {
+            const value = String(code || '').toUpperCase();
+            if (!/^[A-Z]{2}$/.test(value)) return '';
+            return String.fromCodePoint(...[...value].map(char => 127397 + char.charCodeAt(0)));
+        },
+        countryLabel(code) {
+            const country = this.customizationCountries.find(item => item.value === String(code || '').toUpperCase());
+            return country ? country.label : '';
+        },
+        async loadCustomization() {
+            this.customizationLoading = true;
+            this.customizationMessage = '';
+            try {
+                const response = await fetch('/api/profile/customization', { credentials: 'same-origin', cache: 'no-store' });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Could not load profile settings.');
+                this.customization = { ...PROFILE_CUSTOMIZATION_DEFAULTS, ...(result.customization || {}) };
+            } catch (error) {
+                this.customizationMessage = error.message || 'Could not load profile settings.';
+            } finally {
+                this.customizationLoading = false;
+            }
+        },
+        async saveCustomization() {
+            if (this.customizationSaving) return;
+            this.customizationSaving = true;
+            this.customizationMessage = '';
+            try {
+                const response = await fetch('/api/profile/customization', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.customization)
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Could not save profile settings.');
+                this.customization = { ...PROFILE_CUSTOMIZATION_DEFAULTS, ...(result.customization || {}) };
+                this.customizationMessage = 'Profile customisation saved! Your public profile and leaderboard details will use these settings.';
+            } catch (error) {
+                this.customizationMessage = error.message || 'Could not save profile settings.';
+            } finally {
+                this.customizationSaving = false;
+            }
+        },
+        async resetCustomization() {
+            this.customization = { ...PROFILE_CUSTOMIZATION_DEFAULTS };
+            await this.saveCustomization();
+        },
+
         async equipFrame(frame) {
     if (!frame.unlocked || frame.saving) return;
 

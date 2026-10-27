@@ -743,7 +743,117 @@ export default {
                 });
             }
 
-            // Avatar frames: list unlocked frames and the currently equipped frame.
+            // Player customisation settings. Profile text is stored as plain text and returned through JSON.
+if (path === "/api/profile/customization" && ["GET", "POST"].includes(request.method)) {
+    const user = await currentUser(request, env.db);
+    if (!user) return json({ error: "Please log in." }, 401, { "Cache-Control": "no-store" });
+
+    const defaults = {
+        display_name: "", country_code: "", clan_name: "", clan_tag: "", clan_role: "Member",
+        profile_title: "", tagline: "", status: "", bio: "", main_gamemode: "All-around", favorite_level: "",
+        accent_color: "#a855f7", banner_style: "aurora", profile_theme: "midnight", border_style: "glow", website_url: "",
+        show_nationality: false, show_clan: true, show_title: true, show_tagline: true, show_status: true,
+        show_bio: true, show_gamemode: true, show_favorite_level: false, show_website: false
+    };
+    const clientShape = row => {
+        const value = { ...defaults, ...(row || {}) };
+        for (const key of ["show_nationality", "show_clan", "show_title", "show_tagline", "show_status", "show_bio", "show_gamemode", "show_favorite_level", "show_website"]) {
+            value[key] = Boolean(value[key]);
+        }
+        delete value.user_id;
+        delete value.updated_at;
+        return value;
+    };
+
+    if (request.method === "GET") {
+        const row = await env.db.prepare("SELECT * FROM player_customizations WHERE user_id = ?").bind(user.id).first();
+        return json({ customization: clientShape(row) }, 200, { "Cache-Control": "no-store" });
+    }
+
+    let body;
+    try { body = await request.json(); } catch { return json({ error: "Invalid JSON body." }, 400); }
+    if (!body || typeof body !== "object" || Array.isArray(body)) return json({ error: "Invalid customization payload." }, 400);
+
+    const clean = (value, max) => typeof value === "string"
+        ? value.normalize("NFKC").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim().slice(0, max)
+        : "";
+    const enumValue = (value, allowed, fallback) => allowed.includes(value) ? value : fallback;
+    const countryCode = clean(body.country_code, 2).toUpperCase();
+    if (countryCode && !/^[A-Z]{2}$/.test(countryCode)) return json({ error: "Choose a country from the list." }, 400);
+    const clanTagInput = clean(body.clan_tag, 9).replace(/^#/, "").toUpperCase();
+    if (clanTagInput && !/^[A-Z0-9_]{1,8}$/.test(clanTagInput)) return json({ error: "Clan tags can contain up to 8 letters, numbers or underscores." }, 400);
+
+    const accents = ["#a855f7", "#6366f1", "#3b82f6", "#06b6d4", "#14b8a6", "#22c55e", "#84cc16", "#eab308", "#f97316", "#ef4444", "#ec4899", "#f43f5e", "#e2e8f0", "#94a3b8"];
+    const banners = ["aurora", "nebula", "ocean", "sunset", "forest", "grid", "prism", "monochrome"];
+    const themes = ["midnight", "obsidian", "arcade", "dawn", "deep-sea"];
+    const borders = ["glow", "soft", "solid", "double", "dashed"];
+    const gamemodes = ["All-around", "Wave", "Ship", "Cube", "Robot", "Ball", "UFO", "Spider", "Swing"];
+    const clanRoles = ["Leader", "Co-leader", "Officer", "Member", "Recruit"];
+    let websiteUrl = clean(body.website_url, 240);
+    if (websiteUrl) {
+        try {
+            const parsed = new URL(websiteUrl);
+            if (parsed.protocol !== "https:" || parsed.username || parsed.password) throw new Error("bad URL");
+            websiteUrl = parsed.href;
+        } catch {
+            return json({ error: "Website link must be a valid HTTPS URL." }, 400);
+        }
+    }
+    const saved = {
+        display_name: clean(body.display_name, 24),
+        country_code: countryCode,
+        clan_name: clean(body.clan_name, 32),
+        clan_tag: clanTagInput,
+        clan_role: enumValue(body.clan_role, clanRoles, "Member"),
+        profile_title: clean(body.profile_title, 32),
+        tagline: clean(body.tagline, 64),
+        status: clean(body.status, 40),
+        bio: (typeof body.bio === "string" ? body.bio.normalize("NFKC").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim().slice(0, 240) : ""),
+        main_gamemode: enumValue(body.main_gamemode, gamemodes, "All-around"),
+        favorite_level: clean(body.favorite_level, 80),
+        accent_color: enumValue(body.accent_color, accents, defaults.accent_color),
+        banner_style: enumValue(body.banner_style, banners, defaults.banner_style),
+        profile_theme: enumValue(body.profile_theme, themes, defaults.profile_theme),
+        border_style: enumValue(body.border_style, borders, defaults.border_style),
+        website_url: websiteUrl,
+        show_nationality: body.show_nationality === true ? 1 : 0,
+        show_clan: body.show_clan === true ? 1 : 0,
+        show_title: body.show_title === true ? 1 : 0,
+        show_tagline: body.show_tagline === true ? 1 : 0,
+        show_status: body.show_status === true ? 1 : 0,
+        show_bio: body.show_bio === true ? 1 : 0,
+        show_gamemode: body.show_gamemode === true ? 1 : 0,
+        show_favorite_level: body.show_favorite_level === true ? 1 : 0,
+        show_website: body.show_website === true ? 1 : 0
+    };
+    await env.db.prepare(`
+        INSERT INTO player_customizations (
+            user_id, display_name, country_code, clan_name, clan_tag, clan_role, profile_title, tagline, status, bio,
+            main_gamemode, favorite_level, accent_color, banner_style, profile_theme, border_style, website_url,
+            show_nationality, show_clan, show_title, show_tagline, show_status, show_bio, show_gamemode,
+            show_favorite_level, show_website, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        ON CONFLICT(user_id) DO UPDATE SET
+            display_name=excluded.display_name, country_code=excluded.country_code, clan_name=excluded.clan_name,
+            clan_tag=excluded.clan_tag, clan_role=excluded.clan_role, profile_title=excluded.profile_title,
+            tagline=excluded.tagline, status=excluded.status, bio=excluded.bio, main_gamemode=excluded.main_gamemode,
+            favorite_level=excluded.favorite_level, accent_color=excluded.accent_color, banner_style=excluded.banner_style,
+            profile_theme=excluded.profile_theme, border_style=excluded.border_style, website_url=excluded.website_url,
+            show_nationality=excluded.show_nationality, show_clan=excluded.show_clan, show_title=excluded.show_title,
+            show_tagline=excluded.show_tagline, show_status=excluded.show_status, show_bio=excluded.show_bio,
+            show_gamemode=excluded.show_gamemode, show_favorite_level=excluded.show_favorite_level,
+            show_website=excluded.show_website, updated_at=datetime('now')
+    `).bind(
+        user.id, saved.display_name, saved.country_code, saved.clan_name, saved.clan_tag, saved.clan_role,
+        saved.profile_title, saved.tagline, saved.status, saved.bio, saved.main_gamemode, saved.favorite_level,
+        saved.accent_color, saved.banner_style, saved.profile_theme, saved.border_style, saved.website_url,
+        saved.show_nationality, saved.show_clan, saved.show_title, saved.show_tagline, saved.show_status,
+        saved.show_bio, saved.show_gamemode, saved.show_favorite_level, saved.show_website
+    ).run();
+    return json({ success: true, customization: clientShape(saved) }, 200, { "Cache-Control": "no-store" });
+}
+
+// Avatar frames: list unlocked frames and the currently equipped frame.
             if (path === "/api/profile/frames" && request.method === "GET") {
                 const user = await currentUser(request, env.db);
                 if (!user) return json({ error: "Please log in." }, 401, { "Cache-Control": "no-store" });
@@ -897,12 +1007,39 @@ export default {
                         leaderboard_profiles.leaderboard_name,
                         profile_settings.equipped_frame,
                         profile_pictures.user_id AS picture_user_id,
-                        profile_pictures.updated_at AS picture_updated_at
+                        profile_pictures.updated_at AS picture_updated_at,
+player_customizations.display_name AS custom_display_name,
+player_customizations.country_code AS custom_country_code,
+player_customizations.clan_name AS custom_clan_name,
+player_customizations.clan_tag AS custom_clan_tag,
+player_customizations.clan_role AS custom_clan_role,
+player_customizations.profile_title AS custom_profile_title,
+player_customizations.tagline AS custom_tagline,
+player_customizations.status AS custom_status,
+player_customizations.bio AS custom_bio,
+player_customizations.main_gamemode AS custom_main_gamemode,
+player_customizations.favorite_level AS custom_favorite_level,
+player_customizations.accent_color AS custom_accent_color,
+player_customizations.banner_style AS custom_banner_style,
+player_customizations.profile_theme AS custom_profile_theme,
+player_customizations.border_style AS custom_border_style,
+player_customizations.website_url AS custom_website_url,
+player_customizations.show_nationality,
+player_customizations.show_clan,
+player_customizations.show_title,
+player_customizations.show_tagline,
+player_customizations.show_status,
+player_customizations.show_bio,
+player_customizations.show_gamemode,
+player_customizations.show_favorite_level,
+player_customizations.show_website
                     FROM leaderboard_profiles
                     LEFT JOIN profile_settings
                         ON profile_settings.user_id = leaderboard_profiles.user_id
                     LEFT JOIN profile_pictures
                         ON profile_pictures.user_id = leaderboard_profiles.user_id
+LEFT JOIN player_customizations
+ON player_customizations.user_id = leaderboard_profiles.user_id
                 `).all();
 
                 const profiles = (result.results || []).map(profile => {
@@ -914,7 +1051,24 @@ export default {
                             ? `/api/profile/avatar?name=${encodeURIComponent(profile.leaderboard_name)}&v=${profile.picture_updated_at || 0}`
                             : "/assets/profile/No%20PFP.png",
                         equipped_frame: frame ? frame.id : null,
-                        frame_url: frame ? frame.image : null
+                        frame_url: frame ? frame.image : null,
+            display_name: profile.custom_display_name || '',
+            country_code: profile.show_nationality ? (profile.custom_country_code || '') : '',
+            clan_name: profile.show_clan ? (profile.custom_clan_name || '') : '',
+            clan_tag: profile.show_clan ? (profile.custom_clan_tag || '') : '',
+            clan_role: profile.show_clan ? (profile.custom_clan_role || '') : '',
+            profile_title: profile.show_title ? (profile.custom_profile_title || '') : '',
+            tagline: profile.show_tagline ? (profile.custom_tagline || '') : '',
+            status: profile.show_status ? (profile.custom_status || '') : '',
+            bio: profile.show_bio ? (profile.custom_bio || '') : '',
+            main_gamemode: profile.show_gamemode ? (profile.custom_main_gamemode || 'All-around') : '',
+            favorite_level: profile.show_favorite_level ? (profile.custom_favorite_level || '') : '',
+            accent_color: profile.custom_accent_color || '#a855f7',
+            banner_style: profile.custom_banner_style || 'aurora',
+            profile_theme: profile.custom_profile_theme || 'midnight',
+            border_style: profile.custom_border_style || 'glow',
+            website_url: profile.show_website ? (profile.custom_website_url || '') : ''
+
                     };
                 });
 

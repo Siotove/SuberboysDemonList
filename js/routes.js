@@ -10,6 +10,7 @@ import Admin from './pages/Admin.js';
 import Login from './pages/Login.js';
 import Register from './pages/Register.js';
 import Profile from './pages/Profile.js';
+import PlayerShowcase from './pages/PlayerShowcase.js';
 
 export default [
     { path: '/submit', component: Submit },
@@ -24,5 +25,6 @@ export default [
     { path: '/admin', component: Admin },
     { path: '/login', component: Login },
     { path: '/register', component: Register },
+    { path: '/players/:name', component: PlayerShowcase },
     { path: '/profile', component: Profile },
 ];
