@@ -52,3 +52,49 @@
 .nav .nav__actions .nav__cta:hover:not(:active) {
     transform: translateY(-2px);
 }
+
+/* Keep the navigation scrollable while action icons stay visible */
+body > header .nav {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    column-gap: 0.75rem;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.55) transparent;
+}
+
+body > header .nav .nav__tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+body > header .nav .nav__actions {
+    position: sticky;
+    right: 0;
+    z-index: 5;
+    flex: 0 0 auto;
+    min-width: max-content;
+    padding-left: 0.75rem;
+    background-color: var(--color-primary);
+    box-shadow: -0.75rem 0 0.75rem var(--color-primary);
+}
+
+/* Make the horizontal scrollbar visible on Chromium browsers */
+body > header .nav::-webkit-scrollbar {
+    height: 5px;
+}
+
+body > header .nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+body > header .nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.55);
+    border-radius: 999px;
+}
+
+body > header .nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.8);
+}
