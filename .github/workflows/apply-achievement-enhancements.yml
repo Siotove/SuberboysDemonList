@@ -1,0 +1,58 @@
+name: Apply Achievement Enhancements
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Apply tier colours, achievement search, filters and progress bar to main"
+        required: true
+        default: "yes"
+
+permissions:
+  contents: write
+
+jobs:
+  apply-achievement-enhancements:
+    if: ${{ github.event.inputs.confirm == 'yes' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Check enhancement archive exists
+        run: test -f .github/profile-achievement-enhancements.zip
+
+      - name: Extract and update achievement showcase files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/profile-achievement-enhancements
+          unzip -o .github/profile-achievement-enhancements.zip -d /tmp/profile-achievement-enhancements
+          test -f /tmp/profile-achievement-enhancements/js/pages/PlayerShowcase.js
+          test -f /tmp/profile-achievement-enhancements/css/pages/player-showcase.css
+          cp /tmp/profile-achievement-enhancements/js/pages/PlayerShowcase.js js/pages/PlayerShowcase.js
+          cp /tmp/profile-achievement-enhancements/css/pages/player-showcase.css css/pages/player-showcase.css
+
+      - name: Validate JavaScript and diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module --check < js/pages/PlayerShowcase.js
+          git diff --check
+
+      - name: Commit and push update to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- js/pages/PlayerShowcase.js css/pages/player-showcase.css; then
+            echo "No changes to apply. The update may already be installed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add js/pages/PlayerShowcase.js css/pages/player-showcase.css
+          git commit -m "Add tier colours and achievement filters"
+          git push origin HEAD:main
