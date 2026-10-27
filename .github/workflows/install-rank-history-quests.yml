@@ -1,0 +1,102 @@
+name: Install Rank History and Quests
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_install:
+        description: "Confirm installing Rank History and Weekly Quests"
+        required: true
+        type: choice
+        options:
+          - no
+          - yes
+        default: no
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Require confirmation
+        env:
+          CONFIRM_INSTALL: ${{ inputs.confirm_install }}
+        run: test "$CONFIRM_INSTALL" = "yes"
+
+      - name: Unpack upgrade package safely
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          archive = Path('.github/rank-history-quests-upgrade.zip')
+          destination = Path('.rank-history-quests-package')
+          if not archive.is_file():
+              raise SystemExit('Upload rank-history-quests-upgrade.zip into the repository .github folder first.')
+          destination.mkdir(exist_ok=True)
+          base = destination.resolve()
+          with ZipFile(archive) as zf:
+              for item in zf.infolist():
+                  target = (destination / item.filename).resolve()
+                  if target != base and base not in target.parents:
+                      raise SystemExit(f'Unsafe path in uploaded package: {item.filename}')
+              zf.extractall(destination)
+          if not (destination / 'apply_rank_history_quests.py').is_file():
+              raise SystemExit('The ZIP must contain apply_rank_history_quests.py at its root.')
+          PY
+
+      - name: Integrate the feature into the existing app
+        run: python .rank-history-quests-package/apply_rank_history_quests.py --root . --payload .rank-history-quests-package/payload
+
+      - name: Check JavaScript syntax
+        run: |
+          node --input-type=module --check < worker.js
+          node --input-type=module --check < rank-history-quests-worker.js
+          node --input-type=module --check < js/pages/RankHistory.js
+          node --input-type=module --check < js/pages/WeeklyQuests.js
+
+      - name: Validate Wrangler config and D1 migration SQL
+        run: |
+          python - <<'PY'
+          import json
+          import sqlite3
+          from pathlib import Path
+
+          config = json.loads(Path('wrangler.jsonc').read_text(encoding='utf-8'))
+          assert any(item.get('binding') == 'db' for item in config.get('d1_databases', [])), 'Missing D1 binding db'
+          assert '0 0 * * *' in config.get('triggers', {}).get('crons', []), 'Missing daily cron trigger'
+          conn = sqlite3.connect(':memory:')
+          conn.executescript(Path('migrations/0004_rank_history_quests.sql').read_text(encoding='utf-8'))
+          expected = {
+              'rank_history_snapshots', 'rank_history_snapshot_runs',
+              'weekly_quest_baselines', 'weekly_quest_completions',
+              'secret_achievement_unlocks'
+          }
+          found = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+          assert expected <= found, f'Missing migration tables: {expected - found}'
+          print('Wrangler configuration and migration SQL checks passed.')
+          PY
+
+      - name: Check patch whitespace
+        run: git diff --check
+
+      - name: Commit integration
+        run: |
+          rm -rf .rank-history-quests-package
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add worker.js rank-history-quests-worker.js js/routes.js index.html wrangler.jsonc .assetsignore js/pages/RankHistory.js js/pages/WeeklyQuests.js css/pages/rank-history.css css/pages/weekly-quests.css migrations/0004_rank_history_quests.sql
+          if git diff --cached --quiet; then
+            echo 'Feature is already installed; no changes to commit.'
+          else
+            git commit -m 'Add rank history and weekly quests'
+            git push origin HEAD:main
+          fi
