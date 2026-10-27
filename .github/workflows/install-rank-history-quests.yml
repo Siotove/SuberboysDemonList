@@ -26,7 +26,7 @@ jobs:
           ref: main
           fetch-depth: 0
 
-            - name: Require confirmation
+      - name: Require confirmation
         env:
           CONFIRM_INSTALL: ${{ inputs.confirm_install }}
         run: |
