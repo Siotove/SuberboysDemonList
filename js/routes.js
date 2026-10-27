@@ -11,12 +11,16 @@ import Login from './pages/Login.js';
 import Register from './pages/Register.js';
 import Profile from './pages/Profile.js';
 import PlayerShowcase from './pages/PlayerShowcase.js';
+import RankHistory from './pages/RankHistory.js';
+import WeeklyQuests from './pages/WeeklyQuests.js';
 
 export default [
     { path: '/submit', component: Submit },
     { path: '/', component: List },
     { path: '/leaderboard', component: Leaderboard },
     { path: '/achievements', component: Achievements },
+    { path: '/history', component: RankHistory },
+    { path: '/quests', component: WeeklyQuests },
     { path: '/games', component: Games },
     { path: '/games/higher-lower', component: HigherLower },
     { path: '/games/roulette', component: Roulette },

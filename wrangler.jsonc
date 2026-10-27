@@ -6,7 +6,9 @@
   "assets": {
     "directory": ".",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": [
+      "/api/*"
+    ]
   },
   "d1_databases": [
     {
@@ -27,5 +29,10 @@
       "head_sampling_rate": 1,
       "persist": true
     }
+  },
+  "triggers": {
+    "crons": [
+      "0 0 * * *"
+    ]
   }
 }

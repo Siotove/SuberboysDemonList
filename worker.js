@@ -1,5 +1,6 @@
 
 import { handleSubmissionRoute } from "./submission-routes.js";
+import { handleRankHistoryQuestRequest, captureDailyRankSnapshot } from "./rank-history-quests-worker.js";
 
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const PBKDF2_ITERATIONS = 100000;
@@ -578,6 +579,11 @@ export default {
         }
 
         try {
+            const rankHistoryQuestResponse = await handleRankHistoryQuestRequest(
+                request, env, url, currentUser
+            );
+            if (rankHistoryQuestResponse) return rankHistoryQuestResponse;
+
             // Register an account.
             if (path === "/api/auth/register" && request.method === "POST") {
                 let body;
@@ -1711,5 +1717,12 @@ ON player_customizations.user_id = leaderboard_profiles.user_id
                 "Cache-Control": "no-store"
             });
         }
+    },
+    async scheduled(controller, env, ctx) {
+        ctx.waitUntil(
+            captureDailyRankSnapshot(env, new Date(controller.scheduledTime)).catch(error => {
+                console.error("Daily rank-history snapshot failed:", error?.stack || error);
+            })
+        );
     }
 };
