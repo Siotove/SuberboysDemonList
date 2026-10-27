@@ -1,100 +1,152 @@
+/* Primary navigation: scroll tabs only; keep account/action buttons fixed. */
 .nav {
     display: flex;
-    column-gap: 2rem;
-}
-.nav .nav__tab {
-    padding-top: 4px;
-    border-bottom: 4px solid transparent;
-    display: flex;
     align-items: center;
-    padding-inline: 0.5rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 0;
+    overflow: visible;
+}
+
+.nav__tabs {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 1.25rem;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.45) transparent;
+}
+
+.nav__tabs::-webkit-scrollbar {
+    height: 3px;
+}
+
+.nav__tabs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.nav__tabs::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.45);
+    border-radius: 999px;
+}
+
+.nav .nav__tab {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    width: max-content;
+    min-width: max-content;
+    padding: 4px 0.5rem 0;
+    border-bottom: 4px solid transparent;
+    white-space: nowrap;
     transition: border-color 100ms ease;
 }
-.nav .nav__tab.router-link-active {
-    border-color: var(--color-on-primary);
-}
+
+.nav .nav__tab.router-link-active,
 .nav .nav__tab:hover {
     border-color: var(--color-on-primary);
 }
+
 .nav .nav__actions {
-    flex: 1;
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
     justify-content: flex-end;
+    gap: 0.25rem;
+    min-width: max-content;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    margin-left: 0.5rem;
+    padding-left: 0.5rem;
+    background-color: var(--color-primary);
+    box-shadow: -8px 0 10px var(--color-primary);
 }
+
 .nav .nav__actions .nav__icon {
-    height: 3rem;
-    width: 3rem;
-    border: none;
-    background-color: transparent;
-    border-radius: 50%;
-    cursor: pointer;
     display: flex;
+    flex: 0 0 3rem;
     align-items: center;
     justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border: none;
+    border-radius: 50%;
+    background-color: transparent;
+    cursor: pointer;
     transition: background-color 100ms ease;
 }
+
 .nav .nav__actions .nav__icon:hover {
     background-color: rgba(255, 255, 255, 0.2);
 }
+
 .nav .nav__actions .nav__icon img {
     height: 1.5rem;
+    width: auto;
 }
+
 .nav .nav__actions .nav__cta {
-    margin-left: 1rem;
+    display: block;
+    flex: 0 0 auto;
+    margin-left: 0.25rem;
     padding: 1rem;
+    border-radius: 0.5rem;
     background-color: var(--color-on-primary);
     color: var(--color-primary);
-    border-radius: 0.5rem;
+    white-space: nowrap;
     box-shadow: 0 1px 0.5rem 0 rgba(0, 0, 102, 0.5);
     transition: transform 100ms ease;
 }
+
 .nav .nav__actions .nav__cta:hover:not(:active) {
     transform: translateY(-2px);
 }
 
-/* Keep the navigation scrollable while action icons stay visible */
-body > header .nav {
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    column-gap: 0.75rem;
-    overscroll-behavior-x: contain;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.55) transparent;
+/* Keep the header one row even at narrower widths. */
+body > #app > header {
+    display: flex;
+    align-items: center;
+    min-height: 4rem;
+    height: 4rem;
+    overflow: hidden;
 }
 
-body > header .nav .nav__tab {
+body > #app > header .logo {
     flex: 0 0 auto;
-    white-space: nowrap;
 }
 
-body > header .nav .nav__actions {
-    position: sticky;
-    right: 0;
-    z-index: 5;
-    flex: 0 0 auto;
-    min-width: max-content;
-    padding-left: 0.75rem;
-    background-color: var(--color-primary);
-    box-shadow: -0.75rem 0 0.75rem var(--color-primary);
-}
+@media (max-width: 900px) {
+    body > #app > header {
+        gap: 1rem;
+        padding-inline: 1rem;
+    }
 
-/* Make the horizontal scrollbar visible on Chromium browsers */
-body > header .nav::-webkit-scrollbar {
-    height: 5px;
-}
+    .nav__tabs {
+        gap: 0.75rem;
+    }
 
-body > header .nav::-webkit-scrollbar-track {
-    background: transparent;
-}
+    .nav .nav__actions {
+        gap: 0;
+        margin-left: 0.25rem;
+        padding-left: 0.25rem;
+    }
 
-body > header .nav::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.55);
-    border-radius: 999px;
-}
+    .nav .nav__actions .nav__icon {
+        flex-basis: 2.5rem;
+        width: 2.5rem;
+        height: 2.5rem;
+    }
 
-body > header .nav::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.8);
+    .nav .nav__actions .nav__cta {
+        padding: 0.75rem;
+    }
 }
