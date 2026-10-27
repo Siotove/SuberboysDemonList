@@ -41500,5 +41500,88 @@
         "to": 45
       }
     ]
+  },
+  {
+    "date": "2026-10-27T12:52:24.000Z",
+    "commit": "65148c3b5071c42a93ea6d048fa81e1915392478",
+    "added": [],
+    "removed": [],
+    "moved": [
+      {
+        "level": "Erebusbasically",
+        "from": 34,
+        "to": 20
+      },
+      {
+        "level": "Acheroneasy",
+        "from": 20,
+        "to": 21
+      },
+      {
+        "level": "Spookweiner",
+        "from": 21,
+        "to": 22
+      },
+      {
+        "level": "Ultramarine",
+        "from": 22,
+        "to": 23
+      },
+      {
+        "level": "Trytohide",
+        "from": 23,
+        "to": 24
+      },
+      {
+        "level": "TungTung",
+        "from": 24,
+        "to": 25
+      },
+      {
+        "level": "AinaPoniII",
+        "from": 25,
+        "to": 26
+      },
+      {
+        "level": "Fates",
+        "from": 26,
+        "to": 27
+      },
+      {
+        "level": "Dashgs",
+        "from": 27,
+        "to": 28
+      },
+      {
+        "level": "Application",
+        "from": 28,
+        "to": 29
+      },
+      {
+        "level": "Thunderzone",
+        "from": 29,
+        "to": 30
+      },
+      {
+        "level": "Gaopownpunches",
+        "from": 30,
+        "to": 31
+      },
+      {
+        "level": "Ninefiveone",
+        "from": 31,
+        "to": 32
+      },
+      {
+        "level": "WinterWonder",
+        "from": 32,
+        "to": 33
+      },
+      {
+        "level": "Massacre",
+        "from": 33,
+        "to": 34
+      }
+    ]
   }
 ]
