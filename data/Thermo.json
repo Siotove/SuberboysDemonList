@@ -1,23 +1,26 @@
-
 {
-    "id": "150831858",
-    "name": "Thermodynamix",
-    "author": "Suberman2",
-    "creators": ["Suberman2"],
-    "verifier": "Suberman2",
-    "verification": "https://youtu.be/FapKpcCwUhA",
-    "percentToQualify": 100,
-    "password": "Not Copyable",
-    "records": [
-        {
-            "user": "Zaynem12",
-            "link": "https://www.youtube.com/watch?v=invalid",
-            "percent": 100,
-            "hz": 240
-        }
-    ]
+  "id": "150831858",
+  "name": "Thermodynamix",
+  "author": "Suberman2",
+  "creators": [
+    "Suberman2"
+  ],
+  "verifier": "Suberman2",
+  "verification": "https://youtu.be/FapKpcCwUhA",
+  "percentToQualify": 100,
+  "password": "Not Copyable",
+  "records": [
+    {
+      "user": "Zaynem12",
+      "link": "https://www.youtube.com/watch?v=invalid",
+      "percent": 100,
+      "hz": 240
+    },
+    {
+      "user": "Mothcloakinnit",
+      "link": "https://medal.tv/games/geometry-dash/clips/nOmlHX4uaEf7-_-ba?invite=cr-MSwyc3UsNjAxODk1MTU4",
+      "percent": 100,
+      "hz": 60
+    }
+  ]
 }
-
-
-
-
