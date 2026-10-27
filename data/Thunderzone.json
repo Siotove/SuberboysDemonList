@@ -10,5 +10,12 @@
   "verification": "https://suberboysdemonlist.siotove1.workers.dev/#/submit",
   "percentToQualify": 100,
   "password": "Not Copyable",
-  "records": []
+  "records": [
+    {
+      "user": "Justgame",
+      "link": "https://studio.youtube.com/video/dZKsX1l5IRc/edit",
+      "percent": 100,
+      "hz": 120
+    }
+  ]
 }
