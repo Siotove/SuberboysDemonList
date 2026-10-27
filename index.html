@@ -4,7 +4,6 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=1024" />
         <title>Suberboys DemonList</title>
-
         <!-- Replace your server icon by uploading an image file named "list_icon.png"-->
         <link rel="icon" href="/list_icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,13 +16,9 @@
         <link rel="stylesheet" type="text/css" href="/css/typography.css" />
         <link rel="stylesheet" type="text/css" href="/css/main.css" />
         <link rel="stylesheet" type="text/css" href="/css/pages/list.css" />
-        <link
-            rel="stylesheet"
-            type="text/css"
-            href="/css/pages/leaderboard.css"
-        />
+        <link rel="stylesheet" type="text/css" href="/css/pages/leaderboard.css" />
         <link rel="stylesheet" type="text/css" href="/css/pages/roulette.css" />
-        <link rel="stylesheet" href="/css/pages/achievements.css">
+        <link rel="stylesheet" href="/css/pages/achievements.css" />
         <link rel="stylesheet" type="text/css" href="/css/pages/packs.css" />
         <link rel="stylesheet" href="/css/pages/profile.css" />
         <link rel="stylesheet" href="/css/pages/player-showcase.css" />
@@ -31,11 +26,7 @@
         <link rel="stylesheet" href="/css/pages/weekly-quests.css" />
         <link rel="stylesheet" type="text/css" href="/css/components/nav.css" />
         <link rel="stylesheet" type="text/css" href="/css/components/btn.css" />
-        <link
-            rel="stylesheet"
-            type="text/css"
-            href="/css/components/tabs.css"
-        />
+        <link rel="stylesheet" type="text/css" href="/css/components/tabs.css" />
         <script src="https://unpkg.com/vue@3.2.31/dist/vue.global.js"></script>
         <script src="https://unpkg.com/vue-router@4.0.14/dist/vue-router.global.prod.js"></script>
         <script type="module" src="/js/main.js"></script>
@@ -46,54 +37,50 @@
                 <h2>SBDL</h2>
                 <p>v1.0.0</p>
             </div>
-            <nav class="nav">
+            <nav class="nav" aria-label="Main navigation">
                 <div class="nav__tabs">
-                <router-link class="nav__tab" to="/">
-                    <span class="type-label-lg">List</span>
-                </router-link>
-                <router-link class="nav__tab" to="/leaderboard">
-                    <span class="type-label-lg">Leaderboard</span>
-                </router-link>
-                <router-link class="nav__tab" to="/games">
-    <span class="type-label-lg">Games</span>
-</router-link>
-                <router-link class="nav__tab" to="/packs">
-    <span class="type-label-lg">Packs</span>
-</router-link>
-                <router-link class="nav__tab" to="/achievements">
-    <span class="type-label-lg">Achievements</span>
-</router-link>
-                <router-link class="nav__tab" to="/history">
-                    <span class="type-label-lg">History</span>
-                </router-link>
-                <router-link class="nav__tab" to="/quests">
-                    <span class="type-label-lg">Quests</span>
-                </router-link>
-                <router-link class="nav__tab" to="/profile">
-    <span class="type-label-lg">Profile</span>
-</router-link>
-                    </div>
+                    <router-link class="nav__tab" to="/">
+                        <span class="type-label-lg">List</span>
+                    </router-link>
+                    <router-link class="nav__tab" to="/leaderboard">
+                        <span class="type-label-lg">Leaderboard</span>
+                    </router-link>
+                    <router-link class="nav__tab" to="/games">
+                        <span class="type-label-lg">Games</span>
+                    </router-link>
+                    <router-link class="nav__tab" to="/packs">
+                        <span class="type-label-lg">Packs</span>
+                    </router-link>
+                    <router-link class="nav__tab" to="/achievements">
+                        <span class="type-label-lg">Achievements</span>
+                    </router-link>
+                    <router-link class="nav__tab" to="/history">
+                        <span class="type-label-lg">History</span>
+                    </router-link>
+                    <router-link class="nav__tab" to="/quests">
+                        <span class="type-label-lg">Quests</span>
+                    </router-link>
+                    <router-link class="nav__tab" to="/profile">
+                        <span class="type-label-lg">Profile</span>
+                    </router-link>
+                </div>
                 <div class="nav__actions">
                     <button
                         class="nav__icon"
                         @click.prevent="store.toggleDark()"
+                        aria-label="Toggle dark mode"
                     >
                         <img
                             :src="store.dark ? '/assets/light.svg' : '/assets/dark.svg'"
                             alt=""
                         />
                     </button>
-                    <!-- Replace the '#' with your discord server's invite-->
-                    <a class="nav__icon" href="https://discord.gg/59zJe9XkWm">
-                        <img src="/assets/discord.svg" alt="Discord Logo" />
+                    <a class="nav__icon" href="https://discord.gg/59zJe9XkWm" aria-label="Discord">
+                        <img src="/assets/discord.svg" alt="" />
                     </a>
-                    <!-- List record submission form, add a link to replace the '#' when putting a link to your list submission form-->
-                    <router-link
-    class="nav__cta type-label-lg"
-    to="/submit"
->
-    Submit Record
-</router-link>
+                    <router-link class="nav__cta type-label-lg" to="/submit">
+                        Submit Record
+                    </router-link>
                 </div>
             </nav>
         </header>
