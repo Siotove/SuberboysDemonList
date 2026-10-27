@@ -1,0 +1,75 @@
+name: Install Profile Studio
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Run the Profile Studio installer against main"
+        required: true
+        default: "yes"
+
+permissions:
+  contents: write
+
+jobs:
+  install-profile-studio:
+    if: ${{ github.event.inputs.confirm == 'yes' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Set up Node.js for syntax checks
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Check installer archive exists
+        run: test -f .github/profile-studio-upgrade.zip
+
+      - name: Extract only the required feature files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/profile-studio-package
+          unzip -o .github/profile-studio-upgrade.zip -d /tmp/profile-studio-package
+          cp /tmp/profile-studio-package/js/profile-customization-options.js js/profile-customization-options.js
+          cp /tmp/profile-studio-package/js/pages/PlayerShowcase.js js/pages/PlayerShowcase.js
+          cp /tmp/profile-studio-package/css/pages/player-showcase.css css/pages/player-showcase.css
+          cp /tmp/profile-studio-package/apply_profile_customization.py apply_profile_customization.py
+          test -f migrations/0003_player_customizations.sql
+
+      - name: Integrate customization into the current site files
+        run: python3 apply_profile_customization.py
+
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module --check < worker.js
+          node --input-type=module --check < js/pages/Profile.js
+          node --input-type=module --check < js/pages/Leaderboard.js
+          node --input-type=module --check < js/pages/PlayerShowcase.js
+          node --input-type=module --check < js/profile-customization-options.js
+          git diff --check
+
+      - name: Remove temporary installer files
+        run: |
+          rm -f .github/profile-studio-upgrade.zip apply_profile_customization.py
+
+      - name: Commit and push the integrated feature to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit. The feature may already be installed."
+          else
+            git commit -m "Add Profile Studio customisation to profile page"
+            git push origin HEAD:main
+          fi
