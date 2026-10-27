@@ -130,3 +130,13 @@
     z-index: 2;
     pointer-events: none;
 }
+
+.leaderboard-avatar-pfp[src^="/api/profile/avatar"] {
+    top: 10%;
+    left: 10%;
+    right: auto;
+    bottom: auto;
+    width: 80%;
+    height: 80%;
+    object-fit: cover;
+}
