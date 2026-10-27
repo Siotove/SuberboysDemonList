@@ -1,0 +1,148 @@
+diff --git a/js/pages/Profile.js b/js/pages/Profile.js
+--- a/js/pages/Profile.js
++++ b/js/pages/Profile.js
+@@ -5,7 +5,7 @@ export default {
+                 <div class="profile-avatar">
+                     <img
+                         class="profile-avatar-image"
+-                        src="/assets/profile/No%20PFP.png"
++                        :src="profilePictureUrl"
+                         alt="Profile picture"
+-                        width="100"
+-                        height="100"
++                        width="80"
++                        height="80"
+@@ -13,8 +13,8 @@ export default {
+                     <img
+                         v-if="equippedFrameImage"
+                         class="profile-avatar-frame"
+                         :src="equippedFrameImage"
+                         :alt="equippedFrameName + ' equipped'"
+-                        width="100"
+-                        height="100"
++                        width="80"
++                        height="80"
+                     >
+@@ -603,7 +603,8 @@ export default {
+             const result = await response.json();
+             this.user = result.user;
+             if (this.user) {
+                 await this.loadLeaderboardProfile();
++                await this.loadOwnAvatar();
+                 await this.loadAvatarFrames();
+ 
+                 if (this.leaderboardProfile) {
+@@ -697,10 +698,10 @@ export default {
+         }
+         this.avatarMessage = "Profile picture updated!";
+         this.selectedAvatar = null;
+ 
+-        // Reload the profile image here using data.avatarUrl.
+-        // If your profile uses a different image variable, update that variable.
+-        this.profilePictureUrl = data.avatarUrl;
++        // Reload from the canonical public avatar URL so the profile and
++        // leaderboard use the same saved image, with a fresh cache key.
++        await this.loadOwnAvatar();
+     } catch (error) {
+         this.avatarMessage = error.message || "Could not upload image.";
+     } finally {
+@@ -705,4 +706,17 @@ export default {
+         this.uploadingAvatar = false;
+     }
+ },
++async loadOwnAvatar() {
++    const name = this.leaderboardProfile?.leaderboard_name;
++
++    // Public avatars are resolved through the linked leaderboard identity.
++    // An upload made before linking is still saved and will appear after linking.
++    if (!name) {
++        this.profilePictureUrl = '/assets/profile/No%20PFP.png';
++        return;
++    }
++
++    this.profilePictureUrl =
++        `/api/profile/avatar?name=${encodeURIComponent(name)}&v=${Date.now()}`;
++},
+ async loadAvatarFrames() {
+@@ -856,8 +871,9 @@ export default {
+                 this.leaderboardProfile = result.profile;
+                 this.leaderboardName = '';
+                 this.leaderboardMessage =
+                     'Leaderboard identity linked successfully!';
++                await this.loadOwnAvatar();
+                 await this.loadComparisonIdentities();
+             } catch {
+                 this.leaderboardMessage =
+                     'Connection failed. Please try again.';
+diff --git a/css/pages/profile.css b/css/pages/profile.css
+--- a/css/pages/profile.css
++++ b/css/pages/profile.css
+@@ -32,5 +32,32 @@
+ .profile-page .profile-avatar {
+-    display: none;
++    position: relative;
++    display: inline-block;
++    width: 80px;
++    height: 80px;
++    margin: 0 0 1rem;
++    vertical-align: middle;
+ }
++
++.profile-page .profile-avatar-image,
++.profile-page .profile-avatar-frame {
++    position: absolute;
++    inset: 0;
++    display: block;
++    width: 100%;
++    height: 100%;
++}
++
++.profile-page .profile-avatar-image {
++    z-index: 1;
++    border-radius: 50%;
++    object-fit: cover;
++    object-position: center;
++}
++
++.profile-page .profile-avatar-frame {
++    z-index: 2;
++    object-fit: contain;
++    pointer-events: none;
++}
+ 
+ .profile-page .profile-eyebrow {
+diff --git a/css/pages/leaderboard.css b/css/pages/leaderboard.css
+--- a/css/pages/leaderboard.css
++++ b/css/pages/leaderboard.css
+@@ -120,7 +120,9 @@
+ 
+ .leaderboard-avatar-pfp {
+     z-index: 1;
+     border-radius: 50%;
++    object-fit: cover;
++    object-position: center;
+ }
+ 
+ .leaderboard-avatar-frame {
+diff --git a/worker.js b/worker.js
+--- a/worker.js
++++ b/worker.js
+@@ -827,7 +827,8 @@
+                     SELECT
+                         leaderboard_profiles.leaderboard_name,
+                         profile_settings.equipped_frame,
+-                        profile_pictures.user_id AS picture_user_id
++                        profile_pictures.user_id AS picture_user_id,
++                        profile_pictures.updated_at AS picture_updated_at
+                     FROM leaderboard_profiles
+                     LEFT JOIN profile_settings
+                         ON profile_settings.user_id = leaderboard_profiles.user_id
+@@ -841,7 +842,7 @@
+                     return {
+                         leaderboard_name: profile.leaderboard_name,
+                         avatar_url: profile.picture_user_id
+-                            ? `/api/profile/avatar?name=${encodeURIComponent(profile.leaderboard_name)}`
++                            ? `/api/profile/avatar?name=${encodeURIComponent(profile.leaderboard_name)}&v=${profile.picture_updated_at || 0}`
+                             : "/assets/profile/No%20PFP.png",
+                         equipped_frame: frame ? frame.id : null,
+                         frame_url: frame ? frame.image : null
