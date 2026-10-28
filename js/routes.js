@@ -13,6 +13,10 @@ import Profile from './pages/Profile.js';
 import PlayerShowcase from './pages/PlayerShowcase.js';
 import RankHistory from './pages/RankHistory.js';
 import WeeklyQuests from './pages/WeeklyQuests.js';
+import Clans from './pages/Clans.js';
+import CommunityActivity from './pages/CommunityActivity.js';
+import PlayerBattles from './pages/PlayerBattles.js';
+import HallOfFame from './pages/HallOfFame.js';
 
 export default [
     { path: '/submit', component: Submit },
@@ -21,6 +25,11 @@ export default [
     { path: '/achievements', component: Achievements },
     { path: '/history', component: RankHistory },
     { path: '/quests', component: WeeklyQuests },
+    { path: '/clans', component: Clans },
+    { path: '/clans/:id', component: Clans },
+    { path: '/activity', component: CommunityActivity },
+    { path: '/compare', component: PlayerBattles },
+    { path: '/hall-of-fame', component: HallOfFame },
     { path: '/games', component: Games },
     { path: '/games/higher-lower', component: HigherLower },
     { path: '/games/roulette', component: Roulette },

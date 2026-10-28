@@ -1,6 +1,7 @@
 
 import { handleSubmissionRoute } from "./submission-routes.js";
 import { handleRankHistoryQuestRequest, captureDailyRankSnapshot } from "./rank-history-quests-worker.js";
+import { handleCommunityRequest, captureCommunitySnapshot, ensureCommunitySchema } from "./community-features-worker.js";
 
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const PBKDF2_ITERATIONS = 100000;
@@ -579,10 +580,19 @@ export default {
         }
 
         try {
+            if (
+                url.pathname.startsWith("/api/community/") ||
+                url.pathname === "/api/rank-history" ||
+                url.pathname === "/api/weekly-quests"
+            ) {
+                await ensureCommunitySchema(env);
+            }
             const rankHistoryQuestResponse = await handleRankHistoryQuestRequest(
                 request, env, url, currentUser
             );
             if (rankHistoryQuestResponse) return rankHistoryQuestResponse;
+            const communityResponse = await handleCommunityRequest(request, env, url, currentUser);
+            if (communityResponse) return communityResponse;
 
             // Register an account.
             if (path === "/api/auth/register" && request.method === "POST") {
@@ -1719,10 +1729,13 @@ ON player_customizations.user_id = leaderboard_profiles.user_id
         }
     },
     async scheduled(controller, env, ctx) {
-        ctx.waitUntil(
-            captureDailyRankSnapshot(env, new Date(controller.scheduledTime)).catch(error => {
-                console.error("Daily rank-history snapshot failed:", error?.stack || error);
-            })
-        );
+        const snapshotTime = new Date(controller.scheduledTime);
+        ctx.waitUntil((async () => {
+            await ensureCommunitySchema(env);
+            await captureDailyRankSnapshot(env, snapshotTime);
+            await captureCommunitySnapshot(env, snapshotTime, false);
+        })().catch(error => {
+            console.error("Daily rank/community snapshot failed:", error?.stack || error);
+        }));
     }
 };

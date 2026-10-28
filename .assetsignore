@@ -13,3 +13,4 @@ migrations/
 README.md
 SECURITY.md
 rank-history-quests-worker.js
+community-features-worker.js
