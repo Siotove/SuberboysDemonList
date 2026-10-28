@@ -1,0 +1,103 @@
+name: Install SBDL Homepage Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_install:
+        description: "Confirm installing the SBDL homepage update"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Require confirmation
+        env:
+          CONFIRM_INSTALL: ${{ inputs.confirm_install }}
+        run: |
+          if [ "$CONFIRM_INSTALL" != "true" ]; then
+            echo "::error::Set Confirm install to true before continuing."
+            exit 1
+          fi
+          echo "Installation confirmed."
+
+      - name: Unpack homepage package safely
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from shutil import rmtree
+          from zipfile import BadZipFile, ZipFile
+          archive = Path('.github/sbdl-homepage-upgrade.zip')
+          destination = Path('.sbdl-homepage-package')
+          if not archive.is_file():
+              raise SystemExit('Upload sbdl-homepage-upgrade.zip into the repository .github folder first.')
+          if destination.exists(): rmtree(destination)
+          destination.mkdir()
+          base = destination.resolve()
+          try:
+              with ZipFile(archive) as zf:
+                  bad = zf.testzip()
+                  if bad: raise SystemExit(f'ZIP integrity check failed: {bad}')
+                  for item in zf.infolist():
+                      target = (destination / item.filename).resolve()
+                      if target != base and base not in target.parents:
+                          raise SystemExit(f'Unsafe path in uploaded package: {item.filename}')
+                  zf.extractall(destination)
+          except BadZipFile as exc:
+              raise SystemExit(f'The uploaded package is not a valid ZIP: {exc}')
+          for needed in ['apply_sbdl_homepage.py', 'payload/js/pages/Home.js', 'payload/css/pages/home.css']:
+              if not (destination / needed).is_file(): raise SystemExit(f'Package is missing {needed}')
+          PY
+
+      - name: Install homepage and logo navigation
+        run: |
+          python .sbdl-homepage-package/apply_sbdl_homepage.py --root . --payload .sbdl-homepage-package/payload
+
+      - name: Validate JavaScript and integration
+        run: |
+          node --input-type=module --check < js/pages/Home.js
+          node --input-type=module --check < js/routes.js
+          python -m py_compile .sbdl-homepage-package/apply_sbdl_homepage.py
+          python - <<'PY'
+          from pathlib import Path
+          index = Path('index.html').read_text(encoding='utf-8')
+          routes = Path('js/routes.js').read_text(encoding='utf-8')
+          home = Path('js/pages/Home.js').read_text(encoding='utf-8')
+          css = Path('css/pages/home.css').read_text(encoding='utf-8')
+          assert 'to="/home"' in index and '<h2>SBDL</h2>' in index
+          assert "import Home from './pages/Home.js';" in routes
+          assert "{ path: '/home', component: Home }" in routes
+          assert "{ path: '/', component: List }" in routes
+          assert 'Browse the Demon List' in home and '/leaderboard' in home
+          assert 'body.halloween-theme' not in css
+          assert 'var(--color-primary' in css
+          print('Homepage route, SBDL logo navigation, and theme-token checks passed.')
+          PY
+
+      - name: Check patch whitespace
+        run: git diff --check
+
+      - name: Commit homepage update
+        run: |
+          rm -rf .sbdl-homepage-package
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html js/routes.js js/pages/Home.js css/pages/home.css
+          if git diff --cached --quiet; then
+            echo 'SBDL homepage update is already installed; no changes to commit.'
+          else
+            git commit -m 'Add SBDL homepage and logo navigation'
+            git push origin HEAD:main
+          fi
