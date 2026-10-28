@@ -1,0 +1,111 @@
+name: Install Competition Platform Upgrade
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_install:
+        description: "Install notifications, seasons, player goals, rank movement and admin tools"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Require confirmation
+        env:
+          CONFIRM_INSTALL: ${{ inputs.confirm_install }}
+        run: |
+          if [ "$CONFIRM_INSTALL" != "true" ]; then
+            echo "::error::Toggle Confirm install to true before running this workflow."
+            exit 1
+          fi
+          echo "Installation confirmed."
+
+      - name: Safely unpack upgrade package
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import shutil
+
+          archive = Path('.github/competition-platform-upgrade.zip')
+          destination = Path('.competition-platform-package')
+          if not archive.is_file():
+              raise SystemExit('Upload competition-platform-upgrade.zip into the repository .github folder first.')
+          if destination.exists():
+              shutil.rmtree(destination)
+          destination.mkdir()
+          with ZipFile(archive) as zf:
+              bad = zf.testzip()
+              if bad:
+                  raise SystemExit(f'Corrupt ZIP member: {bad}')
+              base = destination.resolve()
+              for item in zf.infolist():
+                  target = (destination / item.filename).resolve()
+                  if target != base and base not in target.parents:
+                      raise SystemExit(f'Unsafe path in uploaded package: {item.filename}')
+              zf.extractall(destination)
+          if not (destination / 'apply_competition_platform.py').is_file():
+              raise SystemExit('ZIP must contain apply_competition_platform.py at its root.')
+          if not (destination / 'payload' / 'competition-platform-worker.js').is_file():
+              raise SystemExit('ZIP is missing the competition platform Worker module.')
+          print('Upgrade package unpacked and validated.')
+          PY
+
+      - name: Integrate features into existing pages and Worker
+        run: python .competition-platform-package/apply_competition_platform.py --root . --payload .competition-platform-package/payload
+
+      - name: Check JavaScript syntax
+        run: |
+          set -e
+          for file in worker.js competition-platform-worker.js js/main.js js/pages/Leaderboard.js js/pages/Profile.js js/pages/Admin.js js/components/NotificationsBell.js js/components/PlayerGoalsWidget.js js/components/CompetitionSeasonWidget.js js/components/CompetitionAdminTools.js; do
+            test -f "$file" || { echo "Missing expected file: $file"; exit 1; }
+            node --input-type=module --check < "$file"
+          done
+          echo 'JavaScript syntax checks passed.'
+
+      - name: Validate migration SQL and Wrangler D1 binding
+        run: |
+          python - <<'PY'
+          import json, sqlite3
+          from pathlib import Path
+          config = json.loads(Path('wrangler.jsonc').read_text(encoding='utf-8'))
+          if not any(item.get('binding') == 'db' for item in config.get('d1_databases', [])):
+              raise SystemExit('wrangler.jsonc must contain the existing D1 binding named db.')
+          conn = sqlite3.connect(':memory:')
+          conn.executescript(Path('migrations/0006_competition_platform.sql').read_text(encoding='utf-8'))
+          expected = {'competition_notifications', 'competition_seasons', 'competition_admin_audit'}
+          actual = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+          missing = expected - actual
+          if missing:
+              raise SystemExit('Migration missing tables: ' + ', '.join(sorted(missing)))
+          print('Wrangler D1 binding and migration SQL validated.')
+          PY
+
+      - name: Check patch whitespace
+        run: git diff --check
+
+      - name: Commit integration
+        run: |
+          rm -rf .competition-platform-package
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add worker.js competition-platform-worker.js index.html js/main.js js/pages/Leaderboard.js js/pages/Profile.js js/pages/Admin.js js/components/NotificationsBell.js js/components/PlayerGoalsWidget.js js/components/CompetitionSeasonWidget.js js/components/CompetitionAdminTools.js css/components/competition-platform.css migrations/0006_competition_platform.sql .assetsignore
+          if git diff --cached --quiet; then
+            echo 'Feature is already installed; no changes to commit.'
+          else
+            git commit -m 'Add notifications seasons goals and admin operations'
+            git push origin HEAD:main
+          fi
