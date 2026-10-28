@@ -81,6 +81,8 @@ jobs:
           assert "{ path: '/home', component: Home }" in routes
           assert "{ path: '/', component: List }" in routes
           assert 'Browse the Demon List' in home and '/leaderboard' in home
+          for feature in ['searchQuery', 'lightTheme', 'copySiteLink', 'goRandom', 'goRecent', 'faqOpen', 'shortcutHelp', 'backToTop']:
+              assert feature in home, f'Missing homepage feature: {feature}'
           assert 'body.halloween-theme' not in css
           assert 'var(--color-primary' in css
           print('Homepage route, SBDL logo navigation, and theme-token checks passed.')
