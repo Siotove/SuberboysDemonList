@@ -2,6 +2,7 @@
 import { handleSubmissionRoute } from "./submission-routes.js";
 import { handleRankHistoryQuestRequest, captureDailyRankSnapshot } from "./rank-history-quests-worker.js";
 import { handleCommunityRequest, captureCommunitySnapshot, ensureCommunitySchema } from "./community-features-worker.js";
+import { handleCompetitionPlatformRequest } from "./competition-platform-worker.js";
 
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const PBKDF2_ITERATIONS = 100000;
@@ -582,11 +583,16 @@ export default {
         try {
             if (
                 url.pathname.startsWith("/api/community/") ||
+                url.pathname.startsWith("/api/competition/") ||
                 url.pathname === "/api/rank-history" ||
                 url.pathname === "/api/weekly-quests"
             ) {
                 await ensureCommunitySchema(env);
             }
+            const competitionResponse = await handleCompetitionPlatformRequest(
+                request, env, url, currentUser, captureDailyRankSnapshot
+            );
+            if (competitionResponse) return competitionResponse;
             const rankHistoryQuestResponse = await handleRankHistoryQuestRequest(
                 request, env, url, currentUser
             );

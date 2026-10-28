@@ -24,6 +24,7 @@ export default {
                 <p>Welcome, {{ username }}!</p>
 
                 <!-- DASHBOARD -->
+                <competition-admin-tools></competition-admin-tools>
                 <section class="admin-section">
                     <h2>Dashboard</h2>
                     <div class="admin-stats">

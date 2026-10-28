@@ -25,6 +25,7 @@
         <link rel="stylesheet" href="/css/pages/rank-history.css" />
         <link rel="stylesheet" href="/css/pages/weekly-quests.css" />
         <link rel="stylesheet" href="/css/pages/community-features.css" />
+        <link rel="stylesheet" type="text/css" href="/css/components/competition-platform.css" />
         <link rel="stylesheet" type="text/css" href="/css/components/nav.css" />
         <link rel="stylesheet" type="text/css" href="/css/components/btn.css" />
         <link rel="stylesheet" type="text/css" href="/css/components/tabs.css" />
@@ -70,6 +71,7 @@
                     </router-link>
                 </div>
                 <div class="nav__actions">
+                    <notifications-bell></notifications-bell>
                     <button
                         class="nav__icon"
                         @click.prevent="store.toggleDark()"

@@ -12,6 +12,8 @@ export default {
     leaderboard: [],
     loading: true,
     avatarProfiles: [],
+    movementByName: {},
+    movementSnapshotDate: '',
     selected: 0,
     sortBy: 'points',
     err: [],
@@ -28,6 +30,8 @@ export default {
                     </p>
                 </div>
                 <div class="board-container">
+                <competition-season-widget :players="leaderboard"></competition-season-widget>
+                <player-goals-widget></player-goals-widget>
                 <div class="leaderboard-controls">
     <label for="leaderboard-sort">Sort by:</label>
     <select id="leaderboard-sort" v-model="sortBy"
@@ -49,7 +53,14 @@ export default {
     </tr>
     <tr v-for="(ientry, i) in sortedLeaderboard" :key="ientry.user">
         <td class="rank">
-            <p class="type-label-lg">#{{ i + 1 }}</p>
+            <p class="type-label-lg">#{{ i + 1 }}
+                <span v-if="sortBy === 'points' && movementFor(ientry.user, i + 1).change !== null"
+                    class="competition-rank-change"
+                    :class="{ 'is-up': movementFor(ientry.user, i + 1).change > 0, 'is-down': movementFor(ientry.user, i + 1).change < 0, 'is-flat': movementFor(ientry.user, i + 1).change === 0 }"
+                    :title="'Previous rank: #' + movementFor(ientry.user, i + 1).previousRank">
+                    {{ movementFor(ientry.user, i + 1).change > 0 ? '▲ ' + movementFor(ientry.user, i + 1).change : (movementFor(ientry.user, i + 1).change < 0 ? '▼ ' + Math.abs(movementFor(ientry.user, i + 1).change) : '—') }}
+                </span>
+            </p>
         </td>
         <td class="total">
             <p class="type-label-lg">{{ rankingValue(ientry) }}</p>
@@ -235,6 +246,16 @@ async mounted() {
             const result = await response.json();
             this.avatarProfiles = result.profiles || [];
         }
+        try {
+            const movementResponse = await fetch('/api/competition/movements', { credentials: 'same-origin', cache: 'no-store' });
+            if (movementResponse.ok) {
+                const movementResult = await movementResponse.json();
+                this.movementByName = movementResult.previousRanks || {};
+                this.movementSnapshotDate = movementResult.previousDate || '';
+            }
+        } catch (movementError) {
+            console.warn('Could not load rank movement:', movementError);
+        }
     } catch (error) {
         console.error('Could not load leaderboard:', error);
     } finally {
@@ -243,6 +264,12 @@ async mounted() {
 },
 
 methods: {
+     movementFor(playerName, currentRank) {
+         const key = String(playerName || '').trim().toLocaleLowerCase('en');
+         const previous = this.movementByName[key];
+         if (!previous || !Number.isFinite(Number(previous.rank))) return { change: null, previousRank: null };
+         return { change: Number(previous.rank) - Number(currentRank), previousRank: Number(previous.rank) };
+     },
      countryFlag,
      countryName,
      playerProfileRoute(playerName) {

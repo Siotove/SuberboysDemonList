@@ -1,5 +1,9 @@
 
 import routes from './routes.js';
+import NotificationsBell from './components/NotificationsBell.js';
+import PlayerGoalsWidget from './components/PlayerGoalsWidget.js';
+import CompetitionSeasonWidget from './components/CompetitionSeasonWidget.js';
+import CompetitionAdminTools from './components/CompetitionAdminTools.js';
 import { isHalloweenEventActive } from './event-schedule.js';
 
 export const store = Vue.reactive({
@@ -45,6 +49,12 @@ const router = VueRouter.createRouter({
 });
 
 app.use(router);
+
+app.component('notifications-bell', NotificationsBell);
+app.component('player-goals-widget', PlayerGoalsWidget);
+app.component('competition-season-widget', CompetitionSeasonWidget);
+app.component('competition-admin-tools', CompetitionAdminTools);
+
 app.mount('#app');
 
 // hallnoween

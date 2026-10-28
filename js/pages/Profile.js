@@ -77,7 +77,12 @@ export default {
                 </template>
             </section>
 
-<div class="avatar-upload">
+
+            <template v-if="!loading && user">
+                <player-goals-widget></player-goals-widget>
+            </template>
+
+ <div class="avatar-upload">
     <label for="profile-avatar-file">Custom profile picture</label>
 
     <input
