@@ -1,0 +1,118 @@
+name: Install Site-wide Search and Seasonal Theme Fix
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_install:
+        description: "Confirm installing site-wide quick search and seasonal theme cleanup"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Require confirmation
+        env:
+          CONFIRM_INSTALL: ${{ inputs.confirm_install }}
+        run: |
+          if [ "$CONFIRM_INSTALL" != "true" ]; then
+            echo "::error::Set Confirm install to true before continuing."
+            exit 1
+          fi
+          echo "Installation confirmed."
+
+      - name: Unpack upgrade package safely
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from shutil import rmtree
+          from zipfile import BadZipFile, ZipFile
+
+          archive = Path('.github/sitewide-search-theme-upgrade.zip')
+          destination = Path('.sitewide-search-theme-package')
+          if not archive.is_file():
+              raise SystemExit('Upload sitewide-search-theme-upgrade.zip into the repository .github folder first.')
+          if destination.exists():
+              rmtree(destination)
+          destination.mkdir()
+          base = destination.resolve()
+          try:
+              with ZipFile(archive) as zf:
+                  bad = zf.testzip()
+                  if bad:
+                      raise SystemExit(f'ZIP integrity check failed: {bad}')
+                  for item in zf.infolist():
+                      target = (destination / item.filename).resolve()
+                      if target != base and base not in target.parents:
+                          raise SystemExit(f'Unsafe path in uploaded package: {item.filename}')
+                  zf.extractall(destination)
+          except BadZipFile as exc:
+              raise SystemExit(f'The uploaded upgrade package is not a valid ZIP: {exc}')
+          if not (destination / 'apply_sitewide_search_theme.py').is_file():
+              raise SystemExit('The ZIP must contain apply_sitewide_search_theme.py at its root.')
+          if not (destination / 'payload/js/components/SiteSearch.js').is_file():
+              raise SystemExit('The ZIP is missing the SiteSearch component.')
+          PY
+
+      - name: Integrate quick search and theme reset
+        run: |
+          python .sitewide-search-theme-package/apply_sitewide_search_theme.py \
+            --root . \
+            --payload .sitewide-search-theme-package/payload
+
+      - name: Check JavaScript syntax
+        run: |
+          node --input-type=module --check < js/components/SiteSearch.js
+          node --input-type=module --check < js/main.js
+          node --input-type=module --check < js/pages/List.js
+          node --input-type=module --check < js/pages/Packs.js
+          python -m py_compile .sitewide-search-theme-package/apply_sitewide_search_theme.py
+
+      - name: Validate event schedule and installed anchors
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          main = Path('js/main.js').read_text(encoding='utf-8')
+          schedule = Path('js/event-schedule.js').read_text(encoding='utf-8')
+          index = Path('index.html').read_text(encoding='utf-8')
+          css = Path('css/components/competition-platform.css').read_text(encoding='utf-8')
+          main_css = Path('css/main.css').read_text(encoding='utf-8')
+          search = Path('js/components/SiteSearch.js').read_text(encoding='utf-8')
+          assert "app.component('site-search', SiteSearch);" in main
+          assert "halloweenThemeVisibilityHandler" in main
+          assert "isHalloweenEventActive" in schedule and "timestamp < closes" in schedule
+          assert '<site-search></site-search>' in index
+          assert '--competition-accent-soft:' in css
+          assert 'body.halloween-theme header.dark' in main_css
+          assert "Ctrl+K" in search and "/players/" in search
+          print('Seasonal reset, global search, and integration checks passed.')
+          PY
+
+      - name: Check patch whitespace
+        run: git diff --check
+
+      - name: Commit integration
+        run: |
+          rm -rf .sitewide-search-theme-package
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html js/main.js js/components/SiteSearch.js js/pages/List.js js/pages/Packs.js css/components/site-search.css css/components/competition-platform.css css/main.css
+          if git diff --cached --quiet; then
+            echo 'Quick search and theme cleanup are already installed; no changes to commit.'
+          else
+            git commit -m 'Add global quick search and seasonal theme cleanup'
+            git push origin HEAD:main
+          fi
