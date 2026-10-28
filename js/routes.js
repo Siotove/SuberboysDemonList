@@ -1,6 +1,7 @@
 import Submit from './pages/Submit.js';
 import HigherLower from './pages/HigherLower.js';
 import List from './pages/List.js';
+import Home from './pages/Home.js';
 import Achievements from './pages/Achievements.js';
 import Leaderboard from './pages/Leaderboard.js';
 import Roulette from './pages/Roulette.js';
@@ -21,6 +22,7 @@ import HallOfFame from './pages/HallOfFame.js';
 export default [
     { path: '/submit', component: Submit },
     { path: '/', component: List },
+    { path: '/home', component: Home },
     { path: '/leaderboard', component: Leaderboard },
     { path: '/achievements', component: Achievements },
     { path: '/history', component: RankHistory },

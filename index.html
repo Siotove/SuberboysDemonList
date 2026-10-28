@@ -15,6 +15,7 @@
         <link rel="stylesheet" type="text/css" href="/css/reset.css" />
         <link rel="stylesheet" type="text/css" href="/css/typography.css" />
         <link rel="stylesheet" type="text/css" href="/css/main.css" />
+        <link rel="stylesheet" type="text/css" href="/css/pages/home.css" />
         <link rel="stylesheet" type="text/css" href="/css/pages/list.css" />
         <link rel="stylesheet" type="text/css" href="/css/pages/leaderboard.css" />
         <link rel="stylesheet" type="text/css" href="/css/pages/roulette.css" />
@@ -35,10 +36,10 @@
     </head>
     <body id="app">
         <header :class="{ dark: store.dark }">
-            <div class="logo">
+            <router-link class="logo" to="/home" aria-label="SBDL homepage" title="Go to homepage">
                 <h2>SBDL</h2>
                 <p>v1.0.0</p>
-            </div>
+            </router-link>
             <nav class="nav" aria-label="Main navigation">
                 <div class="nav__tabs">
                     <router-link class="nav__tab" to="/">
