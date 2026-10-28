@@ -1,0 +1,139 @@
+name: Install Community Features
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_install:
+        description: "Confirm installing Clans, Activity, Player Battles and Hall of Fame"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Require confirmation
+        env:
+          CONFIRM_INSTALL: ${{ inputs.confirm_install }}
+        run: |
+          if [ "$CONFIRM_INSTALL" != "true" ]; then
+            echo "::error::Set Confirm install to true before continuing."
+            exit 1
+          fi
+          echo "Installation confirmed."
+
+      - name: Unpack upgrade package safely
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from shutil import rmtree
+          from zipfile import BadZipFile, ZipFile
+
+          archive = Path('.github/community-four-features-upgrade.zip')
+          destination = Path('.community-four-features-package')
+          if not archive.is_file():
+              raise SystemExit('Upload community-four-features-upgrade.zip into the repository .github folder first.')
+          if destination.exists():
+              rmtree(destination)
+          destination.mkdir()
+          base = destination.resolve()
+          try:
+              with ZipFile(archive) as zf:
+                  bad = zf.testzip()
+                  if bad:
+                      raise SystemExit(f'ZIP integrity check failed: {bad}')
+                  for item in zf.infolist():
+                      target = (destination / item.filename).resolve()
+                      if target != base and base not in target.parents:
+                          raise SystemExit(f'Unsafe path in uploaded package: {item.filename}')
+                  zf.extractall(destination)
+          except BadZipFile as exc:
+              raise SystemExit(f'The uploaded upgrade package is not a valid ZIP: {exc}')
+          if not (destination / 'apply_community_four_features.py').is_file():
+              raise SystemExit('The ZIP must contain apply_community_four_features.py at its root.')
+          if not (destination / 'payload' / 'community-features-worker.js').is_file():
+              raise SystemExit('The ZIP is missing payload/community-features-worker.js.')
+          PY
+
+      - name: Integrate the features into the existing app
+        run: |
+          python .community-four-features-package/apply_community_four_features.py \
+            --root . \
+            --payload .community-four-features-package/payload
+
+      - name: Check JavaScript syntax
+        run: |
+          node --input-type=module --check < worker.js
+          node --input-type=module --check < community-features-worker.js
+          node --input-type=module --check < rank-history-quests-worker.js
+          node --input-type=module --check < js/routes.js
+          node --input-type=module --check < js/pages/Clans.js
+          node --input-type=module --check < js/pages/CommunityActivity.js
+          node --input-type=module --check < js/pages/PlayerBattles.js
+          node --input-type=module --check < js/pages/HallOfFame.js
+          python -m py_compile .community-four-features-package/apply_community_four_features.py
+
+      - name: Validate Wrangler configuration and D1 migration SQL
+        run: |
+          python - <<'PY'
+          import json
+          import sqlite3
+          from pathlib import Path
+
+          config = json.loads(Path('wrangler.jsonc').read_text(encoding='utf-8'))
+          assert any(item.get('binding') == 'db' for item in config.get('d1_databases', [])), 'Missing D1 binding db'
+          assert config.get('assets', {}).get('binding') == 'ASSETS', 'Missing ASSETS binding'
+          assert '0 0 * * *' in config.get('triggers', {}).get('crons', []), 'Missing daily snapshot cron'
+          assert not config.get('r2_buckets'), 'This update should not require an R2 bucket'
+
+          conn = sqlite3.connect(':memory:')
+          conn.execute('PRAGMA foreign_keys = ON')
+          conn.execute('CREATE TABLE users (id TEXT PRIMARY KEY)')
+          history_migration = Path('migrations/0004_rank_history_quests.sql')
+          if history_migration.is_file():
+              conn.executescript(history_migration.read_text(encoding='utf-8'))
+          community_migration = Path('migrations/0005_community_features.sql')
+          if not community_migration.is_file():
+              raise SystemExit('Missing migrations/0005_community_features.sql.')
+          conn.executescript(community_migration.read_text(encoding='utf-8'))
+          expected = {
+              'community_clans', 'community_clan_members', 'community_activity',
+              'community_hall_snapshots', 'community_hall_snapshot_runs',
+              'community_player_records'
+          }
+          found = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+          missing = expected - found
+          if missing:
+              raise SystemExit(f'Migration did not create these tables: {sorted(missing)}')
+          print('Community migration SQL checks passed.')
+          PY
+
+      - name: Check patch whitespace
+        run: git diff --check
+
+      - name: Commit integration
+        run: |
+          rm -rf .community-four-features-package
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add worker.js community-features-worker.js js/routes.js index.html \
+            js/pages/Clans.js js/pages/CommunityActivity.js js/pages/PlayerBattles.js \
+            js/pages/HallOfFame.js css/pages/community-features.css \
+            migrations/0005_community_features.sql wrangler.jsonc .assetsignore
+          if git diff --cached --quiet; then
+            echo 'Community features are already installed; no changes to commit.'
+          else
+            git commit -m 'Add clans, activity, player battles and Hall of Fame'
+            git push origin HEAD:main
+          fi
