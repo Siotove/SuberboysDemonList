@@ -41875,5 +41875,225 @@
         "to": 47
       }
     ]
+  },
+  {
+    "date": "2026-11-01T14:14:53.000Z",
+    "commit": "383f773370d763c6c2926f3d0bcd4e5e30efe335",
+    "added": [
+      "SuberRageStage"
+    ],
+    "removed": [],
+    "moved": [
+      {
+        "level": "PolychromaticalII",
+        "from": 6,
+        "to": 7
+      },
+      {
+        "level": "Sandic",
+        "from": 7,
+        "to": 8
+      },
+      {
+        "level": "CS2",
+        "from": 8,
+        "to": 9
+      },
+      {
+        "level": "Shadow",
+        "from": 9,
+        "to": 10
+      },
+      {
+        "level": "USadaclysm",
+        "from": 10,
+        "to": 11
+      },
+      {
+        "level": "Test68",
+        "from": 11,
+        "to": 12
+      },
+      {
+        "level": "Hypermarine",
+        "from": 12,
+        "to": 13
+      },
+      {
+        "level": "Polychromatical",
+        "from": 13,
+        "to": 14
+      },
+      {
+        "level": "Sadaclysm",
+        "from": 14,
+        "to": 15
+      },
+      {
+        "level": "AinaPoni",
+        "from": 15,
+        "to": 16
+      },
+      {
+        "level": "originallevel2",
+        "from": 16,
+        "to": 17
+      },
+      {
+        "level": "MilestoneIII",
+        "from": 17,
+        "to": 18
+      },
+      {
+        "level": "Unnamed5",
+        "from": 18,
+        "to": 19
+      },
+      {
+        "level": "MilestoneII",
+        "from": 19,
+        "to": 20
+      },
+      {
+        "level": "Thermo",
+        "from": 20,
+        "to": 21
+      },
+      {
+        "level": "Acheroneasy",
+        "from": 21,
+        "to": 22
+      },
+      {
+        "level": "Spookweiner",
+        "from": 22,
+        "to": 23
+      },
+      {
+        "level": "Ultramarine",
+        "from": 23,
+        "to": 24
+      },
+      {
+        "level": "Trytohide",
+        "from": 24,
+        "to": 25
+      },
+      {
+        "level": "TungTung",
+        "from": 25,
+        "to": 26
+      },
+      {
+        "level": "10001layout",
+        "from": 26,
+        "to": 27
+      },
+      {
+        "level": "blu3sh4dow",
+        "from": 27,
+        "to": 28
+      },
+      {
+        "level": "AinaPoniII",
+        "from": 28,
+        "to": 29
+      },
+      {
+        "level": "Fates",
+        "from": 29,
+        "to": 30
+      },
+      {
+        "level": "Dashgs",
+        "from": 30,
+        "to": 31
+      },
+      {
+        "level": "Application",
+        "from": 31,
+        "to": 32
+      },
+      {
+        "level": "Thunderzone",
+        "from": 32,
+        "to": 33
+      },
+      {
+        "level": "Gaopownpunches",
+        "from": 33,
+        "to": 34
+      },
+      {
+        "level": "Ninefiveone",
+        "from": 34,
+        "to": 35
+      },
+      {
+        "level": "WinterWonder",
+        "from": 35,
+        "to": 36
+      },
+      {
+        "level": "Massacre",
+        "from": 36,
+        "to": 37
+      },
+      {
+        "level": "SSS",
+        "from": 37,
+        "to": 38
+      },
+      {
+        "level": "MilestoneI",
+        "from": 38,
+        "to": 39
+      },
+      {
+        "level": "Wobblytooth",
+        "from": 39,
+        "to": 40
+      },
+      {
+        "level": "Casher",
+        "from": 40,
+        "to": 41
+      },
+      {
+        "level": "Getbetter",
+        "from": 41,
+        "to": 42
+      },
+      {
+        "level": "Greaterdepthility",
+        "from": 42,
+        "to": 43
+      },
+      {
+        "level": "22",
+        "from": 43,
+        "to": 44
+      },
+      {
+        "level": "Eternity",
+        "from": 44,
+        "to": 45
+      },
+      {
+        "level": "JustifyableSwift",
+        "from": 45,
+        "to": 46
+      },
+      {
+        "level": "Khrome",
+        "from": 46,
+        "to": 47
+      },
+      {
+        "level": "cu",
+        "from": 47,
+        "to": 48
+      }
+    ]
   }
 ]
