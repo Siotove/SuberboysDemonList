@@ -33,6 +33,12 @@
       "link": "https://www.youtube.com/watch?v=invalid",
       "percent": 100,
       "hz": 240
+    },
+    {
+      "user": "Justgame",
+      "link": "https://studio.youtube.com/video/z33Bz-DnE0Y/edit",
+      "percent": 100,
+      "hz": 360
     }
   ]
 }
