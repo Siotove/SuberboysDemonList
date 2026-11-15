@@ -29,4 +29,13 @@ jobs:
           git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main +refs/heads/production:refs/remotes/origin/production
           git switch -C production --track origin/production
           git merge origin/main --no-ff --no-edit
+
+          # Rebuild the combined asset from the source level files on every
+          # production sync, so level edits never leave the bundle stale.
+          python3 scripts/build-level-bundle.py
+          git add data/_bundle.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Build combined published level data"
+          fi
+
           git push origin HEAD:production
