@@ -173,22 +173,57 @@ async function requireAdmin(request, env) {
     return { user, response: null };
 }
 
+// Keep the published level bundle briefly in the isolate so API routes that
+// scan every level share one asset subrequest instead of fetching each file.
+let publishedBundleCache = null;
+let publishedBundleCacheAt = 0;
+let publishedBundleLoad = null;
+
+async function readPublishedBundle(env, origin) {
+    if (
+        publishedBundleCache &&
+        Date.now() - publishedBundleCacheAt < 15000
+    ) {
+        return publishedBundleCache;
+    }
+
+    if (publishedBundleLoad) return publishedBundleLoad;
+
+    publishedBundleLoad = (async () => {
+        const response = await env.ASSETS.fetch(
+            new Request(new URL("/data/_bundle.json", origin))
+        );
+
+        if (!response.ok) {
+            throw new Error("Could not read published leaderboard data.");
+        }
+
+        const bundle = await response.json();
+
+        if (
+            !bundle ||
+            !Array.isArray(bundle.files) ||
+            !bundle.levels ||
+            typeof bundle.levels !== "object"
+        ) {
+            throw new Error("Invalid published leaderboard data.");
+        }
+
+        publishedBundleCache = bundle;
+        publishedBundleCacheAt = Date.now();
+        return bundle;
+    })();
+
+    try {
+        return await publishedBundleLoad;
+    } finally {
+        publishedBundleLoad = null;
+    }
+}
+
 async function readPublishedLevels(env, origin) {
-    const response = await env.ASSETS.fetch(
-        new Request(new URL("/data/_list.json", origin))
-    );
-
-    if (!response.ok) {
-        throw new Error("Could not read leaderboard list.");
-    }
-
-    const files = await response.json();
-
-    if (!Array.isArray(files)) {
-        throw new Error("Invalid leaderboard list.");
-    }
-
-    return files;
+    const bundle = await readPublishedBundle(env, origin);
+    return bundle.files;
 }
 
 async function readPublishedLevel(env, origin, file) {
@@ -199,17 +234,14 @@ async function readPublishedLevel(env, origin, file) {
         throw new Error("Invalid level filename.");
     }
 
-    const response = await env.ASSETS.fetch(
-        new Request(
-            new URL(`/data/${encodeURIComponent(file)}.json`, origin)
-        )
-    );
+    const bundle = await readPublishedBundle(env, origin);
+    const level = bundle.levels[file];
 
-    if (!response.ok) {
+    if (!level || typeof level !== "object") {
         throw new Error(`Could not read level data: ${file}`);
     }
 
-    return response.json();
+    return level;
 }
 
 async function existingLeaderboardName(env, origin, name) {
