@@ -106,14 +106,24 @@ function ensurePlayer(players, name) {
 }
 
 async function buildCurrentLeaderboard(env) {
-    const files = await getAssetJson(env, "/data/_list.json");
-    if (!Array.isArray(files)) throw new Error("The published level list is invalid.");
+    // One bundled asset replaces the per-level fetch loop, staying well below
+    // Cloudflare's per-invocation subrequest limit.
+    const bundle = await getAssetJson(env, "/data/_bundle.json");
+    if (
+        !bundle ||
+        !Array.isArray(bundle.files) ||
+        !bundle.levels ||
+        typeof bundle.levels !== "object"
+    ) {
+        throw new Error("The published leaderboard data is invalid.");
+    }
 
+    const files = bundle.files;
     const players = new Map();
     for (let index = 0; index < files.length; index++) {
         const file = files[index];
         if (typeof file !== "string" || !/^[a-zA-Z0-9_-]{1,80}$/.test(file)) continue;
-        const level = await getAssetJson(env, `/data/${encodeURIComponent(file)}.json`);
+        const level = bundle.levels[file];
         if (!level || typeof level !== "object") continue;
         const rank = index + 1;
         const required = Number.isFinite(Number(level.percentToQualify))
