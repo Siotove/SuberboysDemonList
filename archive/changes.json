@@ -42250,5 +42250,256 @@
         "to": 51
       }
     ]
+  },
+  {
+    "date": "2026-11-19T20:59:55.000Z",
+    "commit": "a204a731e5cd90709bfc17e3bea7ce24d0f01f29",
+    "added": [
+      "scarletcircles",
+      "Steak"
+    ],
+    "removed": [],
+    "moved": [
+      {
+        "level": "SocietyButNo3",
+        "from": 4,
+        "to": 5
+      },
+      {
+        "level": "NGWave",
+        "from": 5,
+        "to": 6
+      },
+      {
+        "level": "SuberRageStage",
+        "from": 6,
+        "to": 7
+      },
+      {
+        "level": "PolychromaticalII",
+        "from": 7,
+        "to": 8
+      },
+      {
+        "level": "Sandic",
+        "from": 8,
+        "to": 9
+      },
+      {
+        "level": "CS2",
+        "from": 9,
+        "to": 10
+      },
+      {
+        "level": "Shadow",
+        "from": 10,
+        "to": 11
+      },
+      {
+        "level": "USadaclysm",
+        "from": 11,
+        "to": 12
+      },
+      {
+        "level": "Test68",
+        "from": 12,
+        "to": 13
+      },
+      {
+        "level": "Hypermarine",
+        "from": 13,
+        "to": 14
+      },
+      {
+        "level": "Polychromatical",
+        "from": 14,
+        "to": 15
+      },
+      {
+        "level": "Sadaclysm",
+        "from": 15,
+        "to": 16
+      },
+      {
+        "level": "AinaPoni",
+        "from": 16,
+        "to": 17
+      },
+      {
+        "level": "originallevel2",
+        "from": 17,
+        "to": 18
+      },
+      {
+        "level": "MilestoneIII",
+        "from": 18,
+        "to": 19
+      },
+      {
+        "level": "Unnamed5",
+        "from": 19,
+        "to": 20
+      },
+      {
+        "level": "MilestoneII",
+        "from": 20,
+        "to": 21
+      },
+      {
+        "level": "Thermo",
+        "from": 21,
+        "to": 22
+      },
+      {
+        "level": "Acheroneasy",
+        "from": 22,
+        "to": 23
+      },
+      {
+        "level": "Spookweiner",
+        "from": 23,
+        "to": 24
+      },
+      {
+        "level": "Ultramarine",
+        "from": 24,
+        "to": 25
+      },
+      {
+        "level": "Trytohide",
+        "from": 25,
+        "to": 26
+      },
+      {
+        "level": "TungTung",
+        "from": 26,
+        "to": 27
+      },
+      {
+        "level": "10001layout",
+        "from": 27,
+        "to": 28
+      },
+      {
+        "level": "blu3sh4dow",
+        "from": 28,
+        "to": 29
+      },
+      {
+        "level": "AinaPoniII",
+        "from": 29,
+        "to": 30
+      },
+      {
+        "level": "Fates",
+        "from": 30,
+        "to": 31
+      },
+      {
+        "level": "Dashgs",
+        "from": 31,
+        "to": 32
+      },
+      {
+        "level": "Application",
+        "from": 32,
+        "to": 33
+      },
+      {
+        "level": "Thunderzone",
+        "from": 33,
+        "to": 34
+      },
+      {
+        "level": "Gaopownpunches",
+        "from": 34,
+        "to": 35
+      },
+      {
+        "level": "Ninefiveone",
+        "from": 35,
+        "to": 36
+      },
+      {
+        "level": "WinterWonder",
+        "from": 36,
+        "to": 37
+      },
+      {
+        "level": "Massacre",
+        "from": 37,
+        "to": 38
+      },
+      {
+        "level": "SSS",
+        "from": 38,
+        "to": 39
+      },
+      {
+        "level": "glitter",
+        "from": 39,
+        "to": 40
+      },
+      {
+        "level": "MilestoneI",
+        "from": 40,
+        "to": 41
+      },
+      {
+        "level": "Wobblytooth",
+        "from": 41,
+        "to": 42
+      },
+      {
+        "level": "Casher",
+        "from": 42,
+        "to": 44
+      },
+      {
+        "level": "noobvprovdillest",
+        "from": 43,
+        "to": 45
+      },
+      {
+        "level": "ricochetlovelayout",
+        "from": 44,
+        "to": 46
+      },
+      {
+        "level": "Getbetter",
+        "from": 45,
+        "to": 47
+      },
+      {
+        "level": "Greaterdepthility",
+        "from": 46,
+        "to": 48
+      },
+      {
+        "level": "22",
+        "from": 47,
+        "to": 49
+      },
+      {
+        "level": "Eternity",
+        "from": 48,
+        "to": 50
+      },
+      {
+        "level": "JustifyableSwift",
+        "from": 49,
+        "to": 51
+      },
+      {
+        "level": "Khrome",
+        "from": 50,
+        "to": 52
+      },
+      {
+        "level": "cu",
+        "from": 51,
+        "to": 53
+      }
+    ]
   }
 ]
